@@ -52,7 +52,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    token = create_access_token({"sub": user.id})
+    token = create_access_token({"sub": str(user.id)})
     return TokenResponse(access_token=token)
 
 
@@ -65,5 +65,5 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
             detail="Email və ya şifrə yanlışdır"
         )
 
-    token = create_access_token({"sub": user.id})
+    token = create_access_token({"sub": str(user.id)})
     return TokenResponse(access_token=token)
