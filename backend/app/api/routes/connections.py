@@ -1,0 +1,93 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy import or_, and_
+from app.services.database import get_db
+from app.services.auth import get_current_user
+from app.models.user import User
+from app.models.connection import Connection
+
+router = APIRouter(prefix="/api/connections", tags=["connections"])
+
+
+@router.post("/{user_id}")
+def send_request(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Özünüzə istek göndərə bilməzsiniz")
+
+    existing = db.query(Connection).filter(
+        or_(
+            and_(Connection.sender_id == current_user.id, Connection.receiver_id == user_id),
+            and_(Connection.sender_id == user_id, Connection.receiver_id == current_user.id),
+        )
+    ).first()
+
+    if existing:
+        raise HTTPException(status_code=400, detail="Bağlantı artıq mövcuddur")
+
+    conn = Connection(sender_id=current_user.id, receiver_id=user_id)
+    db.add(conn)
+    db.commit()
+    return {"message": "Bağlantı istəyi göndərildi"}
+
+
+@router.put("/{connection_id}/accept")
+def accept_request(connection_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    conn = db.query(Connection).filter(Connection.id == connection_id, Connection.receiver_id == current_user.id).first()
+    if not conn:
+        raise HTTPException(status_code=404, detail="İstək tapılmadı")
+
+    conn.status = "accepted"
+    db.commit()
+    return {"message": "Bağlantı qəbul edildi"}
+
+
+@router.put("/{connection_id}/reject")
+def reject_request(connection_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    conn = db.query(Connection).filter(Connection.id == connection_id, Connection.receiver_id == current_user.id).first()
+    if not conn:
+        raise HTTPException(status_code=404, detail="İstək tapılmadı")
+
+    conn.status = "rejected"
+    db.commit()
+    return {"message": "Bağlantı rədd edildi"}
+
+
+@router.get("/pending")
+def get_pending(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    requests = db.query(Connection).filter(
+        Connection.receiver_id == current_user.id, Connection.status == "pending"
+    ).all()
+    result = []
+    for r in requests:
+        sender = db.query(User).filter(User.id == r.sender_id).first()
+        result.append({
+            "id": r.id,
+            "sender_id": r.sender_id,
+            "sender_name": sender.full_name if sender else "Naməlum",
+            "sender_major": sender.major if sender else None,
+            "created_at": str(r.created_at),
+        })
+    return result
+
+
+@router.get("/my")
+def get_my_connections(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    connections = db.query(Connection).filter(
+        or_(Connection.sender_id == current_user.id, Connection.receiver_id == current_user.id),
+        Connection.status == "accepted",
+    ).all()
+
+    result = []
+    for c in connections:
+        other_id = c.receiver_id if c.sender_id == current_user.id else c.sender_id
+        other = db.query(User).filter(User.id == other_id).first()
+        if other:
+            result.append({
+                "id": c.id,
+                "user_id": other.id,
+                "full_name": other.full_name,
+                "major": other.major,
+                "skills": other.skills,
+                "profile_picture": other.profile_picture,
+            })
+    return result
