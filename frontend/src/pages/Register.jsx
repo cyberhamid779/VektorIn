@@ -71,7 +71,7 @@ export default function Register() {
               <input
                 type="email"
                 name="email"
-                placeholder="ad.soyad@maa.edu.az"
+                placeholder="ad.soyad@naa.edu.az"
                 value={form.email}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"

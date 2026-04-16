@@ -88,7 +88,7 @@ export default function Landing() {
       <section className="max-w-6xl mx-auto px-6 py-16 text-center">
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-12 text-white">
           <h3 className="text-3xl font-bold mb-4">Tələbənin qəhvəsi, karyeranın başlanğıcı.</h3>
-          <p className="text-blue-100 mb-8 text-lg">@maa.edu.az emailinlə indi qeydiyyatdan keç.</p>
+          <p className="text-blue-100 mb-8 text-lg">@naa.edu.az emailinlə indi qeydiyyatdan keç.</p>
           <Link
             to="/register"
             className="inline-block px-8 py-3.5 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition"

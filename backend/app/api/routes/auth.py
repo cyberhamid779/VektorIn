@@ -28,10 +28,10 @@ class TokenResponse(BaseModel):
 
 @router.post("/register", response_model=TokenResponse)
 def register(data: RegisterRequest, db: Session = Depends(get_db)):
-    if not data.email.endswith("@maa.edu.az"):
+    if not data.email.endswith("@naa.edu.az"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Yalnız @maa.edu.az email ilə qeydiyyat mümkündür"
+            detail="Yalnız @naa.edu.az email ilə qeydiyyat mümkündür"
         )
 
     existing = db.query(User).filter(User.email == data.email).first()
