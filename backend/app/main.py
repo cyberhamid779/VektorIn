@@ -4,9 +4,19 @@ from app.api.routes import auth, users, posts, connections, messages, admin
 
 app = FastAPI(title="VektorIn API", version="1.0.0")
 
+import os
+
+allowed_origins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+]
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allowed_origins.append(frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
