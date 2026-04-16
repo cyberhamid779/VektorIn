@@ -12,10 +12,15 @@ class UserResponse(BaseModel):
     id: int
     email: str
     full_name: str
+    headline: str | None
     major: str | None
     course: int | None
     bio: str | None
     profile_picture: str | None
+    phone: str | None
+    github_url: str | None
+    linkedin_url: str | None
+    website_url: str | None
     skills: str | None
     certificates: str | None
     is_open_for_team: bool
@@ -27,9 +32,14 @@ class UserResponse(BaseModel):
 
 class UpdateProfileRequest(BaseModel):
     full_name: str | None = None
+    headline: str | None = None
     major: str | None = None
     course: int | None = None
     bio: str | None = None
+    phone: str | None = None
+    github_url: str | None = None
+    linkedin_url: str | None = None
+    website_url: str | None = None
     skills: str | None = None
     certificates: str | None = None
     is_open_for_team: bool | None = None

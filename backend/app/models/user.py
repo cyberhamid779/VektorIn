@@ -12,10 +12,15 @@ class User(Base):
     full_name = Column(String(255), nullable=False)
     major = Column(String(255))  # ixtisas
     course = Column(Integer)  # kurs (1-4)
+    headline = Column(String(255))  # "Frontend Developer | 3-cu kurs"
     bio = Column(Text)
     profile_picture = Column(String(500))
+    phone = Column(String(50))
+    github_url = Column(String(500))
+    linkedin_url = Column(String(500))
+    website_url = Column(String(500))
     skills = Column(Text)  # comma-separated: "Python,React,Design"
-    certificates = Column(Text)
+    certificates = Column(Text)  # comma-separated
     is_open_for_team = Column(Boolean, default=False)  # komanda ucun aciq
     is_admin = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
