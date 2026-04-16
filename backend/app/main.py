@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import auth, users, posts, connections, messages, admin
+from app.api.routes import auth, users, posts, connections, messages, admin, certificates
 
 app = FastAPI(title="VektorIn API", version="1.0.0")
 
@@ -28,6 +28,7 @@ app.include_router(posts.router)
 app.include_router(connections.router)
 app.include_router(messages.router)
 app.include_router(admin.router)
+app.include_router(certificates.router)
 
 
 @app.get("/")

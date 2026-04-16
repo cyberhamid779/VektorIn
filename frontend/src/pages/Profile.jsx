@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
-import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles } from "lucide-react";
+import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2, ExternalLink } from "lucide-react";
 import api from "../api/client";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
+  const [certificates, setCertificates] = useState([]);
+  const [certForm, setCertForm] = useState({ name: "", issuer: "", issue_date: "", credential_url: "" });
+  const [showCertForm, setShowCertForm] = useState(false);
 
   useEffect(() => {
     loadProfile();
+    loadCertificates();
   }, []);
 
   const loadProfile = async () => {
@@ -16,6 +20,33 @@ export default function Profile() {
       const res = await api.get("/users/me");
       setUser(res.data);
       setForm(res.data);
+    } catch (err) {}
+  };
+
+  const loadCertificates = async () => {
+    try {
+      const res = await api.get("/certificates/me");
+      setCertificates(res.data);
+    } catch (err) {}
+  };
+
+  const handleAddCert = async () => {
+    try {
+      await api.post("/certificates", {
+        ...certForm,
+        issue_date: certForm.issue_date || null,
+        credential_url: certForm.credential_url || null,
+      });
+      setCertForm({ name: "", issuer: "", issue_date: "", credential_url: "" });
+      setShowCertForm(false);
+      loadCertificates();
+    } catch (err) {}
+  };
+
+  const handleDeleteCert = async (id) => {
+    try {
+      await api.delete(`/certificates/${id}`);
+      loadCertificates();
     } catch (err) {}
   };
 
@@ -189,6 +220,96 @@ export default function Profile() {
                 </div>
               </div>
             )}
+
+            {/* Sertifikatlar */}
+            <div className="bg-gradient-to-r from-gray-50 to-white p-5 rounded-xl border border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Award size={16} className="text-gray-400" />
+                  <p className="text-sm text-gray-400 font-medium">Sertifikatlar</p>
+                </div>
+                <button
+                  onClick={() => setShowCertForm(!showCertForm)}
+                  className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700 transition"
+                >
+                  <Plus size={16} /> Elave et
+                </button>
+              </div>
+
+              {showCertForm && (
+                <div className="bg-white p-4 rounded-xl border border-blue-100 mb-4 space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Sertifikat adi"
+                    value={certForm.name}
+                    onChange={(e) => setCertForm({ ...certForm, name: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Veren teshkilat (meselen: Google, ISC2)"
+                    value={certForm.issuer}
+                    onChange={(e) => setCertForm({ ...certForm, issuer: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      type="date"
+                      value={certForm.issue_date}
+                      onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
+                    />
+                    <input
+                      type="url"
+                      placeholder="Dogrulama linki"
+                      value={certForm.credential_url}
+                      onChange={(e) => setCertForm({ ...certForm, credential_url: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleAddCert}
+                      disabled={!certForm.name || !certForm.issuer}
+                      className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-40"
+                    >
+                      Elave et
+                    </button>
+                    <button
+                      onClick={() => setShowCertForm(false)}
+                      className="bg-gray-100 text-gray-600 px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-200 transition"
+                    >
+                      Legv et
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {certificates.length > 0 ? (
+                <div className="space-y-3">
+                  {certificates.map((cert) => (
+                    <div key={cert.id} className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100">
+                      <div className="flex-1">
+                        <p className="text-gray-800 font-semibold text-sm">{cert.name}</p>
+                        <p className="text-gray-400 text-xs mt-0.5">{cert.issuer}{cert.issue_date && ` · ${cert.issue_date}`}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {cert.credential_url && (
+                          <a href={cert.credential_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 transition">
+                            <ExternalLink size={16} />
+                          </a>
+                        )}
+                        <button onClick={() => handleDeleteCert(cert.id)} className="text-red-400 hover:text-red-500 transition">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-300 text-sm text-center py-4">Hele sertifikat elave olunmayib</p>
+              )}
+            </div>
           </div>
         )}
       </div>

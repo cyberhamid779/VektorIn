@@ -19,6 +19,7 @@ from app.models.user import User
 from app.models.post import Post, PostLike, Comment
 from app.models.connection import Connection
 from app.models.message import Message
+from app.models.certificate import Certificate
 
 target_metadata = Base.metadata
 
