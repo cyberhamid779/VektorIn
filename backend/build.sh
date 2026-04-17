@@ -14,6 +14,9 @@ from app.models.certificate import Certificate
 from app.models.project import Project
 from app.models.event import Event
 from app.models.activity_log import ActivityLog
+from sqlalchemy import text
 Base.metadata.create_all(bind=engine)
+with engine.begin() as conn:
+    conn.execute(text('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP WITH TIME ZONE'))
 print('Tables created successfully')
 "

@@ -4,6 +4,7 @@ import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from app.config import settings
 from app.services.database import get_db
 from app.models.user import User
@@ -46,4 +47,9 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise credentials_exception
+
+    # heartbeat — son aktivliyi yenilə
+    user.last_seen = func.now()
+    db.commit()
+
     return user

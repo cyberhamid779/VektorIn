@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -25,6 +26,7 @@ class UserResponse(BaseModel):
     certificates: str | None
     is_open_for_team: bool
     is_admin: bool
+    last_seen: datetime | None = None
 
     class Config:
         from_attributes = True

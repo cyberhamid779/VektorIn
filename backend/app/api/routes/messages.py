@@ -88,5 +88,6 @@ def get_chats(db: Session = Depends(get_db), current_user: User = Depends(get_cu
             "last_message": m.content,
             "unread_count": unread,
             "last_at": str(m.created_at),
+            "last_seen": str(other.last_seen) if other and other.last_seen else None,
         })
     return chats

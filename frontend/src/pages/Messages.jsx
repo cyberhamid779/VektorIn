@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Send, MessageCircle, ArrowLeft, Circle } from "lucide-react";
 import api from "../api/client";
-import { formatBakuHM } from "../utils/time";
+import { formatBakuHM, isActiveNow, formatLastSeen } from "../utils/time";
 
 export default function Messages() {
   const [chats, setChats] = useState([]);
@@ -36,12 +36,18 @@ export default function Messages() {
     } catch (err) {}
   };
 
-  const openChat = async (userId, fullName) => {
-    setActiveChat({ userId, fullName });
+  const openChat = async (userId, fullName, lastSeen = null) => {
+    setActiveChat({ userId, fullName, lastSeen });
     try {
       const res = await api.get(`/messages/${userId}`);
       setMessages(res.data);
       loadChats();
+      if (!lastSeen) {
+        try {
+          const userRes = await api.get(`/users/${userId}`);
+          setActiveChat((prev) => prev && prev.userId === userId ? { ...prev, lastSeen: userRes.data.last_seen } : prev);
+        } catch (err) {}
+      }
     } catch (err) {}
   };
 
@@ -81,7 +87,7 @@ export default function Messages() {
           {chats.map((chat) => (
             <div
               key={chat.user_id}
-              onClick={() => openChat(chat.user_id, chat.full_name)}
+              onClick={() => openChat(chat.user_id, chat.full_name, chat.last_seen)}
               className={`p-4 cursor-pointer border-b border-gray-50 transition-all duration-200 ${
                 activeChat?.userId === chat.user_id
                   ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-2 border-l-blue-500"
@@ -128,10 +134,17 @@ export default function Messages() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">{activeChat.fullName}</p>
-                  <div className="flex items-center gap-1.5">
-                    <Circle size={8} fill="#22c55e" className="text-green-500" />
-                    <p className="text-xs text-green-500 font-medium">Online</p>
-                  </div>
+                  {(() => {
+                    const active = isActiveNow(activeChat.lastSeen);
+                    return (
+                      <div className="flex items-center gap-1.5">
+                        <Circle size={8} fill={active ? "#22c55e" : "#9ca3af"} className={active ? "text-green-500" : "text-gray-400"} />
+                        <p className={`text-xs font-medium ${active ? "text-green-500" : "text-gray-400"}`}>
+                          {active ? "Aktiv" : formatLastSeen(activeChat.lastSeen)}
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
