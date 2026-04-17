@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.services.database import get_db
 from app.services.auth import get_current_user
-from app.services.activity_logger import log_activity
 from app.models.user import User
 
 router = APIRouter(prefix="/api/users", tags=["users"])
@@ -53,28 +52,11 @@ def get_me(current_user: User = Depends(get_current_user)):
 
 
 @router.put("/me", response_model=UserResponse)
-def update_profile(
-    data: UpdateProfileRequest,
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    changes = data.model_dump(exclude_unset=True)
-    for field, value in changes.items():
+def update_profile(data: UpdateProfileRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    for field, value in data.model_dump(exclude_unset=True).items():
         setattr(current_user, field, value)
     db.commit()
     db.refresh(current_user)
-
-    if "profile_picture" in changes:
-        log_activity(
-            db,
-            action="profile_picture_update",
-            user_id=current_user.id,
-            email=current_user.email,
-            request=request,
-            details=changes["profile_picture"],
-        )
-
     return current_user
 
 

@@ -196,6 +196,10 @@ def toggle_pin(post_id: int, db: Session = Depends(get_db), admin: User = Depend
 
 # ─── Activity Logs ───
 
+# Yalnız hesaba giriş/çıxış və qeydiyyatı göstər — mesaj və şəkil logları məxfidir
+ALLOWED_LOG_ACTIONS = {"login_success", "login_failed", "register"}
+
+
 class ActivityLogResponse(BaseModel):
     id: int
     user_id: int | None
@@ -219,8 +223,12 @@ def get_activity_logs(
     admin: User = Depends(get_admin_user),
 ):
     query = db.query(ActivityLog).order_by(ActivityLog.created_at.desc())
-    if action:
+
+    if action and action in ALLOWED_LOG_ACTIONS:
         query = query.filter(ActivityLog.action == action)
+    else:
+        query = query.filter(ActivityLog.action.in_(ALLOWED_LOG_ACTIONS))
+
     if user_id is not None:
         query = query.filter(ActivityLog.user_id == user_id)
     if email:
@@ -243,3 +251,13 @@ def get_activity_logs(
         )
         for log in logs
     ]
+
+
+@router.delete("/logs/purge-sensitive")
+def purge_sensitive_logs(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    """Mesaj və profil şəkli ilə bağlı köhnə log qeydlərini silir."""
+    deleted = db.query(ActivityLog).filter(
+        ~ActivityLog.action.in_(ALLOWED_LOG_ACTIONS)
+    ).delete(synchronize_session=False)
+    db.commit()
+    return {"deleted": deleted}

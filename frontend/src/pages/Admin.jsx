@@ -67,6 +67,17 @@ export default function Admin() {
     setLoading(false);
   };
 
+  const purgeSensitiveLogs = async () => {
+    if (!confirm("Kohne mesaj ve profil sekli loglari silinsin?")) return;
+    try {
+      const res = await api.delete("/admin/logs/purge-sensitive");
+      alert(`${res.data.deleted} qeyd silindi`);
+      loadLogs();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Xeta");
+    }
+  };
+
   const toggleActive = async (userId) => {
     try {
       await api.patch(`/admin/users/${userId}/toggle-active`);
@@ -543,8 +554,6 @@ export default function Admin() {
                 <option value="login_success">Ugurlu giris</option>
                 <option value="login_failed">Ugursuz giris</option>
                 <option value="register">Qeydiyyat</option>
-                <option value="profile_picture_update">Profil sekli</option>
-                <option value="message_send">Mesaj</option>
               </select>
               <form onSubmit={(e) => { e.preventDefault(); loadLogs(); }} className="flex-1 flex gap-3">
                 <div className="relative flex-1">
@@ -567,6 +576,13 @@ export default function Admin() {
               <span className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 shadow-sm">
                 <Activity size={14} /> {logs.length} log
               </span>
+              <button
+                onClick={purgeSensitiveLogs}
+                className="flex items-center gap-1.5 px-4 py-2 bg-red-50 border border-red-100 text-red-500 rounded-xl text-xs font-semibold hover:bg-red-100 transition"
+                title="Mesaj ve sekil loglari sil"
+              >
+                <Trash2 size={14} /> Mexfi loglari sil
+              </button>
             </div>
 
             {loading && (
