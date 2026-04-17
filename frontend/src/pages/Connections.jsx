@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Check, X, Users, Clock, UserCheck, Sparkles, MessageCircle } from "lucide-react";
 import api from "../api/client";
 
@@ -84,11 +84,11 @@ export default function Connections() {
             key={c.id}
             className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center hover:shadow-md hover:border-blue-100 transition-all duration-300 group"
           >
-            <div className="w-13 h-13 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-md shadow-blue-100 group-hover:shadow-blue-200 transition-shadow" style={{ width: '52px', height: '52px' }}>
+            <Link to={`/profile/${c.user_id}`} className="w-13 h-13 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-md shadow-blue-100 group-hover:shadow-blue-200 transition-shadow" style={{ width: '52px', height: '52px' }}>
               {c.full_name?.charAt(0)}
-            </div>
+            </Link>
             <div className="ml-4 flex-1">
-              <p className="font-semibold text-gray-900">{c.full_name}</p>
+              <Link to={`/profile/${c.user_id}`} className="font-semibold text-gray-900 hover:text-blue-600 transition">{c.full_name}</Link>
               <p className="text-sm text-gray-400 mt-0.5">{c.major}</p>
             </div>
             <button
@@ -107,11 +107,11 @@ export default function Connections() {
             key={p.id}
             className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center hover:shadow-md transition-all duration-300 group"
           >
-            <div className="w-13 h-13 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-md shadow-orange-100" style={{ width: '52px', height: '52px' }}>
+            <Link to={`/profile/${p.sender_id}`} className="w-13 h-13 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-md shadow-orange-100" style={{ width: '52px', height: '52px' }}>
               {p.sender_name?.charAt(0)}
-            </div>
+            </Link>
             <div className="ml-4 flex-1">
-              <p className="font-semibold text-gray-900">{p.sender_name}</p>
+              <Link to={`/profile/${p.sender_id}`} className="font-semibold text-gray-900 hover:text-blue-600 transition">{p.sender_name}</Link>
               <p className="text-sm text-gray-400 mt-0.5">{p.sender_major}</p>
             </div>
             <div className="flex gap-2 shrink-0 ml-3">

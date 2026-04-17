@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2, ExternalLink, Camera, FolderGit2, Code2 } from "lucide-react";
 import api from "../api/client";
 import UserAvatar from "../components/UserAvatar";
@@ -6,7 +7,9 @@ import UserAvatar from "../components/UserAvatar";
 const API_BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:8000";
 
 export default function Profile() {
+  const { id } = useParams();
   const [user, setUser] = useState(null);
+  const [isOwn, setIsOwn] = useState(!id);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [certificates, setCertificates] = useState([]);
@@ -22,26 +25,37 @@ export default function Profile() {
     loadProfile();
     loadCertificates();
     loadProjects();
-  }, []);
+  }, [id]);
 
   const loadProfile = async () => {
     try {
-      const res = await api.get("/users/me");
-      setUser(res.data);
-      setForm(res.data);
+      if (id) {
+        const [profileRes, meRes] = await Promise.all([
+          api.get(`/users/${id}`),
+          api.get("/users/me"),
+        ]);
+        setUser(profileRes.data);
+        setForm(profileRes.data);
+        setIsOwn(meRes.data.id === profileRes.data.id);
+      } else {
+        const res = await api.get("/users/me");
+        setUser(res.data);
+        setForm(res.data);
+        setIsOwn(true);
+      }
     } catch (err) {}
   };
 
   const loadCertificates = async () => {
     try {
-      const res = await api.get("/certificates/me");
+      const res = id ? await api.get(`/certificates/user/${id}`) : await api.get("/certificates/me");
       setCertificates(res.data);
     } catch (err) {}
   };
 
   const loadProjects = async () => {
     try {
-      const res = await api.get("/projects/me");
+      const res = id ? await api.get(`/projects/user/${id}`) : await api.get("/projects/me");
       setProjects(res.data);
     } catch (err) {}
   };
@@ -159,25 +173,31 @@ export default function Profile() {
             <div className="border-4 border-white shadow-xl shadow-blue-200 ring-4 ring-blue-50 rounded-2xl overflow-hidden">
               <UserAvatar user={user} size="lg" className="rounded-none" />
             </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingPic}
-              className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-            >
-              <Camera size={24} className="text-white" />
-            </button>
-            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleUploadPic} />
+            {isOwn && (
+              <>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingPic}
+                  className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <Camera size={24} className="text-white" />
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleUploadPic} />
+              </>
+            )}
           </div>
-          <button
-            onClick={() => setEditing(!editing)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-              editing
-                ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 hover:shadow-md hover:shadow-blue-100 border border-blue-100"
-            }`}
-          >
-            {editing ? <><X size={16} /> Legv et</> : <><Edit3 size={16} /> Redakte</>}
-          </button>
+          {isOwn && (
+            <button
+              onClick={() => setEditing(!editing)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                editing
+                  ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 hover:shadow-md hover:shadow-blue-100 border border-blue-100"
+              }`}
+            >
+              {editing ? <><X size={16} /> Legv et</> : <><Edit3 size={16} /> Redakte</>}
+            </button>
+          )}
         </div>
 
         <h2 className="text-2xl font-bold text-gray-900">{user.full_name}</h2>
@@ -190,7 +210,7 @@ export default function Profile() {
         )}
 
         {/* Profil tamamlanma faizi */}
-        {completionPercent < 100 && (
+        {isOwn && completionPercent < 100 && (
           <div className="mt-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-gray-500">Profil tamamlanma</p>
@@ -334,12 +354,14 @@ export default function Profile() {
                   <Award size={16} className="text-gray-400" />
                   <p className="text-sm text-gray-400 font-medium">Sertifikatlar</p>
                 </div>
-                <button onClick={() => setShowCertForm(!showCertForm)} className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700 transition">
-                  <Plus size={16} /> Elave et
-                </button>
+                {isOwn && (
+                  <button onClick={() => setShowCertForm(!showCertForm)} className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700 transition">
+                    <Plus size={16} /> Elave et
+                  </button>
+                )}
               </div>
 
-              {showCertForm && (
+              {isOwn && showCertForm && (
                 <div className="bg-white p-4 rounded-xl border border-blue-100 mb-4 space-y-3">
                   <input type="text" placeholder="Sertifikat adi" value={certForm.name} onChange={(e) => setCertForm({ ...certForm, name: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
                   <input type="text" placeholder="Veren teshkilat (meselen: Google, ISC2)" value={certForm.issuer} onChange={(e) => setCertForm({ ...certForm, issuer: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
@@ -366,13 +388,15 @@ export default function Profile() {
                         {cert.credential_url && (
                           <a href={cert.credential_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 transition"><ExternalLink size={16} /></a>
                         )}
-                        <button onClick={() => handleDeleteCert(cert.id)} className="text-red-400 hover:text-red-500 transition"><Trash2 size={16} /></button>
+                        {isOwn && (
+                          <button onClick={() => handleDeleteCert(cert.id)} className="text-red-400 hover:text-red-500 transition"><Trash2 size={16} /></button>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-300 text-sm text-center py-4">Hele sertifikat elave olunmayib</p>
+                <p className="text-gray-300 text-sm text-center py-4">{isOwn ? "Hele sertifikat elave olunmayib" : "Sertifikat yoxdur"}</p>
               )}
             </div>
 
@@ -383,12 +407,14 @@ export default function Profile() {
                   <FolderGit2 size={16} className="text-gray-400" />
                   <p className="text-sm text-gray-400 font-medium">Layiheler</p>
                 </div>
-                <button onClick={() => setShowProjForm(!showProjForm)} className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700 transition">
-                  <Plus size={16} /> Elave et
-                </button>
+                {isOwn && (
+                  <button onClick={() => setShowProjForm(!showProjForm)} className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700 transition">
+                    <Plus size={16} /> Elave et
+                  </button>
+                )}
               </div>
 
-              {showProjForm && (
+              {isOwn && showProjForm && (
                 <div className="bg-white p-4 rounded-xl border border-blue-100 mb-4 space-y-3">
                   <input type="text" placeholder="Layihe adi" value={projForm.title} onChange={(e) => setProjForm({ ...projForm, title: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
                   <textarea placeholder="Qisa tesvir" value={projForm.description} onChange={(e) => setProjForm({ ...projForm, description: e.target.value })} rows={2} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white resize-none" />
@@ -423,14 +449,16 @@ export default function Profile() {
                           {proj.github_url && (
                             <a href={proj.github_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600 transition"><Code2 size={16} /></a>
                           )}
-                          <button onClick={() => handleDeleteProject(proj.id)} className="text-red-400 hover:text-red-500 transition"><Trash2 size={16} /></button>
+                          {isOwn && (
+                            <button onClick={() => handleDeleteProject(proj.id)} className="text-red-400 hover:text-red-500 transition"><Trash2 size={16} /></button>
+                          )}
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-300 text-sm text-center py-4">Hele layihe elave olunmayib</p>
+                <p className="text-gray-300 text-sm text-center py-4">{isOwn ? "Hele layihe elave olunmayib" : "Layihe yoxdur"}</p>
               )}
             </div>
           </div>

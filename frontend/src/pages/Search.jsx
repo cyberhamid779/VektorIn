@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Search as SearchIcon, UserPlus, Filter, Sparkles, Users } from "lucide-react";
 import api from "../api/client";
 
@@ -77,11 +78,11 @@ export default function Search() {
             key={user.id}
             className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center hover:shadow-md hover:border-blue-100 transition-all duration-300 group"
           >
-            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shrink-0 shadow-md shadow-blue-100 group-hover:shadow-blue-200 transition-shadow">
+            <Link to={`/profile/${user.id}`} className="w-14 h-14 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shrink-0 shadow-md shadow-blue-100 group-hover:shadow-blue-200 transition-shadow">
               {user.full_name?.charAt(0)}
-            </div>
+            </Link>
             <div className="ml-4 flex-1 min-w-0">
-              <p className="font-semibold text-gray-900 text-[15px]">{user.full_name}</p>
+              <Link to={`/profile/${user.id}`} className="font-semibold text-gray-900 text-[15px] hover:text-blue-600 transition">{user.full_name}</Link>
               <p className="text-sm text-gray-400 mt-0.5">
                 {user.major} {user.course && `· Kurs ${user.course}`}
               </p>

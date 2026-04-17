@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Heart, MessageCircle, Send, Pin, Sparkles, TrendingUp, Image as ImageIcon, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Heart, MessageCircle, Send, Pin, Sparkles, TrendingUp, Image as ImageIcon, Film, X } from "lucide-react";
 import api from "../api/client";
 import { formatBakuDate, formatBakuHM } from "../utils/time";
 
@@ -7,6 +8,7 @@ export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [user, setUser] = useState(null);
@@ -30,7 +32,7 @@ export default function Feed() {
     } catch (err) {}
   };
 
-  const handleImagePick = async (e) => {
+  const handleMediaPick = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
@@ -40,9 +42,15 @@ export default function Feed() {
       const res = await api.post("/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setImageUrl(res.data.url);
+      if (res.data.resource_type === "video") {
+        setVideoUrl(res.data.url);
+        setImageUrl("");
+      } else {
+        setImageUrl(res.data.url);
+        setVideoUrl("");
+      }
     } catch (err) {
-      alert(err.response?.data?.detail || "Şəkil yüklənmədi");
+      alert(err.response?.data?.detail || "Fayl yüklənmədi");
     }
     setUploading(false);
     e.target.value = "";
@@ -50,15 +58,17 @@ export default function Feed() {
 
   const handlePost = async (e) => {
     e.preventDefault();
-    if (!newPost.trim() && !imageUrl) return;
+    if (!newPost.trim() && !imageUrl && !videoUrl) return;
     setPosting(true);
     try {
       await api.post("/posts", {
         content: newPost.trim() || "",
         image_url: imageUrl || null,
+        video_url: videoUrl || null,
       });
       setNewPost("");
       setImageUrl("");
+      setVideoUrl("");
       loadFeed();
     } catch (err) {
       alert(err.response?.data?.detail || "Post yaradılmadı");
@@ -112,24 +122,52 @@ export default function Feed() {
                 </button>
               </div>
             )}
+
+            {videoUrl && (
+              <div className="relative mt-2 rounded-xl overflow-hidden border border-gray-100">
+                <video src={videoUrl} controls className="w-full max-h-96" />
+                <button
+                  type="button"
+                  onClick={() => setVideoUrl("")}
+                  className="absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition"
+                  title="Videonu sil"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="flex items-center justify-between mt-3 pt-4 border-t border-gray-100">
-          <label className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:bg-blue-50 px-3 py-2 rounded-xl transition">
-            <ImageIcon size={16} />
-            {uploading ? "Yüklənir..." : "Şəkil"}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImagePick}
-              disabled={uploading}
-              className="hidden"
-            />
-          </label>
+          <div className="flex items-center gap-1">
+            <label className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:bg-blue-50 px-3 py-2 rounded-xl transition">
+              <ImageIcon size={16} />
+              Şəkil
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleMediaPick}
+                disabled={uploading}
+                className="hidden"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:bg-blue-50 px-3 py-2 rounded-xl transition">
+              <Film size={16} />
+              Video
+              <input
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                onChange={handleMediaPick}
+                disabled={uploading}
+                className="hidden"
+              />
+            </label>
+            {uploading && <span className="text-xs text-gray-400 ml-2">Yüklənir...</span>}
+          </div>
           <button
             type="submit"
-            disabled={(!newPost.trim() && !imageUrl) || posting || uploading}
+            disabled={(!newPost.trim() && !imageUrl && !videoUrl) || posting || uploading}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none text-sm"
           >
             <Send size={15} />
@@ -147,11 +185,16 @@ export default function Feed() {
             style={{ animationDelay: `${index * 50}ms` }}
           >
             <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-md shadow-blue-100 group-hover:shadow-blue-200 transition-shadow">
+              <Link
+                to={`/profile/${post.author_id}`}
+                className="w-12 h-12 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-md shadow-blue-100 group-hover:shadow-blue-200 transition-shadow"
+              >
                 {post.author_name?.charAt(0)}
-              </div>
+              </Link>
               <div className="ml-3.5">
-                <p className="font-semibold text-gray-900 text-[15px]">{post.author_name}</p>
+                <Link to={`/profile/${post.author_id}`} className="font-semibold text-gray-900 text-[15px] hover:text-blue-600 transition">
+                  {post.author_name}
+                </Link>
                 <p className="text-xs text-gray-400 mt-0.5">{formatBakuDate(post.created_at)} · {formatBakuHM(post.created_at)}</p>
               </div>
               {post.is_pinned && (
@@ -168,6 +211,12 @@ export default function Feed() {
             {post.image_url && (
               <div className="mb-4 rounded-xl overflow-hidden border border-gray-100">
                 <img src={post.image_url} alt="post" className="w-full max-h-[500px] object-cover" />
+              </div>
+            )}
+
+            {post.video_url && (
+              <div className="mb-4 rounded-xl overflow-hidden border border-gray-100 bg-black">
+                <video src={post.video_url} controls className="w-full max-h-[500px]" />
               </div>
             )}
 

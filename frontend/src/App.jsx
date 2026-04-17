@@ -61,6 +61,7 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/feed" element={<PrivateRoute><Feed /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+        <Route path="/profile/:id" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/search" element={<PrivateRoute><Search /></PrivateRoute>} />
         <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
         <Route path="/connections" element={<PrivateRoute><Connections /></PrivateRoute>} />
