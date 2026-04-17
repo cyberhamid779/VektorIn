@@ -31,7 +31,7 @@ export default function Navbar() {
     <nav className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
       <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-16">
         <Link to="/feed" className="text-xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          VektorIn
+          InVektor
         </Link>
 
         {/* Desktop nav */}

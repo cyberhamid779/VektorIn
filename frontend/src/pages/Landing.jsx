@@ -6,7 +6,7 @@ export default function Landing() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
       <header className="px-6 py-4 flex items-center justify-between max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold text-blue-600">VektorIn</h1>
+        <h1 className="text-2xl font-bold text-blue-600">InVektor</h1>
         <div className="flex gap-3">
           <Link to="/login" className="px-5 py-2 text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition">
             Daxil ol
@@ -28,7 +28,7 @@ export default function Landing() {
           <span className="text-blue-600">gələcəyi qur.</span>
         </h2>
         <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10">
-          VektorIn — Milli Aviasiya Akademiyasının qapalı professional şəbəkəsi.
+          InVektor — Milli Aviasiya Akademiyasının qapalı professional şəbəkəsi.
           Bacarıqlarını paylaş, komanda tap, birlikdə böyü.
         </p>
         <div className="flex gap-4 justify-center">
@@ -100,7 +100,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="text-center py-8 text-gray-400 text-sm">
-        VektorIn — Vektor × MAA × Alfavit Group
+        InVektor — Vektor × MAA × Alfavit Group
       </footer>
     </div>
   );

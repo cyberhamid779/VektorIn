@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import auth, users, posts, connections, messages, admin, certificates, upload, projects, events
 
-app = FastAPI(title="VektorIn API", version="1.0.0")
+app = FastAPI(title="InVektor API", version="1.0.0")
 
 allowed_origins = [
     "http://localhost:5173",
@@ -35,4 +35,4 @@ app.include_router(events.router)
 
 @app.get("/")
 def root():
-    return {"message": "VektorIn API işləyir"}
+    return {"message": "InVektor API işləyir"}

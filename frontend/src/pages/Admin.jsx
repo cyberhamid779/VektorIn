@@ -141,7 +141,7 @@ export default function Admin() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-              <p className="text-gray-400 text-sm mt-0.5">VektorIn platformasini idar et</p>
+              <p className="text-gray-400 text-sm mt-0.5">InVektor platformasini idar et</p>
             </div>
           </div>
           <button
