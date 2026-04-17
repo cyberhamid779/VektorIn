@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
-import { Heart, MessageCircle, Send, Pin, Sparkles, TrendingUp } from "lucide-react";
+import { Heart, MessageCircle, Send, Pin, Sparkles, TrendingUp, Image as ImageIcon, X } from "lucide-react";
 import api from "../api/client";
 import { formatBakuDate, formatBakuHM } from "../utils/time";
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [posting, setPosting] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -27,14 +30,40 @@ export default function Feed() {
     } catch (err) {}
   };
 
+  const handleImagePick = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setImageUrl(res.data.url);
+    } catch (err) {
+      alert(err.response?.data?.detail || "Şəkil yüklənmədi");
+    }
+    setUploading(false);
+    e.target.value = "";
+  };
+
   const handlePost = async (e) => {
     e.preventDefault();
-    if (!newPost.trim()) return;
+    if (!newPost.trim() && !imageUrl) return;
+    setPosting(true);
     try {
-      await api.post("/posts", { content: newPost });
+      await api.post("/posts", {
+        content: newPost.trim() || "",
+        image_url: imageUrl || null,
+      });
       setNewPost("");
+      setImageUrl("");
       loadFeed();
-    } catch (err) {}
+    } catch (err) {
+      alert(err.response?.data?.detail || "Post yaradılmadı");
+    }
+    setPosting(false);
   };
 
   const handleLike = async (postId) => {
@@ -46,7 +75,6 @@ export default function Feed() {
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
-      {/* Salam header */}
       {user && (
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">
@@ -70,20 +98,42 @@ export default function Feed() {
               className="w-full p-3 border-0 resize-none focus:outline-none text-gray-700 placeholder-gray-300 text-[15px] leading-relaxed"
               rows={3}
             />
+
+            {imageUrl && (
+              <div className="relative mt-2 rounded-xl overflow-hidden border border-gray-100">
+                <img src={imageUrl} alt="preview" className="w-full max-h-96 object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setImageUrl("")}
+                  className="absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition"
+                  title="Şəkli sil"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
         <div className="flex items-center justify-between mt-3 pt-4 border-t border-gray-100">
-          <div className="flex items-center gap-2 text-xs text-gray-300">
-            <Sparkles size={14} />
-            <span>Fikrinizi paylashin</span>
-          </div>
+          <label className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:bg-blue-50 px-3 py-2 rounded-xl transition">
+            <ImageIcon size={16} />
+            {uploading ? "Yüklənir..." : "Şəkil"}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImagePick}
+              disabled={uploading}
+              className="hidden"
+            />
+          </label>
           <button
             type="submit"
-            disabled={!newPost.trim()}
+            disabled={(!newPost.trim() && !imageUrl) || posting || uploading}
             className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none text-sm"
           >
             <Send size={15} />
-            Paylas
+            {posting ? "Paylaşılır..." : "Paylas"}
           </button>
         </div>
       </form>
@@ -111,7 +161,15 @@ export default function Feed() {
               )}
             </div>
 
-            <p className="text-gray-700 leading-relaxed mb-4 text-[15px]">{post.content}</p>
+            {post.content && (
+              <p className="text-gray-700 leading-relaxed mb-4 text-[15px] whitespace-pre-wrap">{post.content}</p>
+            )}
+
+            {post.image_url && (
+              <div className="mb-4 rounded-xl overflow-hidden border border-gray-100">
+                <img src={post.image_url} alt="post" className="w-full max-h-[500px] object-cover" />
+              </div>
+            )}
 
             <div className="flex items-center gap-1 pt-3 border-t border-gray-50">
               <button

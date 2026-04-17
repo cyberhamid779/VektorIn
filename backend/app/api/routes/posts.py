@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/posts", tags=["posts"])
 
 
 class PostCreate(BaseModel):
-    content: str
+    content: str | None = None
     image_url: str | None = None
 
 
@@ -20,7 +20,7 @@ class CommentCreate(BaseModel):
 
 class PostResponse(BaseModel):
     id: int
-    content: str
+    content: str | None
     image_url: str | None
     is_pinned: bool
     created_at: str | None
@@ -58,7 +58,10 @@ def get_feed(db: Session = Depends(get_db), current_user: User = Depends(get_cur
 
 @router.post("", response_model=dict)
 def create_post(data: PostCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    post = Post(author_id=current_user.id, content=data.content, image_url=data.image_url)
+    content = data.content.strip() if data.content else None
+    if not content and not data.image_url:
+        raise HTTPException(status_code=400, detail="Post boş ola bilməz")
+    post = Post(author_id=current_user.id, content=content, image_url=data.image_url)
     db.add(post)
     db.commit()
     return {"message": "Post yaradıldı", "id": post.id}
