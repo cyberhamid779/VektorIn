@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from pydantic import BaseModel
 from app.services.database import get_db
 from app.services.auth import get_current_user
+from app.services.activity_logger import log_activity
 from app.models.user import User
 from app.models.message import Message
 from app.models.connection import Connection
@@ -16,7 +17,13 @@ class SendMessage(BaseModel):
 
 
 @router.post("/{user_id}")
-def send_message(user_id: int, data: SendMessage, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def send_message(
+    user_id: int,
+    data: SendMessage,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     # yalniz baglanti olanlara mesaj
     conn = db.query(Connection).filter(
         or_(
@@ -32,6 +39,17 @@ def send_message(user_id: int, data: SendMessage, db: Session = Depends(get_db),
     msg = Message(sender_id=current_user.id, receiver_id=user_id, content=data.content)
     db.add(msg)
     db.commit()
+    db.refresh(msg)
+
+    log_activity(
+        db,
+        action="message_send",
+        user_id=current_user.id,
+        email=current_user.email,
+        request=request,
+        details=f"to_user_id={user_id}, message_id={msg.id}",
+    )
+
     return {"message": "Mesaj göndərildi"}
 
 

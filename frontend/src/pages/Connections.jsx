@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Check, X, Users, Clock, UserCheck, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Check, X, Users, Clock, UserCheck, Sparkles, MessageCircle } from "lucide-react";
 import api from "../api/client";
 
 export default function Connections() {
   const [connections, setConnections] = useState([]);
   const [pending, setPending] = useState([]);
   const [tab, setTab] = useState("my");
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadConnections();
@@ -89,9 +91,14 @@ export default function Connections() {
               <p className="font-semibold text-gray-900">{c.full_name}</p>
               <p className="text-sm text-gray-400 mt-0.5">{c.major}</p>
             </div>
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-              <span className="text-xs text-green-500 font-medium bg-green-50 px-3 py-1 rounded-full">Bagli</span>
-            </div>
+            <button
+              onClick={() => navigate(`/messages?to=${c.user_id}&name=${encodeURIComponent(c.full_name)}`)}
+              className="flex items-center gap-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl transition-all shrink-0 ml-3"
+              title="Mesaj göndər"
+            >
+              <MessageCircle size={16} />
+              Mesaj
+            </button>
           </div>
         ))}
 

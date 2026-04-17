@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.post import Post, PostLike, Comment
 from app.models.connection import Connection
 from app.models.message import Message
+from app.models.activity_log import ActivityLog
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -191,3 +192,54 @@ def toggle_pin(post_id: int, db: Session = Depends(get_db), admin: User = Depend
     post.is_pinned = not post.is_pinned
     db.commit()
     return {"message": "Pin statusu dəyişdirildi", "is_pinned": post.is_pinned}
+
+
+# ─── Activity Logs ───
+
+class ActivityLogResponse(BaseModel):
+    id: int
+    user_id: int | None
+    email: str | None
+    full_name: str | None
+    action: str
+    ip_address: str | None
+    user_agent: str | None
+    details: str | None
+    created_at: str | None
+
+
+@router.get("/logs", response_model=list[ActivityLogResponse])
+def get_activity_logs(
+    action: str | None = None,
+    user_id: int | None = None,
+    email: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+):
+    query = db.query(ActivityLog).order_by(ActivityLog.created_at.desc())
+    if action:
+        query = query.filter(ActivityLog.action == action)
+    if user_id is not None:
+        query = query.filter(ActivityLog.user_id == user_id)
+    if email:
+        query = query.filter(ActivityLog.email.ilike(f"%{email}%"))
+
+    limit = max(1, min(limit, 500))
+    logs = query.offset(offset).limit(limit).all()
+
+    return [
+        ActivityLogResponse(
+            id=log.id,
+            user_id=log.user_id,
+            email=log.email,
+            full_name=log.user.full_name if log.user else None,
+            action=log.action,
+            ip_address=log.ip_address,
+            user_agent=log.user_agent,
+            details=log.details,
+            created_at=str(log.created_at) if log.created_at else None,
+        )
+        for log in logs
+    ]

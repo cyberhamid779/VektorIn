@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Send, MessageCircle, ArrowLeft, Circle } from "lucide-react";
 import api from "../api/client";
 
@@ -8,10 +9,20 @@ export default function Messages() {
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
   const messagesEndRef = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     loadChats();
   }, []);
+
+  useEffect(() => {
+    const to = searchParams.get("to");
+    const name = searchParams.get("name");
+    if (to) {
+      openChat(Number(to), name || "İstifadəçi");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

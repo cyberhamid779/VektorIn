@@ -1,18 +1,27 @@
-import { useState, useEffect } from "react";
-import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2, ExternalLink } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2, ExternalLink, Camera, FolderGit2, Code2 } from "lucide-react";
 import api from "../api/client";
+import UserAvatar from "../components/UserAvatar";
+
+const API_BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:8000";
 
 export default function Profile() {
   const [user, setUser] = useState(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [certificates, setCertificates] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [certForm, setCertForm] = useState({ name: "", issuer: "", issue_date: "", credential_url: "" });
+  const [projForm, setProjForm] = useState({ title: "", description: "", github_url: "", technologies: "" });
   const [showCertForm, setShowCertForm] = useState(false);
+  const [showProjForm, setShowProjForm] = useState(false);
+  const [uploadingPic, setUploadingPic] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     loadProfile();
     loadCertificates();
+    loadProjects();
   }, []);
 
   const loadProfile = async () => {
@@ -28,6 +37,29 @@ export default function Profile() {
       const res = await api.get("/certificates/me");
       setCertificates(res.data);
     } catch (err) {}
+  };
+
+  const loadProjects = async () => {
+    try {
+      const res = await api.get("/projects/me");
+      setProjects(res.data);
+    } catch (err) {}
+  };
+
+  const handleUploadPic = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPic(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const uploadRes = await api.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      await api.put("/users/me", { profile_picture: uploadRes.data.url });
+      loadProfile();
+    } catch (err) {}
+    setUploadingPic(false);
   };
 
   const handleAddCert = async () => {
@@ -50,6 +82,26 @@ export default function Profile() {
     } catch (err) {}
   };
 
+  const handleAddProject = async () => {
+    try {
+      await api.post("/projects", {
+        ...projForm,
+        technologies: projForm.technologies || null,
+        github_url: projForm.github_url || null,
+      });
+      setProjForm({ title: "", description: "", github_url: "", technologies: "" });
+      setShowProjForm(false);
+      loadProjects();
+    } catch (err) {}
+  };
+
+  const handleDeleteProject = async (id) => {
+    try {
+      await api.delete(`/projects/${id}`);
+      loadProjects();
+    } catch (err) {}
+  };
+
   const handleSave = async () => {
     try {
       await api.put("/users/me", {
@@ -65,11 +117,30 @@ export default function Profile() {
     } catch (err) {}
   };
 
+  // Profil tamamlanma faizi
+  const getCompletionPercent = () => {
+    if (!user) return 0;
+    const checks = [
+      !!user.full_name,
+      !!user.major,
+      !!user.course,
+      !!user.bio,
+      !!user.skills,
+      !!user.profile_picture,
+      certificates.length > 0,
+      projects.length > 0,
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  };
+
   if (!user) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="w-8 h-8 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
     </div>
   );
+
+  const completionPercent = getCompletionPercent();
+  const completionColor = completionPercent < 50 ? "from-amber-400 to-orange-500" : completionPercent < 80 ? "from-blue-400 to-blue-600" : "from-green-400 to-emerald-500";
 
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
@@ -83,8 +154,19 @@ export default function Profile() {
       {/* Profile Card */}
       <div className="bg-white rounded-b-3xl border border-gray-100 border-t-0 shadow-sm px-6 pb-8 relative">
         <div className="flex items-end justify-between -mt-12 mb-5">
-          <div className="w-24 h-24 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 rounded-2xl flex items-center justify-center text-white text-3xl font-bold border-4 border-white shadow-xl shadow-blue-200 ring-4 ring-blue-50">
-            {user.full_name?.charAt(0)}
+          {/* Avatar with upload */}
+          <div className="relative group">
+            <div className="border-4 border-white shadow-xl shadow-blue-200 ring-4 ring-blue-50 rounded-2xl overflow-hidden">
+              <UserAvatar user={user} size="lg" className="rounded-none" />
+            </div>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPic}
+              className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+            >
+              <Camera size={24} className="text-white" />
+            </button>
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleUploadPic} />
           </div>
           <button
             onClick={() => setEditing(!editing)}
@@ -105,6 +187,30 @@ export default function Profile() {
           <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-green-50 to-emerald-50 text-green-600 text-xs px-4 py-1.5 rounded-full mt-3 font-semibold border border-green-100">
             <Award size={13} /> Komanda ucun aciq
           </span>
+        )}
+
+        {/* Profil tamamlanma faizi */}
+        {completionPercent < 100 && (
+          <div className="mt-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-gray-500">Profil tamamlanma</p>
+              <p className="text-xs font-bold text-gray-700">{completionPercent}%</p>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className={`bg-gradient-to-r ${completionColor} h-2 rounded-full transition-all duration-500`}
+                style={{ width: `${completionPercent}%` }}
+              />
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              {!user.profile_picture && "Profil sekli, "}
+              {!user.bio && "haqqinda, "}
+              {!user.skills && "bacariqlar, "}
+              {certificates.length === 0 && "sertifikat, "}
+              {projects.length === 0 && "layihe "}
+              elave et
+            </p>
+          </div>
         )}
 
         {editing ? (
@@ -228,59 +334,22 @@ export default function Profile() {
                   <Award size={16} className="text-gray-400" />
                   <p className="text-sm text-gray-400 font-medium">Sertifikatlar</p>
                 </div>
-                <button
-                  onClick={() => setShowCertForm(!showCertForm)}
-                  className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700 transition"
-                >
+                <button onClick={() => setShowCertForm(!showCertForm)} className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700 transition">
                   <Plus size={16} /> Elave et
                 </button>
               </div>
 
               {showCertForm && (
                 <div className="bg-white p-4 rounded-xl border border-blue-100 mb-4 space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Sertifikat adi"
-                    value={certForm.name}
-                    onChange={(e) => setCertForm({ ...certForm, name: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Veren teshkilat (meselen: Google, ISC2)"
-                    value={certForm.issuer}
-                    onChange={(e) => setCertForm({ ...certForm, issuer: e.target.value })}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
-                  />
+                  <input type="text" placeholder="Sertifikat adi" value={certForm.name} onChange={(e) => setCertForm({ ...certForm, name: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
+                  <input type="text" placeholder="Veren teshkilat (meselen: Google, ISC2)" value={certForm.issuer} onChange={(e) => setCertForm({ ...certForm, issuer: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
                   <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="date"
-                      value={certForm.issue_date}
-                      onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
-                    />
-                    <input
-                      type="url"
-                      placeholder="Dogrulama linki"
-                      value={certForm.credential_url}
-                      onChange={(e) => setCertForm({ ...certForm, credential_url: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white"
-                    />
+                    <input type="date" value={certForm.issue_date} onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
+                    <input type="url" placeholder="Dogrulama linki" value={certForm.credential_url} onChange={(e) => setCertForm({ ...certForm, credential_url: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
                   </div>
                   <div className="flex gap-2">
-                    <button
-                      onClick={handleAddCert}
-                      disabled={!certForm.name || !certForm.issuer}
-                      className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-40"
-                    >
-                      Elave et
-                    </button>
-                    <button
-                      onClick={() => setShowCertForm(false)}
-                      className="bg-gray-100 text-gray-600 px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-200 transition"
-                    >
-                      Legv et
-                    </button>
+                    <button onClick={handleAddCert} disabled={!certForm.name || !certForm.issuer} className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-40">Elave et</button>
+                    <button onClick={() => setShowCertForm(false)} className="bg-gray-100 text-gray-600 px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-200 transition">Legv et</button>
                   </div>
                 </div>
               )}
@@ -295,19 +364,73 @@ export default function Profile() {
                       </div>
                       <div className="flex items-center gap-2">
                         {cert.credential_url && (
-                          <a href={cert.credential_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 transition">
-                            <ExternalLink size={16} />
-                          </a>
+                          <a href={cert.credential_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 transition"><ExternalLink size={16} /></a>
                         )}
-                        <button onClick={() => handleDeleteCert(cert.id)} className="text-red-400 hover:text-red-500 transition">
-                          <Trash2 size={16} />
-                        </button>
+                        <button onClick={() => handleDeleteCert(cert.id)} className="text-red-400 hover:text-red-500 transition"><Trash2 size={16} /></button>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-gray-300 text-sm text-center py-4">Hele sertifikat elave olunmayib</p>
+              )}
+            </div>
+
+            {/* Layiheler */}
+            <div className="bg-gradient-to-r from-gray-50 to-white p-5 rounded-xl border border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <FolderGit2 size={16} className="text-gray-400" />
+                  <p className="text-sm text-gray-400 font-medium">Layiheler</p>
+                </div>
+                <button onClick={() => setShowProjForm(!showProjForm)} className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700 transition">
+                  <Plus size={16} /> Elave et
+                </button>
+              </div>
+
+              {showProjForm && (
+                <div className="bg-white p-4 rounded-xl border border-blue-100 mb-4 space-y-3">
+                  <input type="text" placeholder="Layihe adi" value={projForm.title} onChange={(e) => setProjForm({ ...projForm, title: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
+                  <textarea placeholder="Qisa tesvir" value={projForm.description} onChange={(e) => setProjForm({ ...projForm, description: e.target.value })} rows={2} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white resize-none" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="text" placeholder="Texnologiyalar (React, Python...)" value={projForm.technologies} onChange={(e) => setProjForm({ ...projForm, technologies: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
+                    <input type="url" placeholder="GitHub linki" value={projForm.github_url} onChange={(e) => setProjForm({ ...projForm, github_url: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={handleAddProject} disabled={!projForm.title} className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-40">Elave et</button>
+                    <button onClick={() => setShowProjForm(false)} className="bg-gray-100 text-gray-600 px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-200 transition">Legv et</button>
+                  </div>
+                </div>
+              )}
+
+              {projects.length > 0 ? (
+                <div className="space-y-3">
+                  {projects.map((proj) => (
+                    <div key={proj.id} className="bg-white p-4 rounded-xl border border-gray-100">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-gray-800 font-semibold text-sm">{proj.title}</p>
+                          {proj.description && <p className="text-gray-500 text-xs mt-1">{proj.description}</p>}
+                          {proj.technologies && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {proj.technologies.split(",").map((t, i) => (
+                                <span key={i} className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-xs font-medium">{t.trim()}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 ml-3">
+                          {proj.github_url && (
+                            <a href={proj.github_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600 transition"><Code2 size={16} /></a>
+                          )}
+                          <button onClick={() => handleDeleteProject(proj.id)} className="text-red-400 hover:text-red-500 transition"><Trash2 size={16} /></button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-300 text-sm text-center py-4">Hele layihe elave olunmayib</p>
               )}
             </div>
           </div>
