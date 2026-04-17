@@ -3,7 +3,7 @@ import {
   BarChart3, Users, FileText, MessageCircle, Link2, UserCheck,
   Shield, ShieldOff, Ban, CheckCircle, Trash2, Pin, PinOff,
   Search, Heart, Activity, TrendingUp, Calendar, Mail, GraduationCap,
-  RefreshCw, ChevronRight, Eye
+  RefreshCw, ChevronRight, Eye, LogIn, LogOut, UserPlus, Image, Send, Clock, Globe
 } from "lucide-react";
 import api from "../api/client";
 
@@ -12,8 +12,11 @@ export default function Admin() {
   const [stats, setStats] = useState(null);
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [logs, setLogs] = useState([]);
   const [userSearch, setUserSearch] = useState("");
   const [postSearch, setPostSearch] = useState("");
+  const [logAction, setLogAction] = useState("");
+  const [logEmail, setLogEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
@@ -24,6 +27,7 @@ export default function Admin() {
   useEffect(() => {
     if (tab === "users") loadUsers();
     if (tab === "posts") loadPosts();
+    if (tab === "logs") loadLogs();
   }, [tab]);
 
   const loadStats = async () => {
@@ -47,6 +51,18 @@ export default function Admin() {
     try {
       const res = await api.get("/admin/posts", { params: { q: postSearch } });
       setPosts(res.data);
+    } catch (err) {}
+    setLoading(false);
+  };
+
+  const loadLogs = async () => {
+    setLoading(true);
+    try {
+      const params = { limit: 200 };
+      if (logAction) params.action = logAction;
+      if (logEmail) params.email = logEmail;
+      const res = await api.get("/admin/logs", { params });
+      setLogs(res.data);
     } catch (err) {}
     setLoading(false);
   };
@@ -106,6 +122,7 @@ export default function Admin() {
     { id: "dashboard", icon: BarChart3, label: "Panel" },
     { id: "users", icon: Users, label: "Istifadeciler" },
     { id: "posts", icon: FileText, label: "Postlar" },
+    { id: "logs", icon: Activity, label: "Loglar" },
   ];
 
   const banCount = users.filter(u => !u.is_active).length;
@@ -127,7 +144,7 @@ export default function Admin() {
             </div>
           </div>
           <button
-            onClick={() => { loadStats(); if (tab === "users") loadUsers(); if (tab === "posts") loadPosts(); }}
+            onClick={() => { loadStats(); if (tab === "users") loadUsers(); if (tab === "posts") loadPosts(); if (tab === "logs") loadLogs(); }}
             className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all shadow-sm"
           >
             <RefreshCw size={15} />
@@ -511,6 +528,134 @@ export default function Admin() {
             )}
           </div>
         )}
+
+        {/* ═══════ LOGS ═══════ */}
+        {tab === "logs" && (
+          <div>
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-3 mb-6">
+              <select
+                value={logAction}
+                onChange={(e) => setLogAction(e.target.value)}
+                className="px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
+              >
+                <option value="">Butun emeliyyatlar</option>
+                <option value="login_success">Ugurlu giris</option>
+                <option value="login_failed">Ugursuz giris</option>
+                <option value="register">Qeydiyyat</option>
+                <option value="profile_picture_update">Profil sekli</option>
+                <option value="message_send">Mesaj</option>
+              </select>
+              <form onSubmit={(e) => { e.preventDefault(); loadLogs(); }} className="flex-1 flex gap-3">
+                <div className="relative flex-1">
+                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+                  <input
+                    type="text"
+                    value={logEmail}
+                    onChange={(e) => setLogEmail(e.target.value)}
+                    placeholder="Email ile axtar..."
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 text-sm shadow-sm"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-5 py-3 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 transition"
+                >
+                  Filtrle
+                </button>
+              </form>
+              <span className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 shadow-sm">
+                <Activity size={14} /> {logs.length} log
+              </span>
+            </div>
+
+            {loading && (
+              <div className="flex items-center justify-center py-20">
+                <div className="w-7 h-7 border-3 border-gray-200 border-t-slate-800 rounded-full animate-spin" />
+              </div>
+            )}
+
+            {/* Logs table */}
+            {!loading && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3.5 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <div className="col-span-3">Istifadeci</div>
+                  <div className="col-span-2">Emeliyyat</div>
+                  <div className="col-span-3">Vaxt</div>
+                  <div className="col-span-2">IP</div>
+                  <div className="col-span-2">Etrafli</div>
+                </div>
+
+                {logs.map((log, i) => (
+                  <LogRow key={log.id} log={log} isLast={i === logs.length - 1} />
+                ))}
+
+                {logs.length === 0 && (
+                  <div className="text-center py-16">
+                    <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                      <Activity size={28} className="text-gray-300" />
+                    </div>
+                    <p className="text-gray-500 font-medium">Log qeydi yoxdur</p>
+                    <p className="text-gray-400 text-xs mt-1">Filtri deyishin ve ya yenile</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+/* ─── Log Row ─── */
+const actionMeta = {
+  login_success: { label: "Ugurlu giris", icon: LogIn, color: "emerald" },
+  login_failed: { label: "Ugursuz giris", icon: Ban, color: "red" },
+  register: { label: "Qeydiyyat", icon: UserPlus, color: "blue" },
+  profile_picture_update: { label: "Profil sekli", icon: Image, color: "violet" },
+  message_send: { label: "Mesaj", icon: Send, color: "amber" },
+};
+
+const actionColors = {
+  emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  red: "bg-red-50 text-red-500 border-red-100",
+  blue: "bg-blue-50 text-blue-600 border-blue-100",
+  violet: "bg-violet-50 text-violet-600 border-violet-100",
+  amber: "bg-amber-50 text-amber-600 border-amber-100",
+  gray: "bg-gray-50 text-gray-500 border-gray-100",
+};
+
+function LogRow({ log, isLast }) {
+  const meta = actionMeta[log.action] || { label: log.action, icon: Activity, color: "gray" };
+  const Icon = meta.icon;
+  const date = log.created_at ? log.created_at.slice(0, 10) : "—";
+  const time = log.created_at ? log.created_at.slice(11, 19) : "";
+
+  return (
+    <div className={`grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors ${!isLast ? "border-b border-gray-50" : ""}`}>
+      <div className="col-span-3 min-w-0">
+        <p className="font-semibold text-gray-900 text-sm truncate">{log.full_name || "—"}</p>
+        <p className="text-xs text-gray-400 truncate">{log.email || "—"}</p>
+      </div>
+      <div className="col-span-2">
+        <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-semibold border ${actionColors[meta.color]}`}>
+          <Icon size={12} />
+          {meta.label}
+        </span>
+      </div>
+      <div className="col-span-3 flex items-center gap-1.5 text-xs text-gray-500">
+        <Clock size={13} className="text-gray-300" />
+        <span className="font-medium text-gray-700">{date}</span>
+        <span className="text-gray-400">{time}</span>
+      </div>
+      <div className="col-span-2 flex items-center gap-1.5 text-xs text-gray-500 font-mono">
+        <Globe size={12} className="text-gray-300" />
+        {log.ip_address || "—"}
+      </div>
+      <div className="col-span-2 text-xs text-gray-400 truncate" title={log.user_agent || log.details || ""}>
+        {log.details || (log.user_agent ? log.user_agent.split(" ")[0] : "—")}
       </div>
     </div>
   );
