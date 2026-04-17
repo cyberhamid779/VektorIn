@@ -7,7 +7,7 @@ python -c "
 from app.services.database import engine
 from app.models.base import Base
 from app.models.user import User
-from app.models.post import Post, PostLike, Comment
+from app.models.post import Post, PostLike, Comment, PostReport
 from app.models.connection import Connection
 from app.models.message import Message
 from app.models.certificate import Certificate

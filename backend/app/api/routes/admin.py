@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from app.services.database import get_db
 from app.services.auth import get_current_user
 from app.models.user import User
-from app.models.post import Post, PostLike, Comment
+from app.models.post import Post, PostLike, Comment, PostReport
 from app.models.connection import Connection
 from app.models.message import Message
 from app.models.activity_log import ActivityLog
@@ -192,6 +192,67 @@ def toggle_pin(post_id: int, db: Session = Depends(get_db), admin: User = Depend
     post.is_pinned = not post.is_pinned
     db.commit()
     return {"message": "Pin statusu dəyişdirildi", "is_pinned": post.is_pinned}
+
+
+# ─── Reports ───
+
+class ReportedPostResponse(BaseModel):
+    post_id: int
+    post_content: str | None
+    post_image_url: str | None
+    post_video_url: str | None
+    author_name: str
+    author_id: int
+    report_count: int
+    reasons: list[str]
+    latest_reported_at: str | None
+
+
+@router.get("/reports", response_model=list[ReportedPostResponse])
+def get_reports(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    rows = (
+        db.query(PostReport)
+        .filter(PostReport.resolved == False)
+        .order_by(PostReport.created_at.desc())
+        .all()
+    )
+    grouped: dict[int, dict] = {}
+    for r in rows:
+        if not r.post_id:
+            continue
+        g = grouped.setdefault(r.post_id, {"reports": [], "latest": None})
+        g["reports"].append(r)
+        if g["latest"] is None or r.created_at > g["latest"]:
+            g["latest"] = r.created_at
+
+    result = []
+    for post_id, g in grouped.items():
+        post = db.query(Post).filter(Post.id == post_id).first()
+        if not post:
+            continue
+        result.append(ReportedPostResponse(
+            post_id=post.id,
+            post_content=post.content,
+            post_image_url=post.image_url,
+            post_video_url=post.video_url,
+            author_name=post.author.full_name,
+            author_id=post.author_id,
+            report_count=len(g["reports"]),
+            reasons=[r.reason for r in g["reports"] if r.reason],
+            latest_reported_at=str(g["latest"]) if g["latest"] else None,
+        ))
+    result.sort(key=lambda x: x.latest_reported_at or "", reverse=True)
+    return result
+
+
+@router.post("/reports/dismiss/{post_id}")
+def dismiss_reports(post_id: int, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    db.query(PostReport).filter(
+        PostReport.post_id == post_id,
+        PostReport.resolved == False,
+    ).update({"resolved": True})
+    db.commit()
+    return {"message": "Şikayətlər bağlandı"}
 
 
 # ─── Activity Logs ───

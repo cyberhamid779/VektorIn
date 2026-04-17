@@ -3,7 +3,7 @@ import {
   BarChart3, Users, FileText, MessageCircle, Link2, UserCheck,
   Shield, ShieldOff, Ban, CheckCircle, Trash2, Pin, PinOff,
   Search, Heart, Activity, TrendingUp, Calendar, Mail, GraduationCap,
-  RefreshCw, ChevronRight, Eye, LogIn, LogOut, UserPlus, Image, Send, Clock, Globe
+  RefreshCw, ChevronRight, Eye, LogIn, LogOut, UserPlus, Image, Send, Clock, Globe, Flag
 } from "lucide-react";
 import api from "../api/client";
 import { formatBakuDate, formatBakuTime, formatBakuHM } from "../utils/time";
@@ -14,6 +14,7 @@ export default function Admin() {
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
   const [logs, setLogs] = useState([]);
+  const [reports, setReports] = useState([]);
   const [userSearch, setUserSearch] = useState("");
   const [postSearch, setPostSearch] = useState("");
   const [logAction, setLogAction] = useState("");
@@ -29,6 +30,7 @@ export default function Admin() {
     if (tab === "users") loadUsers();
     if (tab === "posts") loadPosts();
     if (tab === "logs") loadLogs();
+    if (tab === "reports") loadReports();
   }, [tab]);
 
   const loadStats = async () => {
@@ -54,6 +56,35 @@ export default function Admin() {
       setPosts(res.data);
     } catch (err) {}
     setLoading(false);
+  };
+
+  const loadReports = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/admin/reports");
+      setReports(res.data);
+    } catch (err) {}
+    setLoading(false);
+  };
+
+  const dismissReports = async (postId) => {
+    try {
+      await api.post(`/admin/reports/dismiss/${postId}`);
+      loadReports();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Xeta");
+    }
+  };
+
+  const deleteReportedPost = async (postId) => {
+    if (!confirm("Bu postu silmek isteyirsiniz? Sikayetler de silinecek.")) return;
+    try {
+      await api.delete(`/admin/posts/${postId}`);
+      loadReports();
+      loadStats();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Xeta");
+    }
   };
 
   const loadLogs = async () => {
@@ -123,6 +154,7 @@ export default function Admin() {
     { id: "dashboard", icon: BarChart3, label: "Panel" },
     { id: "users", icon: Users, label: "Istifadeciler" },
     { id: "posts", icon: FileText, label: "Postlar" },
+    { id: "reports", icon: Flag, label: "Sikayetler" },
     { id: "logs", icon: Activity, label: "Loglar" },
   ];
 
@@ -145,7 +177,7 @@ export default function Admin() {
             </div>
           </div>
           <button
-            onClick={() => { loadStats(); if (tab === "users") loadUsers(); if (tab === "posts") loadPosts(); if (tab === "logs") loadLogs(); }}
+            onClick={() => { loadStats(); if (tab === "users") loadUsers(); if (tab === "posts") loadPosts(); if (tab === "logs") loadLogs(); if (tab === "reports") loadReports(); }}
             className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all shadow-sm"
           >
             <RefreshCw size={15} />
@@ -527,6 +559,94 @@ export default function Admin() {
                 </div>
                 <p className="text-gray-600 font-semibold text-lg">Post tapilmadi</p>
                 <p className="text-gray-400 text-sm mt-2">Axtaris sorgunuzu deyishin</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════ REPORTS ═══════ */}
+        {tab === "reports" && (
+          <div>
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <div className="w-8 h-8 border-3 border-red-200 border-t-red-500 rounded-full animate-spin" />
+              </div>
+            ) : reports.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="w-20 h-20 bg-green-50 rounded-3xl flex items-center justify-center mx-auto mb-5">
+                  <CheckCircle size={32} className="text-green-400" />
+                </div>
+                <p className="text-gray-700 font-semibold text-lg">Açıq şikayət yoxdur</p>
+                <p className="text-gray-400 text-sm mt-2">Hər şey səliqəlidir</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {reports.map((r) => (
+                  <div key={r.post_id} className="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
+                    <div className="px-5 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+                          <Flag size={14} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-red-700 text-sm">{r.report_count} şikayət</p>
+                          <p className="text-xs text-red-500">Son: {formatBakuDate(r.latest_reported_at)} · {formatBakuHM(r.latest_reported_at)}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="px-5 py-4">
+                      <p className="text-xs text-gray-400 mb-1">Müəllif</p>
+                      <p className="text-sm font-semibold text-gray-800 mb-3">{r.author_name}</p>
+
+                      {r.post_content && (
+                        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap mb-3">
+                          {r.post_content.length > 300 ? r.post_content.slice(0, 300) + "..." : r.post_content}
+                        </p>
+                      )}
+
+                      {r.post_image_url && (
+                        <div className="mb-3 rounded-xl overflow-hidden border border-gray-100">
+                          <img src={r.post_image_url} alt="" className="w-full max-h-64 object-cover" />
+                        </div>
+                      )}
+
+                      {r.post_video_url && (
+                        <div className="mb-3 rounded-xl overflow-hidden border border-gray-100 bg-black">
+                          <video src={r.post_video_url} controls className="w-full max-h-64" />
+                        </div>
+                      )}
+
+                      {r.reasons.length > 0 && (
+                        <div className="mt-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                          <p className="text-xs font-semibold text-gray-500 mb-2">Səbəblər:</p>
+                          <ul className="space-y-1">
+                            {r.reasons.map((reason, i) => (
+                              <li key={i} className="text-sm text-gray-600">• {reason}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex gap-2 justify-end">
+                      <button
+                        onClick={() => dismissReports(r.post_id)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition"
+                      >
+                        <CheckCircle size={15} />
+                        Rədd et
+                      </button>
+                      <button
+                        onClick={() => deleteReportedPost(r.post_id)}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded-xl hover:bg-red-600 transition"
+                      >
+                        <Trash2 size={15} />
+                        Postu sil
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

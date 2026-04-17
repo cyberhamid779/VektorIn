@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, MessageCircle, Send, Pin, Sparkles, TrendingUp, Image as ImageIcon, Film, X } from "lucide-react";
+import { Heart, MessageCircle, Send, Pin, Sparkles, TrendingUp, Image as ImageIcon, Film, Flag, X } from "lucide-react";
 import api from "../api/client";
 import { formatBakuDate, formatBakuHM } from "../utils/time";
 
@@ -12,6 +12,9 @@ export default function Feed() {
   const [uploading, setUploading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [user, setUser] = useState(null);
+  const [reportPostId, setReportPostId] = useState(null);
+  const [reportReason, setReportReason] = useState("");
+  const [reporting, setReporting] = useState(false);
 
   useEffect(() => {
     loadFeed();
@@ -81,6 +84,20 @@ export default function Feed() {
       await api.post(`/posts/${postId}/like`);
       loadFeed();
     } catch (err) {}
+  };
+
+  const submitReport = async () => {
+    if (!reportPostId) return;
+    setReporting(true);
+    try {
+      await api.post(`/posts/${reportPostId}/report`, { reason: reportReason.trim() || null });
+      setReportPostId(null);
+      setReportReason("");
+      alert("Şikayət göndərildi. Admin yoxlayacaq.");
+    } catch (err) {
+      alert(err.response?.data?.detail || "Şikayət göndərilmədi");
+    }
+    setReporting(false);
   };
 
   return (
@@ -236,10 +253,59 @@ export default function Feed() {
                 <MessageCircle size={18} />
                 <span>{post.comment_count}</span>
               </span>
+              {user && post.author_id !== user.id && (
+                <button
+                  onClick={() => setReportPostId(post.id)}
+                  className="ml-auto flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-gray-300 hover:text-red-500 hover:bg-red-50 transition"
+                  title="Şikayət et"
+                >
+                  <Flag size={14} />
+                </button>
+              )}
             </div>
           </div>
         ))}
       </div>
+
+      {reportPostId && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={() => !reporting && setReportPostId(null)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                <Flag size={18} className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Postu şikayət et</h3>
+                <p className="text-xs text-gray-400">Admin yoxladıqdan sonra tədbir görüləcək</p>
+              </div>
+            </div>
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              placeholder="Səbəb (istəyə bağlı) — spam, mənasız, təhqiredici..."
+              className="w-full p-3 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-300"
+              rows={3}
+              maxLength={300}
+            />
+            <div className="flex gap-2 mt-4 justify-end">
+              <button
+                onClick={() => { setReportPostId(null); setReportReason(""); }}
+                disabled={reporting}
+                className="px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl transition"
+              >
+                Ləğv et
+              </button>
+              <button
+                onClick={submitReport}
+                disabled={reporting}
+                className="px-5 py-2 bg-red-500 text-white text-sm font-semibold rounded-xl hover:bg-red-600 transition disabled:opacity-50"
+              >
+                {reporting ? "Göndərilir..." : "Şikayət göndər"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {posts.length === 0 && (
         <div className="text-center py-20">

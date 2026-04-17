@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from app.services.database import get_db
 from app.services.auth import get_current_user
 from app.models.user import User
-from app.models.post import Post, PostLike, Comment
+from app.models.post import Post, PostLike, Comment, PostReport
 
 router = APIRouter(prefix="/api/posts", tags=["posts"])
 
@@ -17,6 +17,10 @@ class PostCreate(BaseModel):
 
 class CommentCreate(BaseModel):
     content: str
+
+
+class ReportCreate(BaseModel):
+    reason: str | None = None
 
 
 class PostResponse(BaseModel):
@@ -113,6 +117,29 @@ def get_comments(post_id: int, db: Session = Depends(get_db), current_user: User
         }
         for c in comments
     ]
+
+
+@router.post("/{post_id}/report")
+def report_post(post_id: int, data: ReportCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    post = db.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post tapılmadı")
+    if post.author_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Öz postunu şikayət edə bilməzsən")
+
+    existing = db.query(PostReport).filter(
+        PostReport.post_id == post_id,
+        PostReport.reporter_id == current_user.id,
+        PostReport.resolved == False,
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Bu postu artıq şikayət etmisən")
+
+    reason = data.reason.strip() if data.reason else None
+    report = PostReport(post_id=post_id, reporter_id=current_user.id, reason=reason)
+    db.add(report)
+    db.commit()
+    return {"message": "Şikayət göndərildi"}
 
 
 @router.post("/{post_id}/pin")
