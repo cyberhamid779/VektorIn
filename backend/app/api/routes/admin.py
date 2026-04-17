@@ -47,7 +47,7 @@ class AdminUserResponse(BaseModel):
 
 class AdminPostResponse(BaseModel):
     id: int
-    content: str
+    content: str | None
     image_url: str | None
     is_pinned: bool
     created_at: str | None
