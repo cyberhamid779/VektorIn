@@ -474,11 +474,13 @@ export default function Admin() {
                   </div>
 
                   {/* Post content */}
-                  <div className="px-5 pb-4">
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                      {post.content.length > 300 ? post.content.slice(0, 300) + "..." : post.content}
-                    </p>
-                  </div>
+                  {post.content && (
+                    <div className="px-5 pb-4">
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {post.content.length > 300 ? post.content.slice(0, 300) + "..." : post.content}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Post footer */}
                   <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50 border-t border-gray-100">
