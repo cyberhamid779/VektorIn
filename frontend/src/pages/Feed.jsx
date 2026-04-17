@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Heart, MessageCircle, Send, Pin, Sparkles, TrendingUp } from "lucide-react";
 import api from "../api/client";
+import { formatBakuDate, formatBakuHM } from "../utils/time";
 
 export default function Feed() {
   const [posts, setPosts] = useState([]);
@@ -101,7 +102,7 @@ export default function Feed() {
               </div>
               <div className="ml-3.5">
                 <p className="font-semibold text-gray-900 text-[15px]">{post.author_name}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{post.created_at?.slice(0, 10)} · {post.created_at?.slice(11, 16)}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{formatBakuDate(post.created_at)} · {formatBakuHM(post.created_at)}</p>
               </div>
               {post.is_pinned && (
                 <span className="ml-auto flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-600 text-xs px-3.5 py-1.5 rounded-full font-semibold border border-amber-100">

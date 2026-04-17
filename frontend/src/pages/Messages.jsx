@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Send, MessageCircle, ArrowLeft, Circle } from "lucide-react";
 import api from "../api/client";
+import { formatBakuHM } from "../utils/time";
 
 export default function Messages() {
   const [chats, setChats] = useState([]);
@@ -149,7 +150,7 @@ export default function Messages() {
                     >
                       <p className="text-sm leading-relaxed">{msg.content}</p>
                       <p className={`text-[11px] mt-1.5 ${msg.is_mine ? "text-blue-200" : "text-gray-300"}`}>
-                        {msg.created_at?.slice(11, 16)}
+                        {formatBakuHM(msg.created_at)}
                       </p>
                     </div>
                   </div>
