@@ -625,11 +625,20 @@ const actionColors = {
   gray: "bg-gray-50 text-gray-500 border-gray-100",
 };
 
+function formatBaku(raw) {
+  if (!raw) return { date: "—", time: "" };
+  const d = new Date(raw.replace(" ", "T"));
+  if (isNaN(d)) return { date: raw.slice(0, 10), time: raw.slice(11, 19) };
+  return {
+    date: d.toLocaleDateString("en-CA", { timeZone: "Asia/Baku" }),
+    time: d.toLocaleTimeString("en-GB", { timeZone: "Asia/Baku", hour12: false }),
+  };
+}
+
 function LogRow({ log, isLast }) {
   const meta = actionMeta[log.action] || { label: log.action, icon: Activity, color: "gray" };
   const Icon = meta.icon;
-  const date = log.created_at ? log.created_at.slice(0, 10) : "—";
-  const time = log.created_at ? log.created_at.slice(11, 19) : "";
+  const { date, time } = formatBaku(log.created_at);
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors ${!isLast ? "border-b border-gray-50" : ""}`}>
