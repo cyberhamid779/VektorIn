@@ -18,5 +18,7 @@ from sqlalchemy import text
 Base.metadata.create_all(bind=engine)
 with engine.begin() as conn:
     conn.execute(text('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMP WITH TIME ZONE'))
+    conn.execute(text('ALTER TABLE posts ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)'))
+    conn.execute(text('ALTER TABLE posts ALTER COLUMN content DROP NOT NULL'))
 print('Tables created successfully')
 "
