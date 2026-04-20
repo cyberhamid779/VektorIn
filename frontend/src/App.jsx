@@ -23,15 +23,6 @@ const BG_STYLES = {
       backgroundRepeat: "repeat",
     },
   },
-  "cockpit-night": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
-  "cockpit-panel": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1581094288338-2024c4979bfe?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
-  "cockpit-sky": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
-  "night-flight": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1569154941061-e231b4725ef1?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
-  "wing-sunset": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
-  "wing-clouds": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1436491865332-7a61a109db05?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
-  "runway-sunset": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1559268950-2d7ceb2efa3a?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
-  "airplane-sky": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1556388158-158ea5ccacbd?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
-  dark: { style: { backgroundColor: "#111827" } },
   navy: { style: { backgroundColor: "#0f172a" } },
 };
 
