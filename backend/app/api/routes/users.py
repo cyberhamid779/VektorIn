@@ -14,6 +14,7 @@ class UserResponse(BaseModel):
     email: str
     full_name: str
     headline: str | None
+    faculty: str | None
     major: str | None
     course: int | None
     bio: str | None

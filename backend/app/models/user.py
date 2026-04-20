@@ -10,6 +10,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=False)
+    faculty = Column(String(255))  # fakultə
     major = Column(String(255))  # ixtisas
     course = Column(Integer)  # kurs (1-4)
     headline = Column(String(255))  # "Frontend Developer | 3-cu kurs"

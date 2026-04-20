@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import api from "../api/client";
@@ -8,15 +8,26 @@ export default function Register() {
     email: "",
     password: "",
     full_name: "",
+    faculty: "",
     major: "",
     course: "",
   });
+  const [faculties, setFaculties] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    api.get("/auth/faculties").then((res) => setFaculties(res.data));
+  }, []);
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "faculty") {
+      setForm({ ...form, faculty: value, major: "" });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -26,7 +37,7 @@ export default function Register() {
     try {
       const payload = {
         ...form,
-        course: form.course ? parseInt(form.course) : null,
+        course: parseInt(form.course),
       };
       const res = await api.post("/auth/register", payload);
       localStorage.setItem("token", res.data.access_token);
@@ -37,6 +48,8 @@ export default function Register() {
       setLoading(false);
     }
   };
+
+  const specializations = form.faculty ? faculties[form.faculty] || [] : [];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4">
@@ -91,15 +104,35 @@ export default function Register() {
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fakultə</label>
+              <select
+                name="faculty"
+                value={form.faculty}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-600"
+                required
+              >
+                <option value="">Fakultə seçin</option>
+                {Object.keys(faculties).map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">İxtisas</label>
-              <input
-                type="text"
+              <select
                 name="major"
-                placeholder="Kompüter Elmləri"
                 value={form.major}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              />
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-600"
+                required
+                disabled={!form.faculty}
+              >
+                <option value="">{form.faculty ? "İxtisas seçin" : "Əvvəlcə fakultə seçin"}</option>
+                {specializations.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Kurs</label>
@@ -108,6 +141,7 @@ export default function Register() {
                 value={form.course}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-600"
+                required
               >
                 <option value="">Kurs seçin</option>
                 <option value="1">1-ci kurs</option>

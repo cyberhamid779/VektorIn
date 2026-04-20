@@ -8,13 +8,50 @@ from app.models.user import User
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
+FACULTY_SPECIALIZATIONS = {
+    "Hava nəqliyyatı fakültəsi": [
+        "Uçuş mühəndisliyi",
+        "Hava nəqliyyatının hərəkətinin təşkili",
+        "Aerokosmik mühəndislik",
+        "Hidrometeorologiya",
+    ],
+    "Nəqliyyat texnologiyaları fakültəsi": [
+        "Logistika və nəqliyyat texnologiyaları mühəndisliyi",
+        "Mexanika mühəndisliyi",
+        "Aviasiya təhlükəsizliyi mühəndisliyi",
+        "Materiallar mühəndisliyi",
+    ],
+    "Aerokosmik fakültə": [
+        "Kompüter mühəndisliyi",
+        "Ekologiya mühəndisliyi",
+        "İnformasiya texnologiyaları",
+    ],
+    "Fizika-Texnologiya fakültəsi": [
+        "Mühəndislik fizikası",
+        "Radiotexnika və telekommunikasiya mühəndisliyi",
+        "Elektrik və elektronika mühəndisliyi",
+        "Cihaz mühəndisliyi",
+        "Energetika mühəndisliyi",
+        "Proseslərin avtomatlaşdırılması mühəndisliyi",
+        "Mexatronika və robototexnika mühəndisliyi",
+    ],
+    "İqtisadiyyat və hüquq fakültəsi": [
+        "Hüquqşünaslıq",
+        "İqtisadiyyat",
+        "Maliyyə",
+        "Menecment",
+        "Biznesin idarə edilməsi",
+    ],
+}
+
 
 class RegisterRequest(BaseModel):
     email: str
     password: str
     full_name: str
-    major: str | None = None
-    course: int | None = None
+    faculty: str
+    major: str
+    course: int
 
 
 class LoginRequest(BaseModel):
@@ -35,6 +72,24 @@ def register(data: RegisterRequest, request: Request, db: Session = Depends(get_
             detail="Yalnız @naa.edu.az email ilə qeydiyyat mümkündür"
         )
 
+    if data.faculty not in FACULTY_SPECIALIZATIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Yanlış fakultə seçimi"
+        )
+
+    if data.major not in FACULTY_SPECIALIZATIONS[data.faculty]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Seçilmiş fakultəyə aid olmayan ixtisas"
+        )
+
+    if data.course not in (1, 2, 3, 4):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Kurs 1-4 arasında olmalıdır"
+        )
+
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
         raise HTTPException(
@@ -46,6 +101,7 @@ def register(data: RegisterRequest, request: Request, db: Session = Depends(get_
         email=data.email,
         password_hash=hash_password(data.password),
         full_name=data.full_name,
+        faculty=data.faculty,
         major=data.major,
         course=data.course,
     )
@@ -57,6 +113,11 @@ def register(data: RegisterRequest, request: Request, db: Session = Depends(get_
 
     token = create_access_token({"sub": str(user.id)})
     return TokenResponse(access_token=token)
+
+
+@router.get("/faculties")
+def get_faculties():
+    return FACULTY_SPECIALIZATIONS
 
 
 @router.post("/login", response_model=TokenResponse)
