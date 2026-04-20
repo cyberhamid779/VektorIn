@@ -10,15 +10,44 @@ import Messages from "./pages/Messages";
 import Connections from "./pages/Connections";
 import Landing from "./pages/Landing";
 import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
 import api from "./api/client";
+
+const BG_STYLES = {
+  default: { className: "bg-gray-50", style: {} },
+  vectors: {
+    className: "",
+    style: {
+      backgroundColor: "#1a1a2e",
+      backgroundImage: "url('/bg-vectors.png')",
+      backgroundSize: "400px",
+      backgroundRepeat: "repeat",
+    },
+  },
+  dark: { className: "bg-gray-900", style: {} },
+  navy: { className: "bg-[#0f172a]", style: {} },
+};
+
+function useBackgroundTheme() {
+  const [theme, setTheme] = useState(localStorage.getItem("bg_theme") || "default");
+
+  useEffect(() => {
+    const handler = () => setTheme(localStorage.getItem("bg_theme") || "default");
+    window.addEventListener("bg_theme_change", handler);
+    return () => window.removeEventListener("bg_theme_change", handler);
+  }, []);
+
+  return BG_STYLES[theme] || BG_STYLES.default;
+}
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
+  const bg = useBackgroundTheme();
   if (!token) return <Navigate to="/login" />;
   return (
     <>
       <Navbar />
-      <div className="bg-gray-50 min-h-[calc(100vh-64px)]">
+      <div className={`min-h-[calc(100vh-64px)] ${bg.className}`} style={bg.style}>
         {children}
       </div>
     </>
@@ -28,6 +57,7 @@ function PrivateRoute({ children }) {
 function AdminRoute({ children }) {
   const token = localStorage.getItem("token");
   const [allowed, setAllowed] = useState(null);
+  const bg = useBackgroundTheme();
 
   useEffect(() => {
     if (!token) { setAllowed(false); return; }
@@ -45,7 +75,7 @@ function AdminRoute({ children }) {
   return (
     <>
       <Navbar />
-      <div className="bg-gray-50 min-h-[calc(100vh-64px)]">
+      <div className={`min-h-[calc(100vh-64px)] ${bg.className}`} style={bg.style}>
         {children}
       </div>
     </>
@@ -65,6 +95,7 @@ export default function App() {
         <Route path="/search" element={<PrivateRoute><Search /></PrivateRoute>} />
         <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
         <Route path="/connections" element={<PrivateRoute><Connections /></PrivateRoute>} />
+        <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
         <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
         <Route path="*" element={<Navigate to="/feed" />} />
       </Routes>

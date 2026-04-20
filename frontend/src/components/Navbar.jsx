@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Users, MessageCircle, User, LogOut, Menu, X, Shield } from "lucide-react";
+import { Home, Search, Users, MessageCircle, User, LogOut, Menu, X, Shield, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import api from "../api/client";
 
@@ -24,6 +24,7 @@ export default function Navbar() {
     { path: "/connections", icon: Users, label: "Baglantilar" },
     { path: "/messages", icon: MessageCircle, label: "Mesajlar" },
     { path: "/profile", icon: User, label: "Profil" },
+    { path: "/settings", icon: Settings, label: "Parametrlər" },
     ...(currentUser?.is_admin ? [{ path: "/admin", icon: Shield, label: "Admin" }] : []),
   ];
 
