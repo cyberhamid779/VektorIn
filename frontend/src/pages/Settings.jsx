@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Settings as SettingsIcon, Check, Moon, Sun, Image as ImageIcon } from "lucide-react";
+import { Settings as SettingsIcon, Check, Moon, Sun, Image as ImageIcon, Monitor } from "lucide-react";
 import { useDarkClasses } from "../hooks/useDarkClasses";
 
 const BG_OPTIONS = [
