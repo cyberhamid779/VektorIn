@@ -2,12 +2,14 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Home, Search, Users, MessageCircle, User, LogOut, Menu, X, Shield, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import api from "../api/client";
+import { useDarkMode } from "../hooks/useTheme";
 
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const dark = useDarkMode();
 
   useEffect(() => {
     api.get("/users/me").then(res => setCurrentUser(res.data)).catch(() => {});
@@ -29,7 +31,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white/80 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
+    <nav className={`${dark ? "bg-gray-900/90 border-gray-700/50" : "bg-white/80 border-gray-200/50"} backdrop-blur-xl border-b sticky top-0 z-50 shadow-sm`}>
       <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-16">
         <Link to="/feed" className="text-xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           InVektor
@@ -48,9 +50,13 @@ export default function Navbar() {
                   isActive
                     ? isAdmin
                       ? "bg-gradient-to-r from-red-50 to-rose-50 text-red-600 shadow-sm"
+                      : dark
+                      ? "bg-blue-500/20 text-blue-400 shadow-sm"
                       : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 shadow-sm"
                     : isAdmin
                     ? "text-red-400 hover:bg-red-50 hover:text-red-500"
+                    : dark
+                    ? "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
                     : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                 }`}
               >
@@ -64,10 +70,10 @@ export default function Navbar() {
               </Link>
             );
           })}
-          <div className="w-px h-8 bg-gray-200 mx-2" />
+          <div className={`w-px h-8 ${dark ? "bg-gray-700" : "bg-gray-200"} mx-2`} />
           <button
             onClick={logout}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all duration-200"
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${dark ? "text-gray-400 hover:bg-red-500/10 hover:text-red-400" : "text-gray-400 hover:bg-red-50 hover:text-red-500"} transition-all duration-200`}
           >
             <LogOut size={18} />
             <span>Cixis</span>
@@ -77,7 +83,7 @@ export default function Navbar() {
         {/* Mobile hamburger */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition"
+          className={`md:hidden p-2 rounded-xl ${dark ? "text-gray-400 hover:bg-gray-800" : "text-gray-500 hover:bg-gray-100"} transition`}
         >
           {mobileOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
@@ -85,7 +91,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-gray-100 px-4 pb-4 pt-2 space-y-1">
+        <div className={`md:hidden ${dark ? "bg-gray-900/95" : "bg-white/95"} backdrop-blur-xl border-t ${dark ? "border-gray-700" : "border-gray-100"} px-4 pb-4 pt-2 space-y-1`}>
           {links.map(({ path, icon: Icon, label }) => {
             const isActive = location.pathname === path;
             const isAdmin = path === "/admin";
@@ -98,9 +104,13 @@ export default function Navbar() {
                   isActive
                     ? isAdmin
                       ? "bg-gradient-to-r from-red-50 to-rose-50 text-red-600"
+                      : dark
+                      ? "bg-blue-500/20 text-blue-400"
                       : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600"
                     : isAdmin
                     ? "text-red-400 hover:bg-red-50"
+                    : dark
+                    ? "text-gray-400 hover:bg-gray-800"
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >

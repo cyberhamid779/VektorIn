@@ -14,9 +14,8 @@ import Settings from "./pages/Settings";
 import api from "./api/client";
 
 const BG_STYLES = {
-  default: { className: "bg-gray-50", style: {} },
+  default: { style: {} },
   vectors: {
-    className: "",
     style: {
       backgroundColor: "#1a1a2e",
       backgroundImage: "url('/bg-vectors.png')",
@@ -24,8 +23,16 @@ const BG_STYLES = {
       backgroundRepeat: "repeat",
     },
   },
-  dark: { className: "bg-gray-900", style: {} },
-  navy: { className: "bg-[#0f172a]", style: {} },
+  "cockpit-night": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
+  "cockpit-panel": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1581094288338-2024c4979bfe?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
+  "cockpit-sky": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
+  "night-flight": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1569154941061-e231b4725ef1?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
+  "wing-sunset": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
+  "wing-clouds": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1436491865332-7a61a109db05?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
+  "runway-sunset": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1559268950-2d7ceb2efa3a?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
+  "airplane-sky": { style: { backgroundImage: "url('https://images.unsplash.com/photo-1556388158-158ea5ccacbd?w=1920&q=80')", backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed" } },
+  dark: { style: { backgroundColor: "#111827" } },
+  navy: { style: { backgroundColor: "#0f172a" } },
 };
 
 function useBackgroundTheme() {
@@ -40,17 +47,33 @@ function useBackgroundTheme() {
   return BG_STYLES[theme] || BG_STYLES.default;
 }
 
+function useDarkMode() {
+  const [dark, setDark] = useState(localStorage.getItem("dark_mode") === "true");
+
+  useEffect(() => {
+    const handler = () => setDark(localStorage.getItem("dark_mode") === "true");
+    window.addEventListener("dark_mode_change", handler);
+    return () => window.removeEventListener("dark_mode_change", handler);
+  }, []);
+
+  return dark;
+}
+
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("token");
   const bg = useBackgroundTheme();
+  const dark = useDarkMode();
   if (!token) return <Navigate to="/login" />;
   return (
-    <>
+    <div className={dark ? "dark" : ""}>
       <Navbar />
-      <div className={`min-h-[calc(100vh-64px)] ${bg.className}`} style={bg.style}>
+      <div
+        className={`min-h-[calc(100vh-64px)] ${bg.style.backgroundColor || bg.style.backgroundImage ? "" : "bg-gray-50"}`}
+        style={bg.style}
+      >
         {children}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -58,6 +81,7 @@ function AdminRoute({ children }) {
   const token = localStorage.getItem("token");
   const [allowed, setAllowed] = useState(null);
   const bg = useBackgroundTheme();
+  const dark = useDarkMode();
 
   useEffect(() => {
     if (!token) { setAllowed(false); return; }
@@ -73,12 +97,15 @@ function AdminRoute({ children }) {
   );
   if (!allowed) return <Navigate to="/feed" />;
   return (
-    <>
+    <div className={dark ? "dark" : ""}>
       <Navbar />
-      <div className={`min-h-[calc(100vh-64px)] ${bg.className}`} style={bg.style}>
+      <div
+        className={`min-h-[calc(100vh-64px)] ${bg.style.backgroundColor || bg.style.backgroundImage ? "" : "bg-gray-50"}`}
+        style={bg.style}
+      >
         {children}
       </div>
-    </>
+    </div>
   );
 }
 
