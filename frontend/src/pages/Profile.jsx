@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2, ExternalLink, Camera, FolderGit2, Code2, Heart, ThumbsDown, MessageCircle, FileText } from "lucide-react";
+import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2, ExternalLink, Camera, FolderGit2, Code2, Heart, ThumbsDown, MessageCircle, FileText, Send, Mail, Inbox } from "lucide-react";
 import api from "../api/client";
 import UserAvatar from "../components/UserAvatar";
 import { formatBakuDate, formatBakuHM } from "../utils/time";
@@ -21,6 +21,12 @@ export default function Profile() {
   const [showProjForm, setShowProjForm] = useState(false);
   const [uploadingPic, setUploadingPic] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
+  const [showQuickMsg, setShowQuickMsg] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const [msgSent, setMsgSent] = useState("");
+  const [inbox, setInbox] = useState([]);
+  const [showInbox, setShowInbox] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -28,6 +34,7 @@ export default function Profile() {
     loadCertificates();
     loadProjects();
     loadUserPosts();
+    loadTemplates();
   }, [id]);
 
   const loadProfile = async () => {
@@ -69,6 +76,34 @@ export default function Profile() {
       const res = await api.get(`/posts/user/${userId}`);
       setUserPosts(res.data);
     } catch (err) {}
+  };
+
+  const loadTemplates = async () => {
+    try {
+      const res = await api.get("/messages/templates");
+      setTemplates(res.data);
+    } catch (err) {}
+  };
+
+  const loadInbox = async () => {
+    try {
+      const res = await api.get("/messages/inbox");
+      setInbox(res.data);
+      setShowInbox(true);
+    } catch (err) {}
+  };
+
+  const sendQuickMessage = async (index) => {
+    if (!user) return;
+    setSendingMsg(true);
+    try {
+      await api.post(`/messages/${user.id}`, { template_index: index });
+      setMsgSent(templates[index]);
+      setTimeout(() => { setMsgSent(""); setShowQuickMsg(false); }, 1500);
+    } catch (err) {
+      alert(err.response?.data?.detail || "Mesaj göndərilmədi");
+    }
+    setSendingMsg(false);
   };
 
   const handleDeletePost = async (postId) => {
@@ -205,18 +240,35 @@ export default function Profile() {
               </>
             )}
           </div>
-          {isOwn && (
-            <button
-              onClick={() => setEditing(!editing)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                editing
-                  ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 hover:shadow-md hover:shadow-blue-100 border border-blue-100"
-              }`}
-            >
-              {editing ? <><X size={16} /> Legv et</> : <><Edit3 size={16} /> Redakte</>}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {isOwn && (
+              <button
+                onClick={loadInbox}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-green-50 to-emerald-50 text-green-600 hover:shadow-md hover:shadow-green-100 border border-green-100 transition-all duration-200"
+              >
+                <Inbox size={16} /> Mesajlar
+              </button>
+            )}
+            {isOwn ? (
+              <button
+                onClick={() => setEditing(!editing)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  editing
+                    ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 hover:shadow-md hover:shadow-blue-100 border border-blue-100"
+                }`}
+              >
+                {editing ? <><X size={16} /> Legv et</> : <><Edit3 size={16} /> Redakte</>}
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowQuickMsg(true)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 hover:shadow-md hover:shadow-blue-100 border border-blue-100 transition-all duration-200"
+              >
+                <Mail size={16} /> Mesaj göndər
+              </button>
+            )}
+          </div>
         </div>
 
         <h2 className="text-2xl font-bold text-gray-900">{user.full_name}</h2>
@@ -535,6 +587,93 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* Quick Message Modal */}
+      {showQuickMsg && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={() => !sendingMsg && setShowQuickMsg(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                <Send size={18} className="text-blue-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">{user?.full_name}-a mesaj</h3>
+                <p className="text-xs text-gray-400">Şablon seçin və göndərin</p>
+              </div>
+              <button onClick={() => setShowQuickMsg(false)} className="ml-auto text-gray-400 hover:text-gray-600 transition">
+                <X size={20} />
+              </button>
+            </div>
+
+            {msgSent ? (
+              <div className="text-center py-6">
+                <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Send size={24} className="text-green-500" />
+                </div>
+                <p className="font-semibold text-green-600">Göndərildi!</p>
+                <p className="text-sm text-gray-400 mt-1">"{msgSent}"</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {templates.map((msg, i) => (
+                  <button
+                    key={i}
+                    onClick={() => sendQuickMessage(i)}
+                    disabled={sendingMsg}
+                    className="w-full text-left px-4 py-3 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50 text-sm text-gray-700 font-medium transition-all disabled:opacity-50 flex items-center justify-between group"
+                  >
+                    <span>{msg}</span>
+                    <Send size={14} className="text-gray-300 group-hover:text-blue-500 transition" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Inbox Modal */}
+      {showInbox && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={() => setShowInbox(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+                <Inbox size={18} className="text-green-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Gələn mesajlar</h3>
+                <p className="text-xs text-gray-400">{inbox.length} mesaj</p>
+              </div>
+              <button onClick={() => setShowInbox(false)} className="ml-auto text-gray-400 hover:text-gray-600 transition">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {inbox.length === 0 ? (
+                <p className="text-gray-300 text-sm text-center py-8">Hələ mesaj yoxdur</p>
+              ) : (
+                inbox.map((m) => (
+                  <div key={m.id} className="flex gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition">
+                    <Link to={`/profile/${m.sender_id}`} onClick={() => setShowInbox(false)} className="shrink-0">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-sm font-bold">
+                        {m.sender_name?.charAt(0)}
+                      </div>
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Link to={`/profile/${m.sender_id}`} onClick={() => setShowInbox(false)} className="text-sm font-semibold text-gray-800 hover:text-blue-600 transition truncate">{m.sender_name}</Link>
+                        <span className="text-xs text-gray-300 shrink-0">{formatBakuHM(m.created_at)}</span>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-0.5">{m.content}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
