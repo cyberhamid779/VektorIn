@@ -7,7 +7,7 @@ python -c "
 from app.services.database import engine
 from app.models.base import Base
 from app.models.user import User
-from app.models.post import Post, PostLike, Comment, PostReport
+from app.models.post import Post, PostLike, PostDislike, Comment, PostReport
 from app.models.connection import Connection
 from app.models.message import Message
 from app.models.certificate import Certificate
@@ -21,5 +21,6 @@ with engine.begin() as conn:
     conn.execute(text('ALTER TABLE posts ADD COLUMN IF NOT EXISTS video_url VARCHAR(500)'))
     conn.execute(text('ALTER TABLE posts ALTER COLUMN content DROP NOT NULL'))
     conn.execute(text('ALTER TABLE users ADD COLUMN IF NOT EXISTS faculty VARCHAR(255)'))
+    conn.execute(text('ALTER TABLE posts ADD COLUMN IF NOT EXISTS show_dislikes BOOLEAN DEFAULT TRUE'))
 print('Tables created successfully')
 "

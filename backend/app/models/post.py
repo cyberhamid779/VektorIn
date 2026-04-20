@@ -15,13 +15,25 @@ class Post(Base):
     is_pinned = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    show_dislikes = Column(Boolean, default=True)
+
     author = relationship("User", backref="posts")
     likes = relationship("PostLike", backref="post", cascade="all, delete-orphan")
+    dislikes = relationship("PostDislike", backref="post", cascade="all, delete-orphan")
     comments = relationship("Comment", backref="post", cascade="all, delete-orphan")
 
 
 class PostLike(Base):
     __tablename__ = "post_likes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class PostDislike(Base):
+    __tablename__ = "post_dislikes"
 
     id = Column(Integer, primary_key=True, index=True)
     post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2, ExternalLink, Camera, FolderGit2, Code2 } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
+import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2, ExternalLink, Camera, FolderGit2, Code2, Heart, ThumbsDown, MessageCircle, FileText } from "lucide-react";
 import api from "../api/client";
 import UserAvatar from "../components/UserAvatar";
+import { formatBakuDate, formatBakuHM } from "../utils/time";
 
 const API_BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:8000";
 
@@ -19,12 +20,14 @@ export default function Profile() {
   const [showCertForm, setShowCertForm] = useState(false);
   const [showProjForm, setShowProjForm] = useState(false);
   const [uploadingPic, setUploadingPic] = useState(false);
+  const [userPosts, setUserPosts] = useState([]);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     loadProfile();
     loadCertificates();
     loadProjects();
+    loadUserPosts();
   }, [id]);
 
   const loadProfile = async () => {
@@ -57,6 +60,22 @@ export default function Profile() {
     try {
       const res = id ? await api.get(`/projects/user/${id}`) : await api.get("/projects/me");
       setProjects(res.data);
+    } catch (err) {}
+  };
+
+  const loadUserPosts = async () => {
+    try {
+      const userId = id || (await api.get("/users/me")).data.id;
+      const res = await api.get(`/posts/user/${userId}`);
+      setUserPosts(res.data);
+    } catch (err) {}
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (!confirm("Bu postu silmək istədiyinə əminsən?")) return;
+    try {
+      await api.delete(`/posts/${postId}`);
+      loadUserPosts();
     } catch (err) {}
   };
 
@@ -397,6 +416,58 @@ export default function Profile() {
                 </div>
               ) : (
                 <p className="text-gray-300 text-sm text-center py-4">{isOwn ? "Hele sertifikat elave olunmayib" : "Sertifikat yoxdur"}</p>
+              )}
+            </div>
+
+            {/* Postlar */}
+            <div className="bg-gradient-to-r from-gray-50 to-white p-5 rounded-xl border border-gray-100">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText size={16} className="text-gray-400" />
+                <p className="text-sm text-gray-400 font-medium">Postlar</p>
+                <span className="text-xs text-gray-300 ml-1">({userPosts.length})</span>
+              </div>
+
+              {userPosts.length > 0 ? (
+                <div className="space-y-3">
+                  {userPosts.map((post) => (
+                    <div key={post.id} className="bg-white p-4 rounded-xl border border-gray-100">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          {post.content && (
+                            <p className="text-gray-700 text-sm whitespace-pre-wrap line-clamp-3">{post.content}</p>
+                          )}
+                          {!post.content && post.image_url && (
+                            <p className="text-gray-400 text-sm italic">Şəkil post</p>
+                          )}
+                          {!post.content && post.video_url && (
+                            <p className="text-gray-400 text-sm italic">Video post</p>
+                          )}
+                          <div className="flex items-center gap-4 mt-2">
+                            <span className="flex items-center gap-1 text-xs text-gray-400">
+                              <Heart size={12} /> {post.like_count}
+                            </span>
+                            {post.show_dislikes && (
+                              <span className="flex items-center gap-1 text-xs text-gray-400">
+                                <ThumbsDown size={12} /> {post.dislike_count}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1 text-xs text-gray-400">
+                              <MessageCircle size={12} /> {post.comment_count}
+                            </span>
+                            <span className="text-xs text-gray-300">{formatBakuDate(post.created_at)}</span>
+                          </div>
+                        </div>
+                        {isOwn && (
+                          <button onClick={() => handleDeletePost(post.id)} className="text-red-400 hover:text-red-500 transition ml-3">
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-300 text-sm text-center py-4">{isOwn ? "Hələ post paylaşmamısan" : "Post yoxdur"}</p>
               )}
             </div>
 

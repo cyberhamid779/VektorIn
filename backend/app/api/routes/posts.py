@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from app.services.database import get_db
 from app.services.auth import get_current_user
 from app.models.user import User
-from app.models.post import Post, PostLike, Comment, PostReport
+from app.models.post import Post, PostLike, PostDislike, Comment, PostReport
 
 router = APIRouter(prefix="/api/posts", tags=["posts"])
 
@@ -13,6 +13,7 @@ class PostCreate(BaseModel):
     content: str | None = None
     image_url: str | None = None
     video_url: str | None = None
+    show_dislikes: bool = True
 
 
 class CommentCreate(BaseModel):
@@ -29,12 +30,16 @@ class PostResponse(BaseModel):
     image_url: str | None
     video_url: str | None
     is_pinned: bool
+    show_dislikes: bool
     created_at: str | None
     author_name: str
     author_id: int
+    author_picture: str | None
     like_count: int
+    dislike_count: int
     comment_count: int
     is_liked: bool
+    is_disliked: bool
 
     class Config:
         from_attributes = True
@@ -47,18 +52,23 @@ def get_feed(db: Session = Depends(get_db), current_user: User = Depends(get_cur
     result = []
     for post in posts:
         is_liked = db.query(PostLike).filter(PostLike.post_id == post.id, PostLike.user_id == current_user.id).first() is not None
+        is_disliked = db.query(PostDislike).filter(PostDislike.post_id == post.id, PostDislike.user_id == current_user.id).first() is not None
         result.append(PostResponse(
             id=post.id,
             content=post.content,
             image_url=post.image_url,
             video_url=post.video_url,
             is_pinned=post.is_pinned,
+            show_dislikes=post.show_dislikes if post.show_dislikes is not None else True,
             created_at=str(post.created_at) if post.created_at else None,
             author_name=post.author.full_name,
             author_id=post.author_id,
+            author_picture=post.author.profile_picture,
             like_count=len(post.likes),
+            dislike_count=len(post.dislikes),
             comment_count=len(post.comments),
             is_liked=is_liked,
+            is_disliked=is_disliked,
         ))
     return result
 
@@ -68,7 +78,7 @@ def create_post(data: PostCreate, db: Session = Depends(get_db), current_user: U
     content = data.content.strip() if data.content else None
     if not content and not data.image_url and not data.video_url:
         raise HTTPException(status_code=400, detail="Post boş ola bilməz")
-    post = Post(author_id=current_user.id, content=content, image_url=data.image_url, video_url=data.video_url)
+    post = Post(author_id=current_user.id, content=content, image_url=data.image_url, video_url=data.video_url, show_dislikes=data.show_dislikes)
     db.add(post)
     db.commit()
     return {"message": "Post yaradıldı", "id": post.id}
@@ -80,6 +90,11 @@ def toggle_like(post_id: int, db: Session = Depends(get_db), current_user: User 
     if not post:
         raise HTTPException(status_code=404, detail="Post tapılmadı")
 
+    # Remove dislike if exists
+    existing_dislike = db.query(PostDislike).filter(PostDislike.post_id == post_id, PostDislike.user_id == current_user.id).first()
+    if existing_dislike:
+        db.delete(existing_dislike)
+
     existing = db.query(PostLike).filter(PostLike.post_id == post_id, PostLike.user_id == current_user.id).first()
     if existing:
         db.delete(existing)
@@ -90,6 +105,70 @@ def toggle_like(post_id: int, db: Session = Depends(get_db), current_user: User 
     db.add(like)
     db.commit()
     return {"message": "Like edildi"}
+
+
+@router.post("/{post_id}/dislike")
+def toggle_dislike(post_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    post = db.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post tapılmadı")
+
+    # Remove like if exists
+    existing_like = db.query(PostLike).filter(PostLike.post_id == post_id, PostLike.user_id == current_user.id).first()
+    if existing_like:
+        db.delete(existing_like)
+
+    existing = db.query(PostDislike).filter(PostDislike.post_id == post_id, PostDislike.user_id == current_user.id).first()
+    if existing:
+        db.delete(existing)
+        db.commit()
+        return {"message": "Dislike silindi"}
+
+    dislike = PostDislike(post_id=post_id, user_id=current_user.id)
+    db.add(dislike)
+    db.commit()
+    return {"message": "Dislike edildi"}
+
+
+@router.delete("/{post_id}")
+def delete_post(post_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    post = db.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post tapılmadı")
+    if post.author_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Bu postu silə bilməzsən")
+
+    db.delete(post)
+    db.commit()
+    return {"message": "Post silindi"}
+
+
+@router.get("/user/{user_id}", response_model=list[PostResponse])
+def get_user_posts(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    posts = db.query(Post).filter(Post.author_id == user_id).order_by(Post.created_at.desc()).all()
+
+    result = []
+    for post in posts:
+        is_liked = db.query(PostLike).filter(PostLike.post_id == post.id, PostLike.user_id == current_user.id).first() is not None
+        is_disliked = db.query(PostDislike).filter(PostDislike.post_id == post.id, PostDislike.user_id == current_user.id).first() is not None
+        result.append(PostResponse(
+            id=post.id,
+            content=post.content,
+            image_url=post.image_url,
+            video_url=post.video_url,
+            is_pinned=post.is_pinned,
+            show_dislikes=post.show_dislikes if post.show_dislikes is not None else True,
+            created_at=str(post.created_at) if post.created_at else None,
+            author_name=post.author.full_name,
+            author_id=post.author_id,
+            author_picture=post.author.profile_picture,
+            like_count=len(post.likes),
+            dislike_count=len(post.dislikes),
+            comment_count=len(post.comments),
+            is_liked=is_liked,
+            is_disliked=is_disliked,
+        ))
+    return result
 
 
 @router.post("/{post_id}/comment")
