@@ -4,6 +4,7 @@ import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2,
 import api from "../api/client";
 import UserAvatar from "../components/UserAvatar";
 import { formatBakuDate, formatBakuHM } from "../utils/time";
+import { useDarkClasses } from "../hooks/useDarkClasses";
 
 const API_BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:8000";
 
@@ -28,6 +29,7 @@ export default function Profile() {
   const [inbox, setInbox] = useState([]);
   const [showInbox, setShowInbox] = useState(false);
   const fileInputRef = useRef(null);
+  const d = useDarkClasses();
 
   useEffect(() => {
     loadProfile();
@@ -202,8 +204,21 @@ export default function Profile() {
   };
 
   if (!user) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-8 h-8 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+    <div className="max-w-2xl mx-auto py-8 px-4 animate-pulse">
+      <div className={`bg-gradient-to-r from-blue-500 to-indigo-600 rounded-t-3xl h-36`} />
+      <div className={`${d.dark ? "bg-gray-800" : "bg-white"} rounded-b-3xl px-6 pb-8`}>
+        <div className="flex items-end justify-between -mt-12 mb-5">
+          <div className={`w-24 h-24 rounded-2xl ${d.dark ? "bg-gray-700" : "bg-gray-200"} border-4 ${d.dark ? "border-gray-800" : "border-white"}`} />
+          <div className={`h-10 w-24 rounded-xl ${d.dark ? "bg-gray-700" : "bg-gray-200"}`} />
+        </div>
+        <div className={`h-6 w-48 rounded ${d.dark ? "bg-gray-700" : "bg-gray-200"} mb-2`} />
+        <div className={`h-4 w-32 rounded ${d.dark ? "bg-gray-700" : "bg-gray-200"} mb-6`} />
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className={`h-20 rounded-xl ${d.dark ? "bg-gray-700" : "bg-gray-100"}`} />
+          ))}
+        </div>
+      </div>
     </div>
   );
 
@@ -220,7 +235,7 @@ export default function Profile() {
       </div>
 
       {/* Profile Card */}
-      <div className="bg-white rounded-b-3xl border border-gray-100 border-t-0 shadow-sm px-6 pb-8 relative">
+      <div className={`${d.dark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"} rounded-b-3xl border border-t-0 shadow-sm px-6 pb-8 relative`}>
         <div className="flex items-end justify-between -mt-12 mb-5">
           {/* Avatar with upload */}
           <div className="relative group">
@@ -271,8 +286,8 @@ export default function Profile() {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-900">{user.full_name}</h2>
-        <p className="text-gray-400 text-sm mt-1">{user.email}</p>
+        <h2 className={`text-2xl font-bold ${d.heading}`}>{user.full_name}</h2>
+        <p className={`${d.textFaint} text-sm mt-1`}>{user.email}</p>
 
         {user.is_open_for_team && (
           <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-green-50 to-emerald-50 text-green-600 text-xs px-4 py-1.5 rounded-full mt-3 font-semibold border border-green-100">
@@ -282,18 +297,18 @@ export default function Profile() {
 
         {/* Profil tamamlanma faizi */}
         {isOwn && completionPercent < 100 && (
-          <div className="mt-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+          <div className={`mt-4 ${d.dark ? "bg-gray-700/50" : "bg-gray-50"} p-4 rounded-xl border ${d.border}`}>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold text-gray-500">Profil tamamlanma</p>
-              <p className="text-xs font-bold text-gray-700">{completionPercent}%</p>
+              <p className={`text-xs font-semibold ${d.textMuted}`}>Profil tamamlanma</p>
+              <p className={`text-xs font-bold ${d.textSecondary}`}>{completionPercent}%</p>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className={`w-full ${d.dark ? "bg-gray-600" : "bg-gray-200"} rounded-full h-2`}>
               <div
                 className={`bg-gradient-to-r ${completionColor} h-2 rounded-full transition-all duration-500`}
                 style={{ width: `${completionPercent}%` }}
               />
             </div>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className={`text-xs ${d.textFaint} mt-2`}>
               {!user.profile_picture && "Profil sekli, "}
               {!user.bio && "haqqinda, "}
               {!user.skills && "bacariqlar, "}
@@ -307,30 +322,30 @@ export default function Profile() {
         {editing ? (
           <div className="space-y-5 mt-8">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Ad Soyad</label>
+              <label className={`block text-sm font-semibold ${d.textSecondary} mb-2`}>Ad Soyad</label>
               <input
                 type="text"
                 value={form.full_name || ""}
                 onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${d.inputAlt}`}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Ixtisas</label>
+                <label className={`block text-sm font-semibold ${d.textSecondary} mb-2`}>Ixtisas</label>
                 <input
                   type="text"
                   value={form.major || ""}
                   onChange={(e) => setForm({ ...form, major: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${d.inputAlt}`}
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Kurs</label>
+                <label className={`block text-sm font-semibold ${d.textSecondary} mb-2`}>Kurs</label>
                 <select
                   value={form.course || ""}
                   onChange={(e) => setForm({ ...form, course: parseInt(e.target.value) || null })}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${d.inputAlt}`}
                 >
                   <option value="">Secin</option>
                   <option value="1">1-ci kurs</option>
@@ -341,25 +356,25 @@ export default function Profile() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Haqqinda</label>
+              <label className={`block text-sm font-semibold ${d.textSecondary} mb-2`}>Haqqinda</label>
               <textarea
                 value={form.bio || ""}
                 onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all bg-gray-50 focus:bg-white"
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all ${d.inputAlt}`}
                 rows={3}
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Bacariqlar</label>
+              <label className={`block text-sm font-semibold ${d.textSecondary} mb-2`}>Bacariqlar</label>
               <input
                 type="text"
                 value={form.skills || ""}
                 onChange={(e) => setForm({ ...form, skills: e.target.value })}
                 placeholder="Python, React, Design"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 focus:bg-white"
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${d.inputAlt}`}
               />
             </div>
-            <label className="flex items-center gap-3 cursor-pointer bg-gray-50 p-4 rounded-xl hover:bg-gray-100 transition">
+            <label className={`flex items-center gap-3 cursor-pointer ${d.dark ? "bg-gray-700/50 hover:bg-gray-700" : "bg-gray-50 hover:bg-gray-100"} p-4 rounded-xl transition`}>
               <input
                 type="checkbox"
                 checked={form.is_open_for_team || false}
@@ -367,8 +382,8 @@ export default function Profile() {
                 className="w-5 h-5 text-blue-600 rounded-lg border-gray-300"
               />
               <div>
-                <span className="text-sm font-medium text-gray-700">Komanda ucun acigam</span>
-                <p className="text-xs text-gray-400 mt-0.5">Basqalari sizi komandaya devet ede biler</p>
+                <span className={`text-sm font-medium ${d.textSecondary}`}>Komanda ucun acigam</span>
+                <p className={`text-xs ${d.textFaint} mt-0.5`}>Basqalari sizi komandaya devet ede biler</p>
               </div>
             </label>
             <button
@@ -381,36 +396,36 @@ export default function Profile() {
         ) : (
           <div className="mt-8 space-y-4">
             {user.major && (
-              <div className="flex items-center gap-3 bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-100">
+              <div className="flex items-center gap-3 ${d.surface} p-4 rounded-xl border ${d.border}">
                 <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
                   <GraduationCap size={20} className="text-blue-500" />
                 </div>
                 <div>
                   <p className="text-sm text-gray-400 font-medium">Ixtisas</p>
-                  <p className="text-gray-800 font-semibold">{user.major} {user.course && `· ${user.course}-ci kurs`}</p>
+                  <p className={`${d.text} font-semibold`}>{user.major} {user.course && `· ${user.course}-ci kurs`}</p>
                 </div>
               </div>
             )}
 
             {user.bio && (
-              <div className="bg-gradient-to-r from-gray-50 to-white p-5 rounded-xl border border-gray-100">
+              <div className="${d.surface} p-5 rounded-xl border ${d.border}">
                 <div className="flex items-center gap-2 mb-2">
                   <BookOpen size={16} className="text-gray-400" />
                   <p className="text-sm text-gray-400 font-medium">Haqqinda</p>
                 </div>
-                <p className="text-gray-700 leading-relaxed">{user.bio}</p>
+                <p className={`${d.textSecondary} leading-relaxed`}>{user.bio}</p>
               </div>
             )}
 
             {user.skills && (
-              <div className="bg-gradient-to-r from-gray-50 to-white p-5 rounded-xl border border-gray-100">
+              <div className="${d.surface} p-5 rounded-xl border ${d.border}">
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles size={16} className="text-gray-400" />
                   <p className="text-sm text-gray-400 font-medium">Bacariqlar</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {user.skills.split(",").map((s, i) => (
-                    <span key={i} className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 px-4 py-2 rounded-xl text-sm font-semibold border border-blue-100">
+                    <span key={i} className={`px-4 py-2 rounded-xl text-sm font-semibold border ${d.dark ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 border-blue-100"}`}>
                       {s.trim()}
                     </span>
                   ))}
@@ -419,7 +434,7 @@ export default function Profile() {
             )}
 
             {/* Sertifikatlar */}
-            <div className="bg-gradient-to-r from-gray-50 to-white p-5 rounded-xl border border-gray-100">
+            <div className="${d.surface} p-5 rounded-xl border ${d.border}">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <Award size={16} className="text-gray-400" />
@@ -433,16 +448,16 @@ export default function Profile() {
               </div>
 
               {isOwn && showCertForm && (
-                <div className="bg-white p-4 rounded-xl border border-blue-100 mb-4 space-y-3">
-                  <input type="text" placeholder="Sertifikat adi" value={certForm.name} onChange={(e) => setCertForm({ ...certForm, name: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
-                  <input type="text" placeholder="Veren teshkilat (meselen: Google, ISC2)" value={certForm.issuer} onChange={(e) => setCertForm({ ...certForm, issuer: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
+                <div className={`${d.dark ? "bg-gray-700" : "bg-white"} p-4 rounded-xl border ${d.dark ? "border-blue-500/20" : "border-blue-100"} mb-4 space-y-3`}>
+                  <input type="text" placeholder="Sertifikat adi" value={certForm.name} onChange={(e) => setCertForm({ ...certForm, name: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
+                  <input type="text" placeholder="Veren teshkilat (meselen: Google, ISC2)" value={certForm.issuer} onChange={(e) => setCertForm({ ...certForm, issuer: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
                   <div className="grid grid-cols-2 gap-3">
-                    <input type="date" value={certForm.issue_date} onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
-                    <input type="url" placeholder="Dogrulama linki" value={certForm.credential_url} onChange={(e) => setCertForm({ ...certForm, credential_url: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
+                    <input type="date" value={certForm.issue_date} onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
+                    <input type="url" placeholder="Dogrulama linki" value={certForm.credential_url} onChange={(e) => setCertForm({ ...certForm, credential_url: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
                   </div>
                   <div className="flex gap-2">
                     <button onClick={handleAddCert} disabled={!certForm.name || !certForm.issuer} className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-40">Elave et</button>
-                    <button onClick={() => setShowCertForm(false)} className="bg-gray-100 text-gray-600 px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-200 transition">Legv et</button>
+                    <button onClick={() => setShowCertForm(false)} className={`${d.dark ? "bg-gray-600 text-gray-300 hover:bg-gray-500" : "bg-gray-100 text-gray-600 hover:bg-gray-200"} px-5 py-2 rounded-xl text-sm font-medium transition`}>Legv et</button>
                   </div>
                 </div>
               )}
@@ -450,10 +465,10 @@ export default function Profile() {
               {certificates.length > 0 ? (
                 <div className="space-y-3">
                   {certificates.map((cert) => (
-                    <div key={cert.id} className="flex items-center justify-between bg-white p-4 rounded-xl border border-gray-100">
+                    <div key={cert.id} className={`flex items-center justify-between ${d.dark ? "bg-gray-700/50" : "bg-white"} p-4 rounded-xl border ${d.border}`}>
                       <div className="flex-1">
-                        <p className="text-gray-800 font-semibold text-sm">{cert.name}</p>
-                        <p className="text-gray-400 text-xs mt-0.5">{cert.issuer}{cert.issue_date && ` · ${cert.issue_date}`}</p>
+                        <p className={`${d.text} font-semibold text-sm`}>{cert.name}</p>
+                        <p className={`${d.textFaint} text-xs mt-0.5`}>{cert.issuer}{cert.issue_date && ` · ${cert.issue_date}`}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         {cert.credential_url && (
@@ -472,7 +487,7 @@ export default function Profile() {
             </div>
 
             {/* Postlar */}
-            <div className="bg-gradient-to-r from-gray-50 to-white p-5 rounded-xl border border-gray-100">
+            <div className="${d.surface} p-5 rounded-xl border ${d.border}">
               <div className="flex items-center gap-2 mb-3">
                 <FileText size={16} className="text-gray-400" />
                 <p className="text-sm text-gray-400 font-medium">Postlar</p>
@@ -482,17 +497,17 @@ export default function Profile() {
               {userPosts.length > 0 ? (
                 <div className="space-y-3">
                   {userPosts.map((post) => (
-                    <div key={post.id} className="bg-white p-4 rounded-xl border border-gray-100">
+                    <div key={post.id} className={`${d.dark ? "bg-gray-700/50" : "bg-white"} p-4 rounded-xl border ${d.border}`}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           {post.content && (
-                            <p className="text-gray-700 text-sm whitespace-pre-wrap line-clamp-3">{post.content}</p>
+                            <p className={`${d.textSecondary} text-sm whitespace-pre-wrap line-clamp-3`}>{post.content}</p>
                           )}
                           {!post.content && post.image_url && (
-                            <p className="text-gray-400 text-sm italic">Şəkil post</p>
+                            <p className={`${d.textFaint} text-sm italic`}>Şəkil post</p>
                           )}
                           {!post.content && post.video_url && (
-                            <p className="text-gray-400 text-sm italic">Video post</p>
+                            <p className={`${d.textFaint} text-sm italic`}>Video post</p>
                           )}
                           <div className="flex items-center gap-4 mt-2">
                             <span className="flex items-center gap-1 text-xs text-gray-400">
@@ -524,7 +539,7 @@ export default function Profile() {
             </div>
 
             {/* Layiheler */}
-            <div className="bg-gradient-to-r from-gray-50 to-white p-5 rounded-xl border border-gray-100">
+            <div className="${d.surface} p-5 rounded-xl border ${d.border}">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <FolderGit2 size={16} className="text-gray-400" />
@@ -538,16 +553,16 @@ export default function Profile() {
               </div>
 
               {isOwn && showProjForm && (
-                <div className="bg-white p-4 rounded-xl border border-blue-100 mb-4 space-y-3">
-                  <input type="text" placeholder="Layihe adi" value={projForm.title} onChange={(e) => setProjForm({ ...projForm, title: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
-                  <textarea placeholder="Qisa tesvir" value={projForm.description} onChange={(e) => setProjForm({ ...projForm, description: e.target.value })} rows={2} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white resize-none" />
+                <div className={`${d.dark ? "bg-gray-700" : "bg-white"} p-4 rounded-xl border ${d.dark ? "border-blue-500/20" : "border-blue-100"} mb-4 space-y-3`}>
+                  <input type="text" placeholder="Layihe adi" value={projForm.title} onChange={(e) => setProjForm({ ...projForm, title: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
+                  <textarea placeholder="Qisa tesvir" value={projForm.description} onChange={(e) => setProjForm({ ...projForm, description: e.target.value })} rows={2} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt} resize-none`} />
                   <div className="grid grid-cols-2 gap-3">
-                    <input type="text" placeholder="Texnologiyalar (React, Python...)" value={projForm.technologies} onChange={(e) => setProjForm({ ...projForm, technologies: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
-                    <input type="url" placeholder="GitHub linki" value={projForm.github_url} onChange={(e) => setProjForm({ ...projForm, github_url: e.target.value })} className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white" />
+                    <input type="text" placeholder="Texnologiyalar (React, Python...)" value={projForm.technologies} onChange={(e) => setProjForm({ ...projForm, technologies: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
+                    <input type="url" placeholder="GitHub linki" value={projForm.github_url} onChange={(e) => setProjForm({ ...projForm, github_url: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
                   </div>
                   <div className="flex gap-2">
                     <button onClick={handleAddProject} disabled={!projForm.title} className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-40">Elave et</button>
-                    <button onClick={() => setShowProjForm(false)} className="bg-gray-100 text-gray-600 px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-200 transition">Legv et</button>
+                    <button onClick={() => setShowProjForm(false)} className={`${d.dark ? "bg-gray-600 text-gray-300 hover:bg-gray-500" : "bg-gray-100 text-gray-600 hover:bg-gray-200"} px-5 py-2 rounded-xl text-sm font-medium transition`}>Legv et</button>
                   </div>
                 </div>
               )}
@@ -555,15 +570,15 @@ export default function Profile() {
               {projects.length > 0 ? (
                 <div className="space-y-3">
                   {projects.map((proj) => (
-                    <div key={proj.id} className="bg-white p-4 rounded-xl border border-gray-100">
+                    <div key={proj.id} className={`${d.dark ? "bg-gray-700/50" : "bg-white"} p-4 rounded-xl border ${d.border}`}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="text-gray-800 font-semibold text-sm">{proj.title}</p>
-                          {proj.description && <p className="text-gray-500 text-xs mt-1">{proj.description}</p>}
+                          <p className={`${d.text} font-semibold text-sm`}>{proj.title}</p>
+                          {proj.description && <p className={`${d.textMuted} text-xs mt-1`}>{proj.description}</p>}
                           {proj.technologies && (
                             <div className="flex flex-wrap gap-1.5 mt-2">
                               {proj.technologies.split(",").map((t, i) => (
-                                <span key={i} className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg text-xs font-medium">{t.trim()}</span>
+                                <span key={i} className={`${d.dark ? "bg-gray-600 text-gray-300" : "bg-gray-100 text-gray-600"} px-2.5 py-1 rounded-lg text-xs font-medium`}>{t.trim()}</span>
                               ))}
                             </div>
                           )}
@@ -591,14 +606,14 @@ export default function Profile() {
       {/* Quick Message Modal */}
       {showQuickMsg && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={() => !sendingMsg && setShowQuickMsg(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className={`${d.dark ? "bg-gray-800" : "bg-white"} rounded-2xl p-6 max-w-md w-full shadow-xl`} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+              <div className={`w-10 h-10 ${d.dark ? "bg-blue-500/10" : "bg-blue-50"} rounded-xl flex items-center justify-center`}>
                 <Send size={18} className="text-blue-500" />
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">{user?.full_name}-a mesaj</h3>
-                <p className="text-xs text-gray-400">Şablon seçin və göndərin</p>
+                <h3 className={`font-bold ${d.heading}`}>{user?.full_name}-a mesaj</h3>
+                <p className={`text-xs ${d.textFaint}`}>Şablon seçin və göndərin</p>
               </div>
               <button onClick={() => setShowQuickMsg(false)} className="ml-auto text-gray-400 hover:text-gray-600 transition">
                 <X size={20} />
@@ -620,7 +635,7 @@ export default function Profile() {
                     key={i}
                     onClick={() => sendQuickMessage(i)}
                     disabled={sendingMsg}
-                    className="w-full text-left px-4 py-3 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50 text-sm text-gray-700 font-medium transition-all disabled:opacity-50 flex items-center justify-between group"
+                    className={`w-full text-left px-4 py-3 rounded-xl border ${d.dark ? "border-gray-600 hover:border-blue-500/30 hover:bg-blue-500/10 text-gray-300" : "border-gray-100 hover:border-blue-200 hover:bg-blue-50 text-gray-700"} text-sm font-medium transition-all disabled:opacity-50 flex items-center justify-between group`}
                   >
                     <span>{msg}</span>
                     <Send size={14} className="text-gray-300 group-hover:text-blue-500 transition" />
@@ -635,14 +650,14 @@ export default function Profile() {
       {/* Inbox Modal */}
       {showInbox && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={() => setShowInbox(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div className={`${d.dark ? "bg-gray-800" : "bg-white"} rounded-2xl p-6 max-w-md w-full shadow-xl`} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+              <div className={`w-10 h-10 ${d.dark ? "bg-green-500/10" : "bg-green-50"} rounded-xl flex items-center justify-center`}>
                 <Inbox size={18} className="text-green-500" />
               </div>
               <div>
-                <h3 className="font-bold text-gray-900">Gələn mesajlar</h3>
-                <p className="text-xs text-gray-400">{inbox.length} mesaj</p>
+                <h3 className={`font-bold ${d.heading}`}>Gələn mesajlar</h3>
+                <p className={`text-xs ${d.textFaint}`}>{inbox.length} mesaj</p>
               </div>
               <button onClick={() => setShowInbox(false)} className="ml-auto text-gray-400 hover:text-gray-600 transition">
                 <X size={20} />
@@ -651,10 +666,10 @@ export default function Profile() {
 
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {inbox.length === 0 ? (
-                <p className="text-gray-300 text-sm text-center py-8">Hələ mesaj yoxdur</p>
+                <p className={`${d.textFaint} text-sm text-center py-8`}>Hələ mesaj yoxdur</p>
               ) : (
                 inbox.map((m) => (
-                  <div key={m.id} className="flex gap-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition">
+                  <div key={m.id} className={`flex gap-3 p-3 rounded-xl border ${d.border} ${d.dark ? "hover:bg-gray-700/50" : "hover:bg-gray-50"} transition`}>
                     <Link to={`/profile/${m.sender_id}`} onClick={() => setShowInbox(false)} className="shrink-0">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-sm font-bold">
                         {m.sender_name?.charAt(0)}
@@ -662,10 +677,10 @@ export default function Profile() {
                     </Link>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <Link to={`/profile/${m.sender_id}`} onClick={() => setShowInbox(false)} className="text-sm font-semibold text-gray-800 hover:text-blue-600 transition truncate">{m.sender_name}</Link>
-                        <span className="text-xs text-gray-300 shrink-0">{formatBakuHM(m.created_at)}</span>
+                        <Link to={`/profile/${m.sender_id}`} onClick={() => setShowInbox(false)} className={`text-sm font-semibold ${d.text} hover:text-blue-600 transition truncate`}>{m.sender_name}</Link>
+                        <span className={`text-xs ${d.textFaint} shrink-0`}>{formatBakuHM(m.created_at)}</span>
                       </div>
-                      <p className="text-sm text-gray-500 mt-0.5">{m.content}</p>
+                      <p className={`text-sm ${d.textMuted} mt-0.5`}>{m.content}</p>
                     </div>
                   </div>
                 ))

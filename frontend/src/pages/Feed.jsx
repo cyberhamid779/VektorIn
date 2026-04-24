@@ -21,10 +21,11 @@ export default function Feed() {
   const [openComments, setOpenComments] = useState({});
   const [comments, setComments] = useState({});
   const [commentText, setCommentText] = useState({});
+  const [loading, setLoading] = useState(true);
   const d = useDarkClasses();
 
   useEffect(() => {
-    loadFeed();
+    loadFeed().finally(() => setLoading(false));
     loadUser();
   }, []);
 
@@ -89,16 +90,39 @@ export default function Feed() {
   };
 
   const handleLike = async (postId) => {
-    try { await api.post(`/posts/${postId}/like`); loadFeed(); } catch (err) {}
+    setPosts(prev => prev.map(p => {
+      if (p.id !== postId) return p;
+      const wasLiked = p.is_liked;
+      return {
+        ...p,
+        is_liked: !wasLiked,
+        like_count: wasLiked ? p.like_count - 1 : p.like_count + 1,
+        is_disliked: !wasLiked ? false : p.is_disliked,
+        dislike_count: !wasLiked && p.is_disliked ? p.dislike_count - 1 : p.dislike_count,
+      };
+    }));
+    try { await api.post(`/posts/${postId}/like`); } catch (err) { loadFeed(); }
   };
 
   const handleDislike = async (postId) => {
-    try { await api.post(`/posts/${postId}/dislike`); loadFeed(); } catch (err) {}
+    setPosts(prev => prev.map(p => {
+      if (p.id !== postId) return p;
+      const wasDisliked = p.is_disliked;
+      return {
+        ...p,
+        is_disliked: !wasDisliked,
+        dislike_count: wasDisliked ? p.dislike_count - 1 : p.dislike_count + 1,
+        is_liked: !wasDisliked ? false : p.is_liked,
+        like_count: !wasDisliked && p.is_liked ? p.like_count - 1 : p.like_count,
+      };
+    }));
+    try { await api.post(`/posts/${postId}/dislike`); } catch (err) { loadFeed(); }
   };
 
   const handleDelete = async (postId) => {
     if (!confirm("Bu postu silmək istədiyinə əminsən?")) return;
-    try { await api.delete(`/posts/${postId}`); loadFeed(); } catch (err) { alert(err.response?.data?.detail || "Post silinmədi"); }
+    setPosts(prev => prev.filter(p => p.id !== postId));
+    try { await api.delete(`/posts/${postId}`); } catch (err) { loadFeed(); alert(err.response?.data?.detail || "Post silinmədi"); }
   };
 
   const toggleComments = async (postId) => {
@@ -113,13 +137,13 @@ export default function Feed() {
   const submitComment = async (postId) => {
     const text = commentText[postId]?.trim();
     if (!text) return;
+    setCommentText({ ...commentText, [postId]: "" });
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, comment_count: p.comment_count + 1 } : p));
     try {
       await api.post(`/posts/${postId}/comment`, { content: text });
-      setCommentText({ ...commentText, [postId]: "" });
       const res = await api.get(`/posts/${postId}/comments`);
       setComments({ ...comments, [postId]: res.data });
-      loadFeed();
-    } catch (err) {}
+    } catch (err) { loadFeed(); }
   };
 
   const submitReport = async () => {
@@ -198,8 +222,32 @@ export default function Feed() {
         </div>
       </form>
 
+      {/* Skeleton loading */}
+      {loading && (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className={`${d.card} rounded-2xl shadow-sm p-5 animate-pulse`}>
+              <div className="flex items-center mb-4">
+                <div className={`w-12 h-12 rounded-full ${d.dark ? "bg-gray-700" : "bg-gray-200"}`} />
+                <div className="ml-3.5 flex-1">
+                  <div className={`h-4 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded w-32 mb-2`} />
+                  <div className={`h-3 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded w-24`} />
+                </div>
+              </div>
+              <div className={`h-4 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded w-full mb-2`} />
+              <div className={`h-4 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded w-3/4 mb-4`} />
+              <div className={`flex gap-4 pt-3 border-t ${d.borderLight}`}>
+                <div className={`h-8 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded-xl w-16`} />
+                <div className={`h-8 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded-xl w-16`} />
+                <div className={`h-8 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded-xl w-16`} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Postlar */}
-      <div className="space-y-4">
+      {!loading && <div className="space-y-4">
         {posts.map((post, index) => (
           <div key={post.id} className={`${d.card} rounded-2xl shadow-sm p-5 hover:shadow-md transition-all duration-300 group`}>
             <div className="flex items-center mb-4">
@@ -274,7 +322,7 @@ export default function Feed() {
             )}
           </div>
         ))}
-      </div>
+      </div>}
 
       {/* Report modal */}
       {reportPostId && (
@@ -296,7 +344,7 @@ export default function Feed() {
         </div>
       )}
 
-      {posts.length === 0 && (
+      {!loading && posts.length === 0 && (
         <div className="text-center py-20">
           <div className={`w-20 h-20 ${d.dark ? "bg-blue-500/10" : "bg-gradient-to-br from-blue-50 to-indigo-50"} rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-sm`}>
             <TrendingUp size={32} className="text-blue-400" />

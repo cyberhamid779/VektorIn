@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Send, MessageCircle, ArrowLeft, Circle } from "lucide-react";
 import api from "../api/client";
 import { formatBakuHM, isActiveNow, formatLastSeen } from "../utils/time";
+import { useDarkClasses } from "../hooks/useDarkClasses";
 
 export default function Messages() {
   const [chats, setChats] = useState([]);
@@ -62,36 +63,38 @@ export default function Messages() {
     } catch (err) {}
   };
 
+  const d = useDarkClasses();
+
   return (
     <div className="max-w-5xl mx-auto py-8 px-4">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Mesajlar</h2>
-        <p className="text-gray-400 text-sm mt-1">Baglantilarin ile sohbet et</p>
+        <h2 className={`text-2xl font-bold ${d.heading}`}>Mesajlar</h2>
+        <p className={`${d.textFaint} text-sm mt-1`}>Baglantilarin ile sohbet et</p>
       </div>
 
-      <div className="flex bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden" style={{ height: "560px" }}>
+      <div className={`flex ${d.card} rounded-3xl shadow-sm overflow-hidden`} style={{ height: "560px" }}>
         {/* Chat siyahisi */}
-        <div className={`w-full md:w-80 border-r border-gray-100 overflow-y-auto ${activeChat ? "hidden md:block" : ""}`}>
-          <div className="p-4 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Sohbetler</h3>
+        <div className={`w-full md:w-80 border-r ${d.border} overflow-y-auto ${activeChat ? "hidden md:block" : ""}`}>
+          <div className={`p-4 border-b ${d.border}`}>
+            <h3 className={`text-sm font-semibold ${d.textMuted} uppercase tracking-wider`}>Sohbetler</h3>
           </div>
           {chats.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-[calc(100%-57px)] text-gray-400 px-6">
-              <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-3">
+            <div className={`flex flex-col items-center justify-center h-[calc(100%-57px)] ${d.textFaint} px-6`}>
+              <div className={`w-16 h-16 ${d.dark ? "bg-gray-700" : "bg-gray-50"} rounded-2xl flex items-center justify-center mb-3`}>
                 <MessageCircle size={28} />
               </div>
               <p className="text-sm font-medium">Hele mesaj yoxdur</p>
-              <p className="text-xs text-gray-300 mt-1 text-center">Baglantilarin ile mesajlasmaga bashla</p>
+              <p className={`text-xs ${d.textFaint} mt-1 text-center`}>Baglantilarin ile mesajlasmaga bashla</p>
             </div>
           )}
           {chats.map((chat) => (
             <div
               key={chat.user_id}
               onClick={() => openChat(chat.user_id, chat.full_name, chat.last_seen)}
-              className={`p-4 cursor-pointer border-b border-gray-50 transition-all duration-200 ${
+              className={`p-4 cursor-pointer border-b ${d.borderLight} transition-all duration-200 ${
                 activeChat?.userId === chat.user_id
-                  ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-2 border-l-blue-500"
-                  : "hover:bg-gray-50"
+                  ? d.dark ? "bg-blue-500/10 border-l-2 border-l-blue-500" : "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-2 border-l-blue-500"
+                  : d.dark ? "hover:bg-gray-700/50" : "hover:bg-gray-50"
               }`}
             >
               <div className="flex items-center gap-3">
@@ -104,14 +107,14 @@ export default function Messages() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold text-gray-900 text-sm">{chat.full_name}</p>
+                    <p className={`font-semibold ${d.text} text-sm`}>{chat.full_name}</p>
                     {chat.unread_count > 0 && (
                       <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm shadow-blue-200">
                         {chat.unread_count}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 truncate mt-1">{chat.last_message}</p>
+                  <p className={`text-xs ${d.textFaint} truncate mt-1`}>{chat.last_message}</p>
                 </div>
               </div>
             </div>
@@ -122,10 +125,10 @@ export default function Messages() {
         <div className={`flex-1 flex flex-col ${!activeChat ? "hidden md:flex" : ""}`}>
           {activeChat ? (
             <>
-              <div className="px-6 py-4 border-b border-gray-100 bg-white/80 backdrop-blur-sm flex items-center gap-3">
+              <div className={`px-6 py-4 border-b ${d.border} ${d.dark ? "bg-gray-800/80" : "bg-white/80"} backdrop-blur-sm flex items-center gap-3`}>
                 <button
                   onClick={() => setActiveChat(null)}
-                  className="md:hidden p-2 -ml-2 rounded-xl hover:bg-gray-100 transition text-gray-500"
+                  className={`md:hidden p-2 -ml-2 rounded-xl ${d.dark ? "hover:bg-gray-700 text-gray-400" : "hover:bg-gray-100 text-gray-500"} transition`}
                 >
                   <ArrowLeft size={20} />
                 </button>
@@ -133,7 +136,7 @@ export default function Messages() {
                   {activeChat.fullName?.charAt(0)}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">{activeChat.fullName}</p>
+                  <p className={`font-semibold ${d.text} text-sm`}>{activeChat.fullName}</p>
                   {(() => {
                     const active = isActiveNow(activeChat.lastSeen);
                     return (
@@ -148,7 +151,7 @@ export default function Messages() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-3 bg-gradient-to-b from-gray-50 to-white">
+              <div className={`flex-1 overflow-y-auto p-6 space-y-3 ${d.dark ? "bg-gray-900/50" : "bg-gradient-to-b from-gray-50 to-white"}`}>
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
@@ -158,11 +161,13 @@ export default function Messages() {
                       className={`max-w-[70%] px-4 py-3 ${
                         msg.is_mine
                           ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl rounded-br-md shadow-md shadow-blue-100"
+                          : d.dark
+                          ? "bg-gray-700 text-gray-100 border border-gray-600 rounded-2xl rounded-bl-md shadow-sm"
                           : "bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-bl-md shadow-sm"
                       }`}
                     >
                       <p className="text-sm leading-relaxed">{msg.content}</p>
-                      <p className={`text-[11px] mt-1.5 ${msg.is_mine ? "text-blue-200" : "text-gray-300"}`}>
+                      <p className={`text-[11px] mt-1.5 ${msg.is_mine ? "text-blue-200" : d.textFaint}`}>
                         {formatBakuHM(msg.created_at)}
                       </p>
                     </div>
@@ -171,13 +176,13 @@ export default function Messages() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <form onSubmit={sendMessage} className="p-4 border-t border-gray-100 bg-white flex gap-3">
+              <form onSubmit={sendMessage} className={`p-4 border-t ${d.border} ${d.dark ? "bg-gray-800" : "bg-white"} flex gap-3`}>
                 <input
                   type="text"
                   value={newMsg}
                   onChange={(e) => setNewMsg(e.target.value)}
                   placeholder="Mesaj yaz..."
-                  className="flex-1 px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all text-sm"
+                  className={`flex-1 px-5 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${d.inputAlt}`}
                 />
                 <button
                   type="submit"
@@ -189,12 +194,12 @@ export default function Messages() {
               </form>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 px-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl flex items-center justify-center mb-5 shadow-sm">
+            <div className={`flex-1 flex flex-col items-center justify-center ${d.textFaint} px-6`}>
+              <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-5 shadow-sm ${d.dark ? "bg-blue-500/10" : "bg-gradient-to-br from-blue-50 to-indigo-50"}`}>
                 <MessageCircle size={32} className="text-blue-400" />
               </div>
-              <p className="font-semibold text-gray-700 text-lg">Sohbet secin</p>
-              <p className="text-sm mt-2 text-gray-400 text-center max-w-xs">Soldaki siyahidan bir sohbet secerek mesajlasmaga bashlayin</p>
+              <p className={`font-semibold ${d.text} text-lg`}>Sohbet secin</p>
+              <p className={`text-sm mt-2 ${d.textFaint} text-center max-w-xs`}>Soldaki siyahidan bir sohbet secerek mesajlasmaga bashlayin</p>
             </div>
           )}
         </div>

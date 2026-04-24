@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, subqueryload
+from sqlalchemy import func as sa_func
 from pydantic import BaseModel
 from app.services.database import get_db
 from app.services.auth import get_current_user
@@ -45,32 +46,45 @@ class PostResponse(BaseModel):
         from_attributes = True
 
 
+def _build_post_response(post, current_user_id, user_liked_ids, user_disliked_ids):
+    return PostResponse(
+        id=post.id,
+        content=post.content,
+        image_url=post.image_url,
+        video_url=post.video_url,
+        is_pinned=post.is_pinned,
+        show_dislikes=post.show_dislikes if post.show_dislikes is not None else True,
+        created_at=str(post.created_at) if post.created_at else None,
+        author_name=post.author.full_name,
+        author_id=post.author_id,
+        author_picture=post.author.profile_picture,
+        like_count=len(post.likes),
+        dislike_count=len(post.dislikes),
+        comment_count=len(post.comments),
+        is_liked=post.id in user_liked_ids,
+        is_disliked=post.id in user_disliked_ids,
+    )
+
+
 @router.get("", response_model=list[PostResponse])
 def get_feed(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    posts = db.query(Post).order_by(Post.is_pinned.desc(), Post.created_at.desc()).limit(50).all()
+    posts = (
+        db.query(Post)
+        .options(joinedload(Post.author), subqueryload(Post.likes), subqueryload(Post.dislikes), subqueryload(Post.comments))
+        .order_by(Post.is_pinned.desc(), Post.created_at.desc())
+        .limit(50)
+        .all()
+    )
 
-    result = []
-    for post in posts:
-        is_liked = db.query(PostLike).filter(PostLike.post_id == post.id, PostLike.user_id == current_user.id).first() is not None
-        is_disliked = db.query(PostDislike).filter(PostDislike.post_id == post.id, PostDislike.user_id == current_user.id).first() is not None
-        result.append(PostResponse(
-            id=post.id,
-            content=post.content,
-            image_url=post.image_url,
-            video_url=post.video_url,
-            is_pinned=post.is_pinned,
-            show_dislikes=post.show_dislikes if post.show_dislikes is not None else True,
-            created_at=str(post.created_at) if post.created_at else None,
-            author_name=post.author.full_name,
-            author_id=post.author_id,
-            author_picture=post.author.profile_picture,
-            like_count=len(post.likes),
-            dislike_count=len(post.dislikes),
-            comment_count=len(post.comments),
-            is_liked=is_liked,
-            is_disliked=is_disliked,
-        ))
-    return result
+    post_ids = [p.id for p in posts]
+    user_liked_ids = set(
+        r[0] for r in db.query(PostLike.post_id).filter(PostLike.post_id.in_(post_ids), PostLike.user_id == current_user.id).all()
+    ) if post_ids else set()
+    user_disliked_ids = set(
+        r[0] for r in db.query(PostDislike.post_id).filter(PostDislike.post_id.in_(post_ids), PostDislike.user_id == current_user.id).all()
+    ) if post_ids else set()
+
+    return [_build_post_response(post, current_user.id, user_liked_ids, user_disliked_ids) for post in posts]
 
 
 @router.post("", response_model=dict)
@@ -145,30 +159,23 @@ def delete_post(post_id: int, db: Session = Depends(get_db), current_user: User 
 
 @router.get("/user/{user_id}", response_model=list[PostResponse])
 def get_user_posts(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    posts = db.query(Post).filter(Post.author_id == user_id).order_by(Post.created_at.desc()).all()
+    posts = (
+        db.query(Post)
+        .filter(Post.author_id == user_id)
+        .options(joinedload(Post.author), subqueryload(Post.likes), subqueryload(Post.dislikes), subqueryload(Post.comments))
+        .order_by(Post.created_at.desc())
+        .all()
+    )
 
-    result = []
-    for post in posts:
-        is_liked = db.query(PostLike).filter(PostLike.post_id == post.id, PostLike.user_id == current_user.id).first() is not None
-        is_disliked = db.query(PostDislike).filter(PostDislike.post_id == post.id, PostDislike.user_id == current_user.id).first() is not None
-        result.append(PostResponse(
-            id=post.id,
-            content=post.content,
-            image_url=post.image_url,
-            video_url=post.video_url,
-            is_pinned=post.is_pinned,
-            show_dislikes=post.show_dislikes if post.show_dislikes is not None else True,
-            created_at=str(post.created_at) if post.created_at else None,
-            author_name=post.author.full_name,
-            author_id=post.author_id,
-            author_picture=post.author.profile_picture,
-            like_count=len(post.likes),
-            dislike_count=len(post.dislikes),
-            comment_count=len(post.comments),
-            is_liked=is_liked,
-            is_disliked=is_disliked,
-        ))
-    return result
+    post_ids = [p.id for p in posts]
+    user_liked_ids = set(
+        r[0] for r in db.query(PostLike.post_id).filter(PostLike.post_id.in_(post_ids), PostLike.user_id == current_user.id).all()
+    ) if post_ids else set()
+    user_disliked_ids = set(
+        r[0] for r in db.query(PostDislike.post_id).filter(PostDislike.post_id.in_(post_ids), PostDislike.user_id == current_user.id).all()
+    ) if post_ids else set()
+
+    return [_build_post_response(post, current_user.id, user_liked_ids, user_disliked_ids) for post in posts]
 
 
 @router.post("/{post_id}/comment")
