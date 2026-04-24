@@ -23,6 +23,8 @@ from app.models.certificate import Certificate
 from app.models.project import Project
 from app.models.event import Event
 from app.models.activity_log import ActivityLog
+from app.models.article import Article, ArticleLike, ArticleComment
+from app.models.article import Article, ArticleLike, ArticleComment
 
 target_metadata = Base.metadata
 

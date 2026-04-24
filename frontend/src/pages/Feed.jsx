@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ThumbsDown, MessageCircle, Send, Pin, TrendingUp, Image as ImageIcon, Film, Flag, X, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { Heart, ThumbsDown, MessageCircle, Send, Pin, TrendingUp, Image as ImageIcon, Film, Flag, X, ChevronDown, ChevronUp, Trash2, FileText } from "lucide-react";
 import api from "../api/client";
 import UserAvatar from "../components/UserAvatar";
 import { formatBakuDate, formatBakuHM } from "../utils/time";
@@ -166,6 +166,9 @@ export default function Feed() {
             Salam, {user.full_name?.split(" ")[0]}
           </h1>
           <p className={d.textFaint + " text-sm mt-1"}>Bugün nə paylasmaq isteyirsen?</p>
+          <Link to="/article/new" className="inline-flex items-center gap-2 mt-3 text-sm font-semibold text-blue-600 hover:text-blue-700 transition">
+            <FileText size={16} /> Məqalə yaz
+          </Link>
         </div>
       )}
 

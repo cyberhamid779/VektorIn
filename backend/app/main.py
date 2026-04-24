@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routes import auth, users, posts, connections, messages, admin, certificates, upload, projects, events
+from app.api.routes import auth, users, posts, connections, messages, admin, certificates, upload, projects, events, articles
 
 app = FastAPI(title="InVektor API", version="1.0.0")
 
@@ -31,6 +31,7 @@ app.include_router(certificates.router)
 app.include_router(upload.router)
 app.include_router(projects.router)
 app.include_router(events.router)
+app.include_router(articles.router)
 
 
 @app.get("/")
