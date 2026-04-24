@@ -12,7 +12,7 @@ const Search = lazy(() => import("./pages/Search"));
 const Connections = lazy(() => import("./pages/Connections"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
-const Messages = lazy(() => import("./pages/Messages"));
+// const Messages = lazy(() => import("./pages/Messages"));
 
 const BG_STYLES = {
   default: { style: {} },
@@ -120,7 +120,7 @@ export default function App() {
           <Route path="/profile/:id" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/search" element={<PrivateRoute><Search /></PrivateRoute>} />
           <Route path="/connections" element={<PrivateRoute><Connections /></PrivateRoute>} />
-          <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
+          {/* <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} /> */}
           <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           <Route path="*" element={<Navigate to="/feed" />} />
