@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { LogIn } from "lucide-react";
 import api from "../api/client";
 
@@ -9,6 +9,8 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const justRegistered = searchParams.get("registered") === "1";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,6 +36,11 @@ export default function Login() {
         </div>
 
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+          {justRegistered && (
+            <div className="bg-blue-50 text-blue-700 p-3 rounded-xl mb-4 text-sm font-medium">
+              Qeydiyyat uğurlu oldu! Emailinizi yoxlayın və hesabı təsdiqləyin.
+            </div>
+          )}
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-sm font-medium">
               {error}
@@ -45,7 +52,7 @@ export default function Login() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
                 type="email"
-                placeholder="ad.soyad@naa.edu.az"
+                placeholder="ad.soyad@naa.edu.az və ya @student.naa.edu.az"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"

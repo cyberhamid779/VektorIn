@@ -39,9 +39,8 @@ export default function Register() {
         ...form,
         course: parseInt(form.course),
       };
-      const res = await api.post("/auth/register", payload);
-      localStorage.setItem("token", res.data.access_token);
-      navigate("/feed");
+      await api.post("/auth/register", payload);
+      navigate("/login?registered=1");
     } catch (err) {
       setError(err.response?.data?.detail || "Qeydiyyat uğursuz oldu");
     } finally {
@@ -84,7 +83,7 @@ export default function Register() {
               <input
                 type="email"
                 name="email"
-                placeholder="ad.soyad@naa.edu.az"
+                placeholder="ad.soyad@naa.edu.az və ya @student.naa.edu.az"
                 value={form.email}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"

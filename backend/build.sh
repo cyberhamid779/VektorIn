@@ -23,5 +23,7 @@ with engine.begin() as conn:
     conn.execute(text('ALTER TABLE posts ALTER COLUMN content DROP NOT NULL'))
     conn.execute(text('ALTER TABLE users ADD COLUMN IF NOT EXISTS faculty VARCHAR(255)'))
     conn.execute(text('ALTER TABLE posts ADD COLUMN IF NOT EXISTS show_dislikes BOOLEAN DEFAULT TRUE'))
+    conn.execute(text('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN NOT NULL DEFAULT FALSE'))
+    conn.execute(text('ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255)'))
 print('Tables created successfully')
 "
