@@ -70,6 +70,19 @@ def get_pending(db: Session = Depends(get_db), current_user: User = Depends(get_
     return result
 
 
+@router.delete("/{connection_id}")
+def remove_connection(connection_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    conn = db.query(Connection).filter(
+        Connection.id == connection_id,
+        or_(Connection.sender_id == current_user.id, Connection.receiver_id == current_user.id)
+    ).first()
+    if not conn:
+        raise HTTPException(status_code=404, detail="Bağlantı tapılmadı")
+    db.delete(conn)
+    db.commit()
+    return {"message": "Bağlantı silindi"}
+
+
 @router.get("/my")
 def get_my_connections(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     connections = db.query(Connection).filter(

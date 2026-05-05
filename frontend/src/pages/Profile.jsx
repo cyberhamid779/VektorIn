@@ -257,14 +257,6 @@ export default function Profile() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            {isOwn && (
-              <button
-                onClick={loadInbox}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-green-50 to-emerald-50 text-green-600 hover:shadow-md hover:shadow-green-100 border border-green-100 transition-all duration-200"
-              >
-                <Inbox size={16} /> Mesajlar
-              </button>
-            )}
             {isOwn ? (
               <button
                 onClick={() => setEditing(!editing)}
@@ -275,13 +267,6 @@ export default function Profile() {
                 }`}
               >
                 {editing ? <><X size={16} /> Legv et</> : <><Edit3 size={16} /> Redakte</>}
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowQuickMsg(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 hover:shadow-md hover:shadow-blue-100 border border-blue-100 transition-all duration-200"
-              >
-                <Mail size={16} /> Mesaj göndər
               </button>
             )}
           </div>
