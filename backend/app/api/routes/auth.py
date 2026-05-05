@@ -69,7 +69,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
-@router.post("/register", response_model=TokenResponse)
+@router.post("/register")
 @limiter.limit("5/minute")
 def register(request: Request, data: RegisterRequest, db: Session = Depends(get_db)):
     if not (data.email.endswith("@naa.edu.az") or data.email.endswith("@student.naa.edu.az")):
