@@ -1,9 +1,16 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from app.api.routes import auth, users, posts, connections, messages, admin, certificates, upload, projects, events, articles
 
-app = FastAPI(title="InVektor API", version="1.0.0")
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI(title="Hash API", version="1.0.0")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 allowed_origins = [
     "http://localhost:5173",
@@ -36,4 +43,4 @@ app.include_router(articles.router)
 
 @app.get("/")
 def root():
-    return {"message": "InVektor API işləyir"}
+    return {"message": "Hash API işləyir"}

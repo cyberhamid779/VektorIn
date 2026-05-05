@@ -1,12 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from app.services.database import get_db
 from app.services.auth import hash_password, verify_password, create_access_token
 from app.services.activity_logger import log_activity
 from app.models.user import User
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+limiter = Limiter(key_func=get_remote_address)
 
 FACULTY_SPECIALIZATIONS = {
     "Hava nəqliyyatı fakültəsi": [
@@ -65,7 +68,8 @@ class TokenResponse(BaseModel):
 
 
 @router.post("/register", response_model=TokenResponse)
-def register(data: RegisterRequest, request: Request, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register(request: Request, data: RegisterRequest, db: Session = Depends(get_db)):
     if not data.email.endswith("@naa.edu.az"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -121,7 +125,8 @@ def get_faculties():
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(data: LoginRequest, request: Request, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
     if not user or not verify_password(data.password, user.password_hash):
         log_activity(db, action="login_failed", email=data.email, request=request)
