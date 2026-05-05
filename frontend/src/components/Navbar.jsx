@@ -33,7 +33,7 @@ export default function Navbar() {
     <nav className={`${dark ? "bg-gray-900/90 border-gray-700/50" : "bg-white/80 border-gray-200/50"} backdrop-blur-xl border-b sticky top-0 z-50 shadow-sm`}>
       <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-16">
         <Link to="/feed" className="text-xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          InVektor
+          Hash
         </Link>
 
         {/* Desktop nav */}

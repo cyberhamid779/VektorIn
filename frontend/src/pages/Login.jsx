@@ -29,7 +29,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link to="/" className="text-4xl font-bold text-blue-600">InVektor</Link>
+          <Link to="/" className="text-4xl font-bold text-blue-600">Hash</Link>
           <p className="text-gray-500 mt-2">Hesabına daxil ol</p>
         </div>
 
