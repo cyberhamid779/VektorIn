@@ -257,7 +257,7 @@ export default function Profile() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            {isOwn ? (
+            {isOwn && (
               <button
                 onClick={() => setEditing(!editing)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
