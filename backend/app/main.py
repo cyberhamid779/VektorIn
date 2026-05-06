@@ -62,6 +62,11 @@ app.include_router(articles.router)
 app.include_router(notifications.router)
 
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=500, content={"detail": "Daxili server xətası"})
+
+
 @app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return {"message": "Hash API işləyir"}
