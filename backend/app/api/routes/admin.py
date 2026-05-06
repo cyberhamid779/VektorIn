@@ -5,10 +5,13 @@ from pydantic import BaseModel
 from app.services.database import get_db
 from app.services.auth import get_current_user
 from app.models.user import User
-from app.models.post import Post, PostLike, Comment, PostReport
+from app.models.post import Post, PostLike, PostDislike, Comment, PostReport
 from app.models.connection import Connection
 from app.models.message import Message
 from app.models.activity_log import ActivityLog
+from app.models.certificate import Certificate
+from app.models.project import Project
+from app.models.notification import Notification
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -133,15 +136,29 @@ def delete_user(user_id: int, db: Session = Depends(get_db), admin: User = Depen
         raise HTTPException(status_code=404, detail="İstifadəçi tapılmadı")
 
     # Əlaqəli datanı sil
-    db.query(PostLike).filter(PostLike.user_id == user_id).delete()
-    db.query(Comment).filter(Comment.user_id == user_id).delete()
+    db.query(Notification).filter(
+        (Notification.user_id == user_id) | (Notification.from_user_id == user_id)
+    ).delete(synchronize_session=False)
+    db.query(Certificate).filter(Certificate.user_id == user_id).delete(synchronize_session=False)
+    db.query(Project).filter(Project.user_id == user_id).delete(synchronize_session=False)
+    db.query(PostReport).filter(PostReport.reporter_id == user_id).delete(synchronize_session=False)
+    db.query(PostDislike).filter(PostDislike.user_id == user_id).delete(synchronize_session=False)
+    db.query(PostLike).filter(PostLike.user_id == user_id).delete(synchronize_session=False)
+    db.query(Comment).filter(Comment.user_id == user_id).delete(synchronize_session=False)
     posts = db.query(Post).filter(Post.author_id == user_id).all()
     for post in posts:
-        db.query(PostLike).filter(PostLike.post_id == post.id).delete()
-        db.query(Comment).filter(Comment.post_id == post.id).delete()
-    db.query(Post).filter(Post.author_id == user_id).delete()
-    db.query(Connection).filter((Connection.sender_id == user_id) | (Connection.receiver_id == user_id)).delete()
-    db.query(Message).filter((Message.sender_id == user_id) | (Message.receiver_id == user_id)).delete()
+        db.query(Notification).filter(Notification.post_id == post.id).delete(synchronize_session=False)
+        db.query(PostReport).filter(PostReport.post_id == post.id).delete(synchronize_session=False)
+        db.query(PostDislike).filter(PostDislike.post_id == post.id).delete(synchronize_session=False)
+        db.query(PostLike).filter(PostLike.post_id == post.id).delete(synchronize_session=False)
+        db.query(Comment).filter(Comment.post_id == post.id).delete(synchronize_session=False)
+    db.query(Post).filter(Post.author_id == user_id).delete(synchronize_session=False)
+    db.query(Connection).filter(
+        (Connection.sender_id == user_id) | (Connection.receiver_id == user_id)
+    ).delete(synchronize_session=False)
+    db.query(Message).filter(
+        (Message.sender_id == user_id) | (Message.receiver_id == user_id)
+    ).delete(synchronize_session=False)
 
     db.delete(user)
     db.commit()
