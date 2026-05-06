@@ -1,3 +1,4 @@
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -72,6 +73,25 @@ def get_stats(db: Session = Depends(get_db), admin: User = Depends(get_admin_use
         accepted_connections=db.query(func.count(Connection.id)).filter(Connection.status == "accepted").scalar(),
         total_messages=db.query(func.count(Message.id)).scalar(),
     )
+
+
+# ─── Online Users ───
+
+@router.get("/online")
+def get_online_users(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    cutoff = datetime.now(timezone.utc) - timedelta(minutes=3)
+    users = db.query(User).filter(User.last_seen >= cutoff, User.is_active == True).all()
+    return [
+        {
+            "id": u.id,
+            "full_name": u.full_name,
+            "email": u.email,
+            "major": u.major,
+            "last_page": u.last_page,
+            "last_seen": u.last_seen.isoformat() if u.last_seen else None,
+        }
+        for u in users
+    ]
 
 
 # ─── Users ───

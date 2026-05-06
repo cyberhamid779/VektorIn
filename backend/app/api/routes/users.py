@@ -63,6 +63,20 @@ def update_profile(data: UpdateProfileRequest, db: Session = Depends(get_db), cu
     return current_user
 
 
+class HeartbeatRequest(BaseModel):
+    page: str | None = None
+
+
+@router.post("/me/heartbeat")
+def heartbeat(data: HeartbeatRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    from datetime import datetime, timezone
+    current_user.last_seen = datetime.now(timezone.utc)
+    if data.page:
+        current_user.last_page = data.page
+    db.commit()
+    return {"ok": True}
+
+
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str

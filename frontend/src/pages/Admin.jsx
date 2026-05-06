@@ -22,6 +22,7 @@ export default function Admin() {
   const [logEmail, setLogEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   useEffect(() => {
     loadStats();
@@ -32,7 +33,15 @@ export default function Admin() {
     if (tab === "posts") loadPosts();
     if (tab === "logs") loadLogs();
     if (tab === "reports") loadReports();
+    if (tab === "online") loadOnline();
   }, [tab]);
+
+  const loadOnline = async () => {
+    try {
+      const res = await api.get("/admin/online");
+      setOnlineUsers(res.data);
+    } catch (err) {}
+  };
 
   const loadStats = async () => {
     try {
@@ -153,6 +162,7 @@ export default function Admin() {
 
   const tabs = [
     { id: "dashboard", icon: BarChart3, label: "Panel" },
+    { id: "online", icon: Globe, label: "Onlayn" },
     { id: "users", icon: Users, label: "İstifadəçilər" },
     { id: "posts", icon: FileText, label: "Postlar" },
     { id: "reports", icon: Flag, label: "Şikayətlər" },
@@ -251,6 +261,71 @@ export default function Admin() {
             {!stats && (
               <div className="flex items-center justify-center py-20">
                 <div className="w-8 h-8 border-3 border-gray-200 border-t-slate-800 rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════ ONLINE ═══════ */}
+        {tab === "online" && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Hal-hazırda onlayn</h2>
+                <p className="text-sm text-gray-400 mt-0.5">Son 3 dəqiqə ərzində aktiv olan istifadəçilər</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-xl font-bold text-sm border border-green-100">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  {onlineUsers.length} onlayn
+                </div>
+                <button onClick={loadOnline} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-500 hover:bg-gray-50 transition shadow-sm">
+                  <RefreshCw size={14} /> Yenilə
+                </button>
+              </div>
+            </div>
+
+            {onlineUsers.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+                <Globe size={36} className="mx-auto text-gray-200 mb-3" />
+                <p className="text-gray-400 font-medium">Hal-hazırda onlayn istifadəçi yoxdur</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {onlineUsers.map(u => {
+                  const pageLabels = {
+                    "/feed": "Feed-ə baxır",
+                    "/search": "Axtarış edir",
+                    "/connections": "Bağlantılara baxır",
+                    "/settings": "Parametrlərə baxır",
+                    "/messages": "Mesajlara baxır",
+                    "/admin": "Admin paneldədir",
+                  };
+                  const pageLabel = u.last_page
+                    ? (pageLabels[u.last_page] || (u.last_page.startsWith("/profile") ? "Profilə baxır" : u.last_page))
+                    : "Naviqasiya edir";
+                  const seenSec = u.last_seen ? Math.floor((Date.now() - new Date(u.last_seen)) / 1000) : null;
+                  const seenLabel = seenSec === null ? "" : seenSec < 60 ? `${seenSec}s əvvəl` : `${Math.floor(seenSec / 60)}dəq əvvəl`;
+
+                  return (
+                    <div key={u.id} className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+                      <div className="relative">
+                        <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                          {u.full_name?.charAt(0)}
+                        </div>
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm">{u.full_name}</p>
+                        <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">{pageLabel}</p>
+                        <p className="text-xs text-gray-300 mt-1">{seenLabel}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

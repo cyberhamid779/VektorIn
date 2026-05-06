@@ -93,7 +93,14 @@ export default function Navbar() {
   useEffect(() => {
     api.get("/users/me").then(res => setCurrentUser(res.data)).catch(() => {});
     fetchUnread();
-    const interval = setInterval(fetchUnread, 30000);
+    const sendHeartbeat = () => {
+      api.post("/users/me/heartbeat", { page: window.location.pathname }).catch(() => {});
+    };
+    sendHeartbeat();
+    const interval = setInterval(() => {
+      fetchUnread();
+      sendHeartbeat();
+    }, 60000);
     return () => clearInterval(interval);
   }, []);
 
