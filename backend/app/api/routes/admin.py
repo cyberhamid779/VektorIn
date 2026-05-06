@@ -87,7 +87,6 @@ def get_online_users(db: Session = Depends(get_db), admin: User = Depends(get_ad
             "full_name": u.full_name,
             "email": u.email,
             "major": u.major,
-            "last_page": u.last_page,
             "last_seen": u.last_seen.isoformat() if u.last_seen else None,
         }
         for u in users

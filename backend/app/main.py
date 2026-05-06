@@ -10,39 +10,13 @@ from alembic.config import Config
 from alembic import command
 
 def run_migrations():
-    import time
-    for attempt in range(5):
-        try:
-            alembic_cfg = Config("alembic.ini")
-            command.upgrade(alembic_cfg, "head")
-            print("Migrations uğurla tamamlandı")
-            return
-        except Exception as e:
-            print(f"Migration cəhdi {attempt + 1}/5 uğursuz: {e}")
-            if attempt < 4:
-                time.sleep(5)
-    print("Migration tamamlanmadı, server işə davam edir")
-
-
-def ensure_columns():
-    from sqlalchemy import text
-    from app.services.database import engine
-    import time
-    for attempt in range(5):
-        try:
-            with engine.connect() as conn:
-                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_page VARCHAR(255)"))
-                conn.commit()
-            print("ensure_columns: last_page OK")
-            return
-        except Exception as e:
-            print(f"ensure_columns cəhdi {attempt + 1}/5: {e}")
-            if attempt < 4:
-                time.sleep(5)
-
+    try:
+        alembic_cfg = Config("alembic.ini")
+        command.upgrade(alembic_cfg, "head")
+    except Exception as e:
+        print(f"Migration xətası (davam edir): {e}")
 
 run_migrations()
-ensure_columns()
 
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="Hash API", version="1.0.0")
@@ -84,26 +58,9 @@ app.include_router(notifications.router)
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     print(f"UNHANDLED ERROR: {type(exc).__name__}: {exc}")
-    return JSONResponse(status_code=500, content={"detail": "Daxili server xətası", "error": str(exc)})
+    return JSONResponse(status_code=500, content={"detail": "Daxili server xətası"})
 
 
 @app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return {"message": "Hash API işləyir"}
-
-
-@app.get("/health")
-def health():
-    from sqlalchemy import text
-    from app.services.database import engine
-    try:
-        with engine.connect() as conn:
-            result = conn.execute(text("SELECT current_database(), version()"))
-            row = result.fetchone()
-            cols = conn.execute(text(
-                "SELECT column_name FROM information_schema.columns WHERE table_name='users' ORDER BY ordinal_position"
-            )).fetchall()
-            ver = conn.execute(text("SELECT version_num FROM alembic_version")).fetchone()
-            return {"db": "ok", "database": row[0], "alembic_version": ver[0] if ver else None, "users_columns": [c[0] for c in cols]}
-    except Exception as e:
-        return {"db": "error", "detail": str(e)}

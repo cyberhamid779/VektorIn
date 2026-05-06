@@ -71,8 +71,6 @@ class HeartbeatRequest(BaseModel):
 def heartbeat(data: HeartbeatRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     from datetime import datetime, timezone
     current_user.last_seen = datetime.now(timezone.utc)
-    if data.page:
-        current_user.last_page = data.page
     db.commit()
     return {"ok": True}
 
