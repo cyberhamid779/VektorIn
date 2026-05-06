@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ThumbsDown, MessageCircle, Send, Pin, TrendingUp, Image as ImageIcon, Film, Flag, X, ChevronDown, ChevronUp, Trash2, FileText } from "lucide-react";
+import { Heart, ThumbsDown, MessageCircle, Send, Pin, TrendingUp, Image as ImageIcon, Film, Flag, X, ChevronDown, ChevronUp, Trash2, Sparkles } from "lucide-react";
 import api from "../api/client";
 import UserAvatar from "../components/UserAvatar";
 import { formatBakuDate, formatBakuHM } from "../utils/time";
@@ -24,6 +24,7 @@ export default function Feed() {
   const [comments, setComments] = useState({});
   const [commentText, setCommentText] = useState({});
   const [loading, setLoading] = useState(true);
+  const [aiLoading, setAiLoading] = useState(false);
   const d = useDarkClasses();
   const { t } = useLang();
 
@@ -149,6 +150,18 @@ export default function Feed() {
     } catch (err) { loadFeed(); }
   };
 
+  const handleAiEnhance = async () => {
+    if (!newPost.trim()) return;
+    setAiLoading(true);
+    try {
+      const res = await api.post("/posts/ai-enhance", { text: newPost });
+      setNewPost(res.data.text);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "AI xəta verdi");
+    }
+    setAiLoading(false);
+  };
+
   const submitReport = async () => {
     if (!reportPostId) return;
     setReporting(true);
@@ -204,7 +217,25 @@ export default function Feed() {
           </div>
         </div>
 
-        <div className={`flex items-center justify-between mt-3 pt-4 border-t ${d.borderLight}`}>
+        {newPost.trim() && (
+          <div className="px-1 mb-2">
+            <button
+              type="button"
+              onClick={handleAiEnhance}
+              disabled={aiLoading}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border ${
+                d.dark
+                  ? "bg-purple-500/10 text-purple-400 border-purple-500/20 hover:bg-purple-500/20"
+                  : "bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-600 border-purple-100 hover:shadow-md hover:shadow-purple-100"
+              } disabled:opacity-50`}
+            >
+              <Sparkles size={15} className={aiLoading ? "animate-spin" : ""} />
+              {aiLoading ? "AI yazır..." : "AI ilə peşəkarlaşdır"}
+            </button>
+          </div>
+        )}
+
+        <div className={`flex items-center justify-between mt-1 pt-4 border-t ${d.borderLight}`}>
           <div className="flex items-center gap-1">
             <label className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:bg-blue-50/10 px-3 py-2 rounded-xl transition">
               <ImageIcon size={16} /> Şəkil

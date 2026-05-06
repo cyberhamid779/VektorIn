@@ -2,13 +2,57 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload, subqueryload
 from sqlalchemy import func as sa_func
 from pydantic import BaseModel
+import httpx
 from app.services.database import get_db
 from app.services.auth import get_current_user
 from app.services.notifier import create_notification
 from app.models.user import User
 from app.models.post import Post, PostLike, PostDislike, Comment, PostReport
+from app.config import settings
 
 router = APIRouter(prefix="/api/posts", tags=["posts"])
+
+
+class AIEnhanceRequest(BaseModel):
+    text: str
+
+
+@router.post("/ai-enhance")
+async def ai_enhance(data: AIEnhanceRequest, current_user: User = Depends(get_current_user)):
+    if not data.text.strip():
+        raise HTTPException(status_code=400, detail="Mətn boş ola bilməz")
+    if not settings.GEMINI_API_KEY:
+        raise HTTPException(status_code=503, detail="AI xidməti aktiv deyil")
+
+    prompt = f"""Sen peşəkar LinkedIn post redaktorusan. Aşağıdakı mətnə bax və onu professional, akademik üslubda LinkedIn postu kimi yenidən yaz.
+
+Qaydalar:
+- Azərbaycan dilində yaz
+- Giriş cümləsi diqqət çəkici olsun
+- Strukturlu ol: giriş → əsas fikir → nəticə/çağırış
+- Emojilər az istifadə et (1-2 max)
+- 150-250 söz arasında olsun
+- Həşteqləri sona əlavə et (3-5 ədəd)
+- Akademik/aviasiya mühitinə uyğun ton
+
+İstifadəçinin mətni:
+{data.text.strip()}
+
+Yalnız hazır postu yaz, heç bir izahat əlavə etmə."""
+
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            res = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={settings.GEMINI_API_KEY}",
+                json={"contents": [{"parts": [{"text": prompt}]}]},
+            )
+            if res.status_code != 200:
+                raise HTTPException(status_code=502, detail="AI xidmətindən xəta")
+            result = res.json()
+            enhanced = result["candidates"][0]["content"]["parts"][0]["text"]
+            return {"text": enhanced.strip()}
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="AI cavab vermək üçün çox gec etdi")
 
 
 class PostCreate(BaseModel):
