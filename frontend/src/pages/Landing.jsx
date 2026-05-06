@@ -263,7 +263,7 @@ export default function Landing() {
 
       {/* ── FOOTER ── */}
       <footer className="border-t border-white/8 text-center py-8 text-slate-500 text-sm">
-        Hash · Vektor × MAA × Alfavit Group
+        © 2026 Hash · hashcampus.site
       </footer>
     </div>
   );
