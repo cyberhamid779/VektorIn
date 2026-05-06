@@ -84,6 +84,7 @@ def health():
             cols = conn.execute(text(
                 "SELECT column_name FROM information_schema.columns WHERE table_name='users' ORDER BY ordinal_position"
             )).fetchall()
-            return {"db": "ok", "database": row[0], "users_columns": [c[0] for c in cols]}
+            ver = conn.execute(text("SELECT version_num FROM alembic_version")).fetchone()
+            return {"db": "ok", "database": row[0], "alembic_version": ver[0] if ver else None, "users_columns": [c[0] for c in cols]}
     except Exception as e:
         return {"db": "error", "detail": str(e)}
