@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ExternalLink, RefreshCw, Trophy, Star, Calendar } from "lucide-react";
+import { ExternalLink, RefreshCw, Trophy, Calendar } from "lucide-react";
 import api from "../api/client";
 import { useDarkClasses } from "../hooks/useDarkClasses";
 
@@ -12,13 +12,6 @@ function HackathonCard({ item, dark, d }) {
       className={`group flex gap-4 p-5 rounded-2xl border transition-all duration-200 hover:shadow-md
         ${dark ? "bg-gray-800/60 border-gray-700/50 hover:bg-gray-800" : "bg-white border-gray-100 hover:border-gray-200"}`}
     >
-      <div className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center
-        ${dark ? "bg-amber-500/15" : "bg-amber-50"}`}>
-        {item.trusted
-          ? <Star size={18} className="text-amber-500 fill-amber-400" />
-          : <Trophy size={18} className="text-amber-500" />}
-      </div>
-
       <div className="flex-1 min-w-0">
         <h3 className={`text-sm font-semibold leading-snug line-clamp-2 mb-1 group-hover:text-blue-500 transition
           ${dark ? "text-white" : "text-gray-900"}`}>
