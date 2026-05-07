@@ -119,8 +119,11 @@ export default function ArticleView() {
             </div>
 
             <div
-              className={`article-content prose prose-lg max-w-none ${isDark ? "prose-invert" : "prose-gray"} mb-10`}
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+              className={`article-content prose prose-lg max-w-none ${isDark ? "prose-invert" : ""} mb-10`}
+              style={{
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                color: isDark ? "#e5e7eb" : "#1f2937",
+              }}
               dangerouslySetInnerHTML={{ __html: article.content }}
             />
 
