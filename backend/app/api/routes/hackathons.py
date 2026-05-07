@@ -80,3 +80,35 @@ def manual_refresh(
         raise HTTPException(status_code=403, detail="Yalnız adminlər yeniləyə bilər")
     background_tasks.add_task(_do_refresh)
     return {"detail": "Yeniləmə başladı, bir neçə dəqiqə gözləyin."}
+
+
+@router.get("/status")
+def scrape_status(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Yalnız adminlər")
+    count = db.query(Hackathon).count()
+    latest = db.query(Hackathon).order_by(Hackathon.scraped_at.desc()).first()
+
+    # DuckDuckGo əlçatanlığını yoxla
+    import requests as req
+    ddg_ok = False
+    ddg_error = ""
+    try:
+        r = req.get("https://html.duckduckgo.com/html/",
+                    params={"q": "hackathon test"},
+                    headers={"User-Agent": "Mozilla/5.0"},
+                    timeout=8)
+        ddg_ok = r.status_code == 200
+        ddg_error = f"HTTP {r.status_code}"
+    except Exception as e:
+        ddg_error = str(e)
+
+    return {
+        "table_count": count,
+        "last_scraped": latest.scraped_at.isoformat() if latest else None,
+        "duckduckgo_reachable": ddg_ok,
+        "duckduckgo_error": ddg_error if not ddg_ok else None,
+    }
