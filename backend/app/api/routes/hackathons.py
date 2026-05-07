@@ -53,21 +53,32 @@ def get_hackathons(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    from app.services.hackathon_scraper import is_expired
+
+    count = db.query(Hackathon).count()
     latest = db.query(Hackathon).order_by(Hackathon.scraped_at.desc()).first()
+
     cache_stale = (
         latest is None
         or (datetime.now(timezone.utc) - latest.scraped_at.replace(tzinfo=timezone.utc)).total_seconds()
         > CACHE_TTL_HOURS * 3600
     )
-    if cache_stale:
+
+    # DB boşdursa — sync scrape et (ilk açılış)
+    if count == 0:
+        _do_refresh()
+    elif cache_stale:
         background_tasks.add_task(_do_refresh)
 
-    return (
+    all_items = (
         db.query(Hackathon)
         .order_by(Hackathon.trusted.desc(), Hackathon.id.asc())
-        .limit(25)
         .all()
     )
+
+    # Keçmiş tarixliləri süz, maks 5 göstər
+    active = [h for h in all_items if not is_expired(h.deadline or "")]
+    return active[:5]
 
 
 @router.post("/refresh")
