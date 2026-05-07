@@ -23,7 +23,7 @@ function ArticleCard({ article, dark, d }) {
     >
       <div className="flex-1 min-w-0 flex flex-col justify-between gap-3">
         <div className="flex items-center gap-2">
-          <UserAvatar name={article.author_name} picture={article.author_picture} size={22} />
+          <UserAvatar user={{ full_name: article.author_name, profile_picture: article.author_picture }} size="xs" />
           <span className={`text-xs font-medium ${dark ? "text-gray-300" : "text-gray-700"}`}>{article.author_name}</span>
         </div>
 
@@ -128,7 +128,7 @@ export default function Articles() {
           {me && (
             <div className={`mt-4 p-4 rounded-2xl border ${dark ? "bg-gray-800/60 border-gray-700/50" : "bg-gray-50 border-gray-100"}`}>
               <div className="flex items-center gap-3 mb-2">
-                <UserAvatar name={me.full_name} picture={me.profile_picture} size={36} />
+                <UserAvatar user={{ full_name: me.full_name, profile_picture: me.profile_picture }} size="sm" />
                 <div className="min-w-0">
                   <p className={`text-xs font-semibold truncate ${dark ? "text-white" : "text-gray-900"}`}>{me.full_name}</p>
                   <p className={`text-[11px] truncate ${dark ? "text-gray-500" : "text-gray-400"}`}>{me.major}</p>
