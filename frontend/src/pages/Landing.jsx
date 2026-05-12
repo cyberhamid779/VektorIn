@@ -1,10 +1,23 @@
-import { useRef, useMemo, useEffect, useState, useCallback } from "react";
+import { useRef, useMemo, useEffect, useState, useCallback, createContext, useContext } from "react";
 import { Link } from "react-router-dom";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Sphere, MeshDistortMaterial, Float, Stars, Trail, Html } from "@react-three/drei";
 import { motion, useScroll, useTransform, AnimatePresence, useSpring } from "framer-motion";
 import * as THREE from "three";
 import { ArrowRight, Users, BookOpen, Network, FileText, ChevronDown, Zap, Globe, Shield } from "lucide-react";
+
+/* ═══════════════════════════════════════
+   MOBILE HOOK
+═══════════════════════════════════════ */
+function useMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const fn = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+  return isMobile;
+}
 
 /* ═══════════════════════════════════════
    3D: REALISTIC AIRPLANE
@@ -516,6 +529,7 @@ function HeroScene({ mouseX, mouseY }) {
    HUD OVERLAY
 ═══════════════════════════════════════ */
 function HUDOverlay() {
+  const isMobile = useMobile();
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
@@ -548,6 +562,8 @@ function HUDOverlay() {
     };
     return <div style={{ position: "absolute", width: size, height: size, opacity: 0.6, ...styles[pos] }} />;
   };
+
+  if (isMobile) return null;
 
   return (
     <div style={{
@@ -977,6 +993,7 @@ const steps = [
 function StepRow({ step, index, mockup }) {
   const rowRef   = useRef();
   const [active, setActive] = useState(false);
+  const isMobile = useMobile();
   const isEven   = index % 2 === 0;
 
   useEffect(() => {
@@ -999,18 +1016,18 @@ function StepRow({ step, index, mockup }) {
       transition={{ duration: 0.7 }}
       style={{
         display: "flex",
-        flexDirection: isEven ? "row" : "row-reverse",
+        flexDirection: isMobile ? "column" : isEven ? "row" : "row-reverse",
         alignItems: "center",
         justifyContent: "center",
-        gap: "clamp(32px,6vw,80px)",
-        padding: "clamp(60px,8vw,100px) clamp(16px,5vw,48px)",
+        gap: isMobile ? 28 : "clamp(32px,6vw,80px)",
+        padding: isMobile ? "48px 20px" : "clamp(60px,8vw,100px) clamp(16px,5vw,48px)",
         maxWidth: 1000,
         margin: "0 auto",
         width: "100%",
       }}
     >
       {/* Step info */}
-      <div style={{ flexShrink: 0, maxWidth: 260 }}>
+      <div style={{ flexShrink: 0, maxWidth: isMobile ? "100%" : 260, width: isMobile ? "100%" : "auto" }}>
         {/* Step number badge */}
         <motion.div
           animate={{
@@ -1136,6 +1153,7 @@ export default function Landing() {
   const mouseX = useRef(0);
   const mouseY = useRef(0);
   const [mounted, setMounted] = useState(false);
+  const isMobile = useMobile();
 
   const { scrollYProgress } = useScroll({ target: containerRef });
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
@@ -1160,7 +1178,7 @@ export default function Landing() {
         initial={{ y: -70, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 py-4"
+        className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-4 md:px-8 py-4"
         style={{ background: "linear-gradient(180deg,rgba(4,12,24,0.95) 0%,transparent 100%)", backdropFilter: "blur(14px)" }}
       >
         <span className="text-2xl font-black tracking-tight select-none"
@@ -1208,7 +1226,7 @@ export default function Landing() {
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.7 }}
-                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 text-xs font-semibold tracking-widest uppercase pointer-events-auto"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6 text-xs font-semibold tracking-widest uppercase pointer-events-auto"
                   style={{ border: "1px solid rgba(56,189,248,0.28)", background: "rgba(56,189,248,0.07)", color: "#7dd3fc" }}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
@@ -1219,7 +1237,7 @@ export default function Landing() {
                   initial={{ opacity: 0, y: 36 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.45, duration: 0.85 }}
-                  className="text-6xl md:text-8xl font-black leading-[1.02] tracking-tight mb-6"
+                  className="text-4xl md:text-8xl font-black leading-[1.05] tracking-tight mb-5"
                 >
                   Bilik paylaş.
                   <br />
@@ -1246,15 +1264,15 @@ export default function Landing() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.78, duration: 0.7 }}
-                  className="flex flex-wrap gap-4 justify-center mb-24 pointer-events-auto"
+                  className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-20 pointer-events-auto px-4"
                 >
                   <Link to="/register"
-                    className="flex items-center gap-2 px-9 py-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                    className="flex items-center gap-2 px-7 py-3.5 rounded-xl font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl w-full sm:w-auto justify-center"
                     style={{ background: "linear-gradient(135deg,#0ea5e9,#2563eb)", boxShadow: "0 0 50px rgba(14,165,233,0.45), inset 0 1px 0 rgba(255,255,255,0.12)" }}>
                     Platformaya qoşul <ArrowRight size={18} />
                   </Link>
                   <Link to="/login"
-                    className="flex items-center gap-2 px-9 py-4 rounded-xl font-medium transition-all duration-300 hover:scale-105"
+                    className="flex items-center gap-2 px-7 py-3.5 rounded-xl font-medium transition-all duration-300 hover:scale-105 w-full sm:w-auto justify-center"
                     style={{ border: "1px solid rgba(255,255,255,0.11)", background: "rgba(255,255,255,0.04)", backdropFilter: "blur(8px)" }}>
                     Daxil ol
                   </Link>
@@ -1269,7 +1287,7 @@ export default function Landing() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.0, duration: 0.7 }}
-          className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-14 z-10"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-8 md:gap-14 z-10"
         >
           {[
             { target: "3000", suffix: "+", label: "Tələbə" },
@@ -1351,7 +1369,7 @@ export default function Landing() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          className="relative overflow-hidden rounded-3xl p-14 text-center"
+          className="relative overflow-hidden rounded-3xl p-8 md:p-14 text-center"
           style={{
             background: "linear-gradient(135deg,rgba(12,37,80,0.92) 0%,rgba(4,12,24,0.97) 100%)",
             border: "1px solid rgba(56,189,248,0.14)",
