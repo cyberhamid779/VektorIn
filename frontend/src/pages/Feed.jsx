@@ -6,7 +6,7 @@ import UserAvatar from "../components/UserAvatar";
 import { formatBakuDate, formatBakuHM } from "../utils/time";
 import { toast } from "../components/Toast";
 import { useLang } from "../hooks/useLang";
-import useIsMobile from "../hooks/useIsMobile";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 const C = {
   border:   "1px solid #d4d4d4",
