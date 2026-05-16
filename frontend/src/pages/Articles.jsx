@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Heart, MessageCircle, Clock, PenSquare, BookOpen, Home, User, FileText, BarChart2, Bookmark } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Heart, MessageCircle, Clock, PenSquare, BookOpen, Home, FileText } from "lucide-react";
 import api from "../api/client";
 import UserAvatar from "../components/UserAvatar";
-import { useDarkClasses } from "../hooks/useDarkClasses";
 
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -14,45 +13,57 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString("az-AZ", { day: "numeric", month: "short" });
 }
 
-function ArticleCard({ article, dark, d }) {
+function ArticleCard({ article }) {
   return (
     <Link
       to={`/article/${article.id}`}
-      className={`group flex gap-4 p-5 rounded-2xl border transition-all duration-200 hover:shadow-md
-        ${dark ? "bg-gray-800/60 border-gray-700/50 hover:bg-gray-800" : "bg-white border-gray-100 hover:border-gray-200"}`}
+      style={{
+        display: "flex",
+        gap: 14,
+        alignItems: "flex-start",
+        padding: "14px 16px",
+        background: "#fff",
+        border: "1px solid #d4d4d4",
+        marginBottom: 8,
+        textDecoration: "none",
+        color: "inherit",
+      }}
     >
-      <div className="flex-1 min-w-0 flex flex-col justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <UserAvatar user={{ full_name: article.author_name, profile_picture: article.author_picture }} size="xs" />
-          <span className={`text-xs font-medium ${dark ? "text-gray-300" : "text-gray-700"}`}>{article.author_name}</span>
+          <span style={{ fontSize: 12, fontWeight: 500, color: "#444" }}>{article.author_name}</span>
         </div>
 
         <div>
-          <h2 className={`text-base font-bold leading-snug line-clamp-2 mb-1 ${dark ? "text-white" : "text-gray-900"}`}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: "#1a1a1a", margin: 0, lineHeight: 1.4, marginBottom: 3 }}>
             {article.title}
           </h2>
           {(article.subtitle || article.preview) && (
-            <p className={`text-sm line-clamp-2 ${dark ? "text-gray-400" : "text-gray-500"}`}>
+            <p style={{
+              fontSize: 13, color: "#666", margin: 0, lineHeight: 1.5,
+              overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+            }}>
               {article.subtitle || article.preview}
             </p>
           )}
         </div>
 
-        <div className={`flex items-center gap-3 text-xs ${dark ? "text-gray-500" : "text-gray-400"}`}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "#999" }}>
           <span>{timeAgo(article.created_at)}</span>
           <span>·</span>
-          <span className="flex items-center gap-1"><Clock size={11} /> {article.read_time} dəq</span>
-          <span className="flex items-center gap-1"><Heart size={11} /> {article.like_count}</span>
-          <span className="flex items-center gap-1"><MessageCircle size={11} /> {article.comment_count}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 3 }}><Clock size={11} /> {article.read_time} dəq</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 3 }}><Heart size={11} /> {article.like_count}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: 3 }}><MessageCircle size={11} /> {article.comment_count}</span>
         </div>
       </div>
 
       {article.cover_image && (
-        <div className="w-24 h-24 shrink-0 rounded-xl overflow-hidden">
+        <div style={{ width: 80, height: 80, flexShrink: 0, overflow: "hidden" }}>
           <img
             src={article.cover_image}
             alt=""
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         </div>
       )}
@@ -67,8 +78,6 @@ export default function Articles() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all"); // "all" | "mine"
   const navigate = useNavigate();
-  const d = useDarkClasses();
-  const dark = d.dark;
 
   useEffect(() => {
     Promise.all([
@@ -89,122 +98,108 @@ export default function Articles() {
   const displayed = tab === "mine" ? myArticles : articles;
 
   const navItems = [
-    { id: "all",  icon: Home,      label: "Ana səhifə" },
-    { id: "mine", icon: FileText,  label: "Mənim yazılarım" },
+    { id: "all",  icon: Home,     label: "Bütün məqalələr" },
+    { id: "mine", icon: FileText, label: "Mənim yazılarım" },
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="flex gap-8">
+    <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 12px" }}>
 
-        {/* Left sidebar — Medium style */}
-        <aside className="hidden md:flex flex-col gap-1 w-52 shrink-0 sticky top-24 self-start">
+      {/* Top bar: tabs + new article button */}
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 20 }}>
+        {/* Tab bar */}
+        <div style={{ display: "flex", borderBottom: "1px solid #d4d4d4" }}>
           {navItems.map(({ id, icon: Icon, label }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left w-full
-                ${tab === id
-                  ? dark ? "bg-blue-500/15 text-blue-400" : "bg-gray-100 text-gray-900"
-                  : dark ? "text-gray-400 hover:bg-gray-800 hover:text-gray-200" : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"
-                }`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "8px 16px",
+                fontSize: 13,
+                fontWeight: tab === id ? 600 : 400,
+                color: tab === id ? "#1a4a8a" : "#666",
+                background: "none",
+                border: "none",
+                borderBottom: tab === id ? "2px solid #1a4a8a" : "2px solid transparent",
+                marginBottom: -1,
+                cursor: "pointer",
+              }}
             >
-              <Icon size={18} strokeWidth={tab === id ? 2.5 : 2} />
+              <Icon size={15} />
               {label}
             </button>
           ))}
+        </div>
 
-          <div className={`my-3 border-t ${dark ? "border-gray-700" : "border-gray-100"}`} />
-
-          <button
-            onClick={() => navigate("/article/new")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all text-left w-full
-              ${dark ? "text-gray-400 hover:bg-gray-800 hover:text-gray-200" : "text-gray-500 hover:bg-gray-50 hover:text-gray-800"}`}
-          >
-            <PenSquare size={18} strokeWidth={2} />
-            Yeni məqalə yaz
-          </button>
-
-          {me && (
-            <div className={`mt-4 p-4 rounded-2xl border ${dark ? "bg-gray-800/60 border-gray-700/50" : "bg-gray-50 border-gray-100"}`}>
-              <div className="flex items-center gap-3 mb-2">
-                <UserAvatar user={{ full_name: me.full_name, profile_picture: me.profile_picture }} size="sm" />
-                <div className="min-w-0">
-                  <p className={`text-xs font-semibold truncate ${dark ? "text-white" : "text-gray-900"}`}>{me.full_name}</p>
-                  <p className={`text-[11px] truncate ${dark ? "text-gray-500" : "text-gray-400"}`}>{me.major}</p>
-                </div>
-              </div>
-              <p className={`text-[11px] ${dark ? "text-gray-500" : "text-gray-400"}`}>
-                {articles.filter(a => a.author_id === me.id).length} yazı
-              </p>
-            </div>
-          )}
-        </aside>
-
-        {/* Main content */}
-        <main className="flex-1 min-w-0">
-          {/* Mobile top bar */}
-          <div className="flex md:hidden items-center justify-between mb-5">
-            <div className="flex gap-1">
-              {navItems.map(({ id, label }) => (
-                <button
-                  key={id}
-                  onClick={() => setTab(id)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition
-                    ${tab === id
-                      ? "bg-gray-900 text-white"
-                      : dark ? "text-gray-400 hover:bg-gray-800" : "text-gray-500 hover:bg-gray-100"
-                    }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => navigate("/article/new")}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold"
-            >
-              <PenSquare size={13} /> Yaz
-            </button>
-          </div>
-
-          {/* Desktop tab header */}
-          <div className="hidden md:flex items-center justify-between mb-6">
-            <h1 className={`text-xl font-bold ${dark ? "text-white" : "text-gray-900"}`}>
-              {tab === "mine" ? "Mənim yazılarım" : "Bütün məqalələr"}
-            </h1>
-            <button
-              onClick={() => navigate("/article/new")}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:opacity-90 transition"
-            >
-              <PenSquare size={15} /> Yeni məqalə
-            </button>
-          </div>
-
-          {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map(i => (
-                <div key={i} className={`h-28 rounded-2xl animate-pulse ${dark ? "bg-gray-800" : "bg-gray-100"}`} />
-              ))}
-            </div>
-          ) : displayed.length === 0 ? (
-            <div className={`flex flex-col items-center justify-center py-20 rounded-2xl border ${dark ? "border-gray-700/50 text-gray-500" : "border-gray-100 text-gray-400"}`}>
-              <BookOpen size={40} className="mb-3 opacity-30" />
-              <p className="font-medium text-sm">
-                {tab === "mine" ? "Hələ məqalən yoxdur" : "Hələ məqalə yoxdur"}
-              </p>
-              <p className="text-xs mt-1 opacity-70">İlk məqaləni sən yaz!</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {displayed.map(a => (
-                <ArticleCard key={a.id} article={a} dark={dark} d={d} />
-              ))}
-            </div>
-          )}
-        </main>
-
+        {/* New article button */}
+        <button
+          onClick={() => navigate("/article/new")}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "7px 14px",
+            fontSize: 13,
+            fontWeight: 600,
+            color: "#fff",
+            background: "#1a4a8a",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          <PenSquare size={14} /> Yeni məqalə
+        </button>
       </div>
+
+      {/* User info strip */}
+      {me && (
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "10px 14px",
+          background: "#fff",
+          border: "1px solid #d4d4d4",
+          marginBottom: 16,
+        }}>
+          <UserAvatar user={{ full_name: me.full_name, profile_picture: me.profile_picture }} size="sm" />
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", margin: 0 }}>{me.full_name}</p>
+            <p style={{ fontSize: 12, color: "#999", margin: 0 }}>
+              {me.major} &middot; {articles.filter(a => a.author_id === me.id).length} yazı
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Article list */}
+      {loading ? (
+        <div>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{ height: 96, background: "#e8e8e8", marginBottom: 8 }} />
+          ))}
+        </div>
+      ) : displayed.length === 0 ? (
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          padding: "60px 20px", border: "1px solid #d4d4d4", background: "#fff",
+        }}>
+          <BookOpen size={36} style={{ color: "#ccc", marginBottom: 12 }} />
+          <p style={{ fontSize: 14, fontWeight: 500, color: "#666", margin: 0 }}>
+            {tab === "mine" ? "Hələ məqalən yoxdur" : "Hələ məqalə yoxdur"}
+          </p>
+          <p style={{ fontSize: 12, color: "#999", marginTop: 4 }}>İlk məqaləni sən yaz!</p>
+        </div>
+      ) : (
+        <div>
+          {displayed.map(a => (
+            <ArticleCard key={a.id} article={a} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

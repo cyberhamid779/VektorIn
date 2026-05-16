@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { UserPlus, ShieldCheck } from "lucide-react";
 import api from "../api/client";
 
 export default function Register() {
@@ -89,59 +88,43 @@ export default function Register() {
 
   const specializations = form.faculty ? faculties[form.faculty] || [] : [];
 
+  const pageWrap = { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f2f2f2", padding: "0 16px" };
+  const card = { background: "#fff", border: "1px solid #d4d4d4", padding: "24px 24px" };
+  const inp = { width: "100%", padding: "8px 10px", border: "1px solid #ccc", fontSize: 13, color: "#1a1a1a", outline: "none", boxSizing: "border-box" };
+  const lbl = { display: "block", fontSize: 12, fontWeight: 600, color: "#333", marginBottom: 4 };
+  const errBox = { background: "#fff0f0", color: "#c0392b", border: "1px solid #f5c6cb", padding: "8px 12px", fontSize: 12, marginBottom: 14 };
+
   if (step === "verify") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <Link to="/" className="text-4xl font-bold text-blue-600">Hash</Link>
-            <p className="text-gray-500 mt-2">Email təsdiqi</p>
+      <div style={pageWrap}>
+        <div style={{ width: "100%", maxWidth: 380 }}>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <Link to="/" style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a", textDecoration: "none" }}>Hash</Link>
+            <p style={{ fontSize: 13, color: "#666", marginTop: 4 }}>Email təsdiqi</p>
           </div>
-
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-            <div className="text-center mb-6">
-              <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <ShieldCheck size={28} className="text-blue-600" />
-              </div>
-              <p className="text-gray-700 font-medium">Emailinizə 6 rəqəmli kod göndərildi</p>
-              <p className="text-blue-600 text-sm font-semibold mt-1">{pendingEmail}</p>
+          <div style={card}>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: "#333", fontWeight: 600 }}>Emailinizə 6 rəqəmli kod göndərildi</p>
+              <p style={{ fontSize: 12, color: "#1a4a8a", marginTop: 4 }}>{pendingEmail}</p>
             </div>
-
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-sm font-medium text-center">
-                {error}
-              </div>
-            )}
-
+            {error && <div style={errBox}>{error}</div>}
             <form onSubmit={handleVerify}>
-              <div className="flex gap-2 justify-center mb-6" onPaste={handleCodePaste}>
+              <div style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 16 }} onPaste={handleCodePaste}>
                 {code.map((d, i) => (
-                  <input
-                    key={i}
-                    ref={el => codeRefs.current[i] = el}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={d}
-                    onChange={e => handleCodeChange(i, e.target.value)}
-                    onKeyDown={e => handleCodeKeyDown(i, e)}
-                    className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
-                  />
+                  <input key={i} ref={el => codeRefs.current[i] = el} type="text" inputMode="numeric" maxLength={1} value={d}
+                    onChange={e => handleCodeChange(i, e.target.value)} onKeyDown={e => handleCodeKeyDown(i, e)}
+                    style={{ width: 40, height: 48, textAlign: "center", fontSize: 22, fontWeight: 700, border: "1px solid #ccc", outline: "none" }}
+                    onFocus={e => e.target.style.borderColor = "#1a4a8a"} onBlur={e => e.target.style.borderColor = "#ccc"} />
                 ))}
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-              >
+              <button type="submit" disabled={loading}
+                style={{ width: "100%", background: "#1a4a8a", color: "#fff", border: "1px solid #1a4a8a", padding: "9px", fontSize: 13, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}>
                 {loading ? "Yoxlanılır..." : "Təsdiqlə"}
               </button>
             </form>
-
-            <p className="text-center mt-4 text-sm text-gray-400">
+            <p style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: "#999" }}>
               Kod gəlmədi?{" "}
-              <button onClick={resendCode} className="text-blue-600 font-medium hover:underline">
+              <button onClick={resendCode} style={{ background: "none", border: "none", color: "#1a4a8a", fontWeight: 600, cursor: "pointer", fontSize: 12, padding: 0 }}>
                 Yenidən göndər
               </button>
             </p>
@@ -152,65 +135,43 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="text-4xl font-bold text-blue-600">Hash</Link>
-          <p className="text-gray-500 mt-2">Yeni hesab yarat</p>
+    <div style={pageWrap}>
+      <div style={{ width: "100%", maxWidth: 380 }}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <Link to="/" style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a", textDecoration: "none" }}>Hash</Link>
+          <p style={{ fontSize: 13, color: "#666", marginTop: 4 }}>Yeni hesab yarat</p>
         </div>
-
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-sm font-medium">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ad Soyad</label>
-              <input type="text" name="full_name" placeholder="Ad Soyad" value={form.full_name}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" name="email" placeholder="ad.soyad@naa.edu.az və ya @student.naa.edu.az"
-                value={form.email} onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Şifrə</label>
-              <input type="password" name="password" placeholder="Minimum 6 simvol" value={form.password}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Fakultə</label>
-              <select name="faculty" value={form.faculty} onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-600"
-                required>
+        <div style={card}>
+          {error && <div style={errBox}>{error}</div>}
+          <form onSubmit={handleSubmit}>
+            {[
+              { label: "Ad Soyad", name: "full_name", type: "text", placeholder: "Ad Soyad" },
+              { label: "Email", name: "email", type: "email", placeholder: "ad.soyad@naa.edu.az" },
+              { label: "Şifrə", name: "password", type: "password", placeholder: "Minimum 6 simvol" },
+            ].map(({ label, name, type, placeholder }) => (
+              <div key={name} style={{ marginBottom: 10 }}>
+                <label style={lbl}>{label}</label>
+                <input type={type} name={name} placeholder={placeholder} value={form[name]} onChange={handleChange}
+                  style={inp} onFocus={e => e.target.style.borderColor = "#1a4a8a"} onBlur={e => e.target.style.borderColor = "#ccc"} required />
+              </div>
+            ))}
+            <div style={{ marginBottom: 10 }}>
+              <label style={lbl}>Fakultə</label>
+              <select name="faculty" value={form.faculty} onChange={handleChange} style={{ ...inp, color: form.faculty ? "#1a1a1a" : "#999" }} required>
                 <option value="">Fakultə seçin</option>
-                {Object.keys(faculties).map((f) => <option key={f} value={f}>{f}</option>)}
+                {Object.keys(faculties).map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">İxtisas</label>
-              <select name="major" value={form.major} onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-600"
-                required disabled={!form.faculty}>
+            <div style={{ marginBottom: 10 }}>
+              <label style={lbl}>İxtisas</label>
+              <select name="major" value={form.major} onChange={handleChange} style={{ ...inp, color: form.major ? "#1a1a1a" : "#999" }} required disabled={!form.faculty}>
                 <option value="">{form.faculty ? "İxtisas seçin" : "Əvvəlcə fakultə seçin"}</option>
-                {specializations.map((s) => <option key={s} value={s}>{s}</option>)}
+                {specializations.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Kurs</label>
-              <select name="course" value={form.course} onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-gray-600"
-                required>
+            <div style={{ marginBottom: 16 }}>
+              <label style={lbl}>Kurs</label>
+              <select name="course" value={form.course} onChange={handleChange} style={{ ...inp, color: form.course ? "#1a1a1a" : "#999" }} required>
                 <option value="">Kurs seçin</option>
                 <option value="1">1-ci kurs</option>
                 <option value="2">2-ci kurs</option>
@@ -219,16 +180,14 @@ export default function Register() {
               </select>
             </div>
             <button type="submit" disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 disabled:opacity-50">
-              <UserPlus size={18} />
+              style={{ width: "100%", background: "#1a4a8a", color: "#fff", border: "1px solid #1a4a8a", padding: "9px", fontSize: 13, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}>
               {loading ? "Gözləyin..." : "Qeydiyyatdan keç"}
             </button>
           </form>
         </div>
-
-        <p className="text-center mt-6 text-gray-500">
+        <p style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#666" }}>
           Artıq hesabın var?{" "}
-          <Link to="/login" className="text-blue-600 font-medium hover:underline">Daxil ol</Link>
+          <Link to="/login" style={{ color: "#1a4a8a", fontWeight: 600, textDecoration: "none" }}>Daxil ol</Link>
         </p>
       </div>
     </div>

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { LogIn } from "lucide-react";
 import api from "../api/client";
 
 export default function Login() {
@@ -25,58 +24,47 @@ export default function Login() {
     }
   };
 
+  const inp = {
+    width: "100%", padding: "8px 10px", border: "1px solid #ccc",
+    fontSize: 13, color: "#1a1a1a", outline: "none", boxSizing: "border-box",
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link to="/" className="text-4xl font-bold text-blue-600">Hash</Link>
-          <p className="text-gray-500 mt-2">Hesabına daxil ol</p>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f2f2f2", padding: "0 16px" }}>
+      <div style={{ width: "100%", maxWidth: 380 }}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <Link to="/" style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a", textDecoration: "none" }}>Hash</Link>
+          <p style={{ fontSize: 13, color: "#666", marginTop: 4 }}>Hesabına daxil ol</p>
         </div>
 
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+        <div style={{ background: "#fff", border: "1px solid #d4d4d4", padding: "24px 24px" }}>
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-sm font-medium">
+            <div style={{ background: "#fff0f0", color: "#c0392b", border: "1px solid #f5c6cb", padding: "8px 12px", fontSize: 12, marginBottom: 14 }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email"
-                placeholder="ad.soyad@naa.edu.az və ya @student.naa.edu.az"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                required
-              />
+          <form onSubmit={handleSubmit}>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#333", marginBottom: 4 }}>Email</label>
+              <input type="email" placeholder="ad.soyad@naa.edu.az" value={email} onChange={e => setEmail(e.target.value)}
+                style={inp} onFocus={e => e.target.style.borderColor = "#1a4a8a"} onBlur={e => e.target.style.borderColor = "#ccc"} required />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Şifrə</label>
-              <input
-                type="password"
-                placeholder="Şifrənizi daxil edin"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                required
-              />
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#333", marginBottom: 4 }}>Şifrə</label>
+              <input type="password" placeholder="Şifrənizi daxil edin" value={password} onChange={e => setPassword(e.target.value)}
+                style={inp} onFocus={e => e.target.style.borderColor = "#1a4a8a"} onBlur={e => e.target.style.borderColor = "#ccc"} required />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <LogIn size={18} />
+            <button type="submit" disabled={loading}
+              style={{ width: "100%", background: "#1a4a8a", color: "#fff", border: "1px solid #1a4a8a", padding: "9px", fontSize: 13, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}>
               {loading ? "Gözləyin..." : "Daxil ol"}
             </button>
           </form>
         </div>
 
-        <p className="text-center mt-6 text-gray-500">
+        <p style={{ textAlign: "center", marginTop: 16, fontSize: 13, color: "#666" }}>
           Hesabın yoxdur?{" "}
-          <Link to="/register" className="text-blue-600 font-medium hover:underline">Qeydiyyat</Link>
+          <Link to="/register" style={{ color: "#1a4a8a", fontWeight: 600, textDecoration: "none" }}>Qeydiyyat</Link>
         </p>
       </div>
     </div>

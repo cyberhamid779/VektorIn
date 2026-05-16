@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Search as SearchIcon, UserPlus, Users, SlidersHorizontal, X } from "lucide-react";
 import api from "../api/client";
-import { useDarkClasses } from "../hooks/useDarkClasses";
 import { toast } from "../components/Toast";
 import { useLang } from "../hooks/useLang";
 
@@ -12,6 +11,86 @@ const COURSES = [
   { val: 3, label: "III" },
   { val: 4, label: "IV" },
 ];
+
+const S = {
+  page: { maxWidth: 720, margin: "0 auto", padding: "20px 12px" },
+  heading: { fontSize: 22, fontWeight: 700, color: "#1a1a1a", margin: 0 },
+  subtitle: { fontSize: 13, color: "#999", marginTop: 4 },
+  formCard: { background: "#ffffff", border: "1px solid #d4d4d4", padding: "16px", marginBottom: 20 },
+  inputWrap: { position: "relative", flex: 1 },
+  input: (focused) => ({
+    width: "100%",
+    border: `1px solid ${focused ? "#1a4a8a" : "#ccc"}`,
+    padding: "6px 10px 6px 32px",
+    fontSize: 13,
+    outline: "none",
+    boxSizing: "border-box",
+    background: "#fff",
+    color: "#1a1a1a",
+  }),
+  inputIcon: {
+    position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)",
+    color: "#999", pointerEvents: "none", display: "flex", alignItems: "center",
+  },
+  filterToggle: (active) => ({
+    display: "flex", alignItems: "center", gap: 6, padding: "6px 10px",
+    border: `1px solid ${active ? "#1a4a8a" : "#ccc"}`,
+    background: active ? "#1a4a8a" : "#fff",
+    color: active ? "#fff" : "#444",
+    fontSize: 13, cursor: "pointer", position: "relative", flexShrink: 0,
+  }),
+  filterBadge: {
+    position: "absolute", top: -6, right: -6, width: 16, height: 16,
+    background: "#c0392b", color: "#fff", fontSize: 10, fontWeight: 700,
+    borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+  },
+  filterPanel: { border: "1px solid #d4d4d4", background: "#f7f7f7", padding: 12, marginBottom: 10 },
+  filterLabel: { fontSize: 11, fontWeight: 600, color: "#666", textTransform: "uppercase", letterSpacing: "0.05em" },
+  clearBtn: { display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#1a4a8a", background: "none", border: "none", cursor: "pointer", padding: 0 },
+  courseChip: (active) => ({
+    width: 36, height: 30,
+    border: `1px solid ${active ? "#1a4a8a" : "#ccc"}`,
+    background: "#fff",
+    color: active ? "#1a4a8a" : "#666",
+    fontSize: 12, fontWeight: 700, cursor: "pointer",
+  }),
+  teamBtn: (active) => ({
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+    padding: "6px 12px",
+    border: `1px solid ${active ? "#27ae60" : "#ccc"}`,
+    background: active ? "#27ae60" : "#fff",
+    color: active ? "#fff" : "#666",
+    fontSize: 12, fontWeight: 600, cursor: "pointer", width: "100%",
+  }),
+  submitBtn: {
+    width: "100%", background: "#1a4a8a", color: "#fff", border: "1px solid #1a4a8a",
+    padding: "8px 0", fontSize: 13, fontWeight: 600, cursor: "pointer",
+    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+  },
+  userRow: {
+    background: "#ffffff", border: "1px solid #d4d4d4", padding: "10px 12px",
+    display: "flex", alignItems: "center", marginBottom: 6,
+  },
+  avatar: {
+    width: 44, height: 44, background: "#1a4a8a", display: "flex",
+    alignItems: "center", justifyContent: "center", color: "#fff",
+    fontWeight: 700, fontSize: 18, flexShrink: 0, overflow: "hidden", textDecoration: "none",
+  },
+  userName: { fontWeight: 600, fontSize: 13, color: "#1a1a1a", textDecoration: "none" },
+  userMeta: { fontSize: 12, color: "#999", marginTop: 2 },
+  skillChip: {
+    padding: "2px 6px", border: "1px solid #c0d4f0", background: "#eef4ff",
+    color: "#1a4a8a", fontSize: 11, marginRight: 4, marginTop: 4, display: "inline-block",
+  },
+  skillChipMore: { padding: "2px 4px", fontSize: 11, color: "#999", marginTop: 4, display: "inline-block" },
+  teamBadge: { fontSize: 10, fontWeight: 600, color: "#27ae60", border: "1px solid #27ae60", padding: "1px 5px", marginLeft: 6 },
+  badgeConnected: { border: "1px solid #ccc", color: "#888", padding: "3px 8px", fontSize: 11, background: "#fff" },
+  badgePending: { border: "1px solid #e0a800", color: "#b8860b", padding: "3px 8px", fontSize: 11, background: "#fffbf0" },
+  connectBtn: { border: "1px solid #1a4a8a", color: "#1a4a8a", background: "#f0f5ff", padding: "5px 8px", cursor: "pointer", display: "flex", alignItems: "center" },
+  resultsCount: { fontSize: 13, color: "#666", marginBottom: 12 },
+  emptyWrap: { textAlign: "center", padding: "60px 0" },
+  emptyIcon: { width: 52, height: 52, background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" },
+};
 
 export default function Search() {
   const [query, setQuery]             = useState("");
@@ -23,7 +102,7 @@ export default function Search() {
   const [searched, setSearched]       = useState(false);
   const [connectedIds, setConnectedIds] = useState(new Set());
   const [pendingIds, setPendingIds]   = useState(new Set());
-  const d = useDarkClasses();
+  const [focusedInput, setFocusedInput] = useState(null);
   const { t } = useLang();
   const debounceRef = useRef(null);
 
@@ -74,34 +153,38 @@ export default function Search() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
-      <div className="mb-6">
-        <h2 className={`text-2xl font-bold ${d.heading}`}>{t("search_title")}</h2>
-        <p className={`${d.textFaint} text-sm mt-1`}>{t("search_subtitle")}</p>
+    <div style={S.page}>
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={S.heading}>{t("search_title")}</h2>
+        <p style={S.subtitle}>{t("search_subtitle")}</p>
       </div>
 
-      <form onSubmit={handleSearch} className={`${d.card} rounded-2xl shadow-sm p-5 mb-6`}>
+      <form onSubmit={handleSearch} style={S.formCard}>
 
         {/* Search inputs row */}
-        <div className="flex gap-2 mb-3">
-          <div className="relative flex-1">
-            <SearchIcon size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${d.textFaint}`} />
+        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+          <div style={S.inputWrap}>
+            <span style={S.inputIcon}><SearchIcon size={13} /></span>
             <input
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder={t("search_name")}
-              className={`w-full pl-9 pr-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${d.inputAlt}`}
+              style={S.input(focusedInput === "query")}
+              onFocus={() => setFocusedInput("query")}
+              onBlur={() => setFocusedInput(null)}
             />
           </div>
-          <div className="relative flex-1">
-            <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold ${d.textFaint}`}>#</span>
+          <div style={S.inputWrap}>
+            <span style={{ ...S.inputIcon, fontSize: 13, fontWeight: 700 }}>#</span>
             <input
               type="text"
               value={skill}
               onChange={e => setSkill(e.target.value)}
               placeholder={t("search_skill")}
-              className={`w-full pl-8 pr-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${d.inputAlt}`}
+              style={S.input(focusedInput === "skill")}
+              onFocus={() => setFocusedInput("skill")}
+              onBlur={() => setFocusedInput(null)}
             />
           </div>
 
@@ -109,52 +192,37 @@ export default function Search() {
           <button
             type="button"
             onClick={() => setShowFilters(v => !v)}
-            className={`relative flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all shrink-0 ${
-              showFilters || activeFilterCount > 0
-                ? "bg-blue-600 text-white border-blue-600"
-                : d.dark
-                  ? "bg-white/5 text-gray-400 border-white/10 hover:border-blue-500 hover:text-blue-400"
-                  : "bg-gray-50 text-gray-500 border-gray-200 hover:border-blue-400 hover:text-blue-600"
-            }`}
+            style={S.filterToggle(showFilters || activeFilterCount > 0)}
           >
-            <SlidersHorizontal size={15} />
+            <SlidersHorizontal size={14} />
             {activeFilterCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                {activeFilterCount}
-              </span>
+              <span style={S.filterBadge}>{activeFilterCount}</span>
             )}
           </button>
         </div>
 
         {/* Filter panel — collapsible */}
         {showFilters && (
-          <div className={`rounded-xl p-4 mb-3 space-y-3 ${d.dark ? "bg-white/[0.03] border border-white/[0.07]" : "bg-gray-50 border border-gray-100"}`}>
-            <div className="flex items-center justify-between">
-              <span className={`text-xs font-semibold uppercase tracking-wider ${d.textFaint}`}>Filtrlər</span>
+          <div style={S.filterPanel}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={S.filterLabel}>Filtrlər</span>
               {activeFilterCount > 0 && (
-                <button type="button" onClick={clearFilters}
-                  className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-400 transition">
+                <button type="button" onClick={clearFilters} style={S.clearBtn}>
                   <X size={11} /> Təmizlə
                 </button>
               )}
             </div>
 
             {/* Course chips */}
-            <div className="flex items-center gap-2">
-              <span className={`text-xs shrink-0 ${d.textFaint}`}>Kurs:</span>
-              <div className="flex gap-1.5">
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 12, color: "#666", flexShrink: 0 }}>Kurs:</span>
+              <div style={{ display: "flex", gap: 4 }}>
                 {COURSES.map(({ val, label }) => (
                   <button
                     key={val}
                     type="button"
                     onClick={() => setCourse(course === val ? null : val)}
-                    className={`w-9 h-8 rounded-lg text-xs font-bold transition-all border ${
-                      course === val
-                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                        : d.dark
-                          ? "bg-white/5 text-gray-400 border-white/10 hover:border-blue-500 hover:text-blue-400"
-                          : "bg-white text-gray-500 border-gray-200 hover:border-blue-400 hover:text-blue-600"
-                    }`}
+                    style={S.courseChip(course === val)}
                   >
                     {label}
                   </button>
@@ -166,81 +234,68 @@ export default function Search() {
             <button
               type="button"
               onClick={() => setOpenForTeam(v => !v)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all border w-full justify-center ${
-                openForTeam
-                  ? "bg-emerald-500 text-white border-emerald-500"
-                  : d.dark
-                    ? "bg-white/5 text-gray-400 border-white/10 hover:border-emerald-500 hover:text-emerald-400"
-                    : "bg-white text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-emerald-600"
-              }`}
+              style={S.teamBtn(openForTeam)}
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${openForTeam ? "bg-white" : "bg-emerald-500"}`} />
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: openForTeam ? "#fff" : "#27ae60", display: "inline-block" }} />
               Komanda axtaranlar
             </button>
           </div>
         )}
 
-        <button
-          type="submit"
-          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 flex items-center justify-center gap-2 text-sm"
-        >
-          <SearchIcon size={15} /> {t("search_btn")}
+        <button type="submit" style={S.submitBtn}>
+          <SearchIcon size={14} /> {t("search_btn")}
         </button>
       </form>
 
       {searched && results.length > 0 && (
-        <p className={`text-sm ${d.textFaint} mb-4`}>{results.length} {t("search_results")}</p>
+        <p style={S.resultsCount}>{results.length} {t("search_results")}</p>
       )}
 
-      <div className="space-y-3">
+      <div>
         {results.map((user) => (
-          <div key={user.id}
-            className={`${d.card} rounded-2xl shadow-sm p-4 flex items-center hover:shadow-md transition-all duration-300 group`}>
-            <Link to={`/profile/${user.id}`}
-              className="w-11 h-11 rounded-xl overflow-hidden shrink-0 shadow-sm">
+          <div
+            key={user.id}
+            style={S.userRow}
+            onMouseEnter={e => e.currentTarget.style.background = "#f7f9fc"}
+            onMouseLeave={e => e.currentTarget.style.background = "#ffffff"}
+          >
+            <Link to={`/profile/${user.id}`} style={S.avatar}>
               {user.profile_picture
-                ? <img src={user.profile_picture} alt="" className="w-11 h-11 object-cover" />
-                : <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">{user.full_name?.charAt(0)}</div>
+                ? <img src={user.profile_picture} alt="" style={{ width: 44, height: 44, objectFit: "cover", display: "block" }} />
+                : user.full_name?.charAt(0)
               }
             </Link>
-            <div className="ml-3 flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Link to={`/profile/${user.id}`}
-                  className={`font-semibold ${d.text} text-sm hover:text-blue-600 transition`}>
+            <div style={{ marginLeft: 10, flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+                <Link to={`/profile/${user.id}`} style={S.userName}>
                   {user.full_name}
                 </Link>
                 {user.is_open_for_team && (
-                  <span className="text-[10px] font-semibold text-emerald-500 border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
-                    Komanda
-                  </span>
+                  <span style={S.teamBadge}>Komanda</span>
                 )}
               </div>
-              <p className={`text-xs ${d.textFaint} mt-0.5`}>
+              <p style={S.userMeta}>
                 {[user.major, user.course && `${COURSES.find(c => c.val === user.course)?.label || user.course} kurs`].filter(Boolean).join(" · ")}
               </p>
               {user.skills && (
-                <div className="flex flex-wrap gap-1 mt-1.5">
+                <div>
                   {user.skills.split(",").slice(0, 3).map((s, i) => (
-                    <span key={i} className={`px-2 py-0.5 rounded-md text-[11px] font-medium border ${
-                      d.dark ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-blue-50 text-blue-600 border-blue-100"
-                    }`}>{s.trim()}</span>
+                    <span key={i} style={S.skillChip}>{s.trim()}</span>
                   ))}
                   {user.skills.split(",").length > 3 && (
-                    <span className={`px-2 py-0.5 rounded-md text-[11px] ${d.textFaint}`}>+{user.skills.split(",").length - 3}</span>
+                    <span style={S.skillChipMore}>+{user.skills.split(",").length - 3}</span>
                   )}
                 </div>
               )}
             </div>
-            <div className="shrink-0 ml-3">
+            <div style={{ flexShrink: 0, marginLeft: 10 }}>
               {connectedIds.has(user.id) ? (
-                <span className={`text-xs px-2.5 py-1.5 rounded-xl font-medium border ${d.dark ? "text-gray-500 border-gray-700" : "text-gray-400 border-gray-200"}`}>Bağlı</span>
+                <span style={S.badgeConnected}>Bağlı</span>
               ) : pendingIds.has(user.id) ? (
-                <span className={`text-xs px-2.5 py-1.5 rounded-xl font-medium ${d.dark ? "text-amber-400 bg-amber-500/10 border border-amber-500/20" : "text-amber-600 bg-amber-50 border border-amber-200"}`}>Gözləyir</span>
+                <span style={S.badgePending}>Gözləyir</span>
               ) : (
-                <button onClick={() => sendConnection(user.id)}
-                  className={`p-2 rounded-xl transition-all border ${d.dark ? "bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20" : "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100"}`}
-                  title={t("search_connect")}>
-                  <UserPlus size={16} />
+                <button onClick={() => sendConnection(user.id)} style={S.connectBtn} title={t("search_connect")}>
+                  <UserPlus size={15} />
                 </button>
               )}
             </div>
@@ -249,12 +304,12 @@ export default function Search() {
       </div>
 
       {searched && results.length === 0 && (
-        <div className="text-center py-16">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 ${d.dark ? "bg-gray-800" : "bg-gray-100"}`}>
-            <Users size={24} className="text-gray-400" />
+        <div style={S.emptyWrap}>
+          <div style={S.emptyIcon}>
+            <Users size={22} color="#aaa" />
           </div>
-          <p className={`${d.text} font-semibold text-sm`}>{t("search_empty")}</p>
-          <p className={`${d.textFaint} text-xs mt-1`}>{t("search_empty_sub")}</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: "#1a1a1a", margin: 0 }}>{t("search_empty")}</p>
+          <p style={{ fontSize: 12, color: "#999", marginTop: 4 }}>{t("search_empty_sub")}</p>
         </div>
       )}
     </div>

@@ -9,6 +9,18 @@ import api from "../api/client";
 import { formatBakuDate, formatBakuTime, formatBakuHM } from "../utils/time";
 import { toast } from "../components/Toast";
 
+const C = {
+  primary: "#1a4a8a",
+  text: "#1a1a1a",
+  muted: "#666",
+  faint: "#999",
+  border: "#d4d4d4",
+  bg: "#f2f2f2",
+  white: "#ffffff",
+  danger: "#dc2626",
+  success: "#16a34a",
+};
+
 export default function Admin() {
   const [tab, setTab] = useState("dashboard");
   const [stats, setStats] = useState(null);
@@ -172,43 +184,88 @@ export default function Admin() {
   const banCount = users.filter(u => !u.is_active).length;
   const adminCount = users.filter(u => u.is_admin).length;
 
+  const inputStyle = {
+    width: "100%",
+    padding: "8px 12px",
+    border: `1px solid ${C.border}`,
+    background: C.white,
+    color: C.text,
+    fontSize: 13,
+    outline: "none",
+    boxSizing: "border-box",
+  };
+
+  const flatBtnStyle = (bg, color) => ({
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 5,
+    padding: "5px 10px",
+    background: bg,
+    color: color,
+    border: "none",
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: "pointer",
+  });
+
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-gray-50">
-      <div className="max-w-6xl mx-auto py-8 px-4">
+    <div style={{ minHeight: "calc(100vh - 64px)", background: C.bg }}>
+      <div style={{ maxWidth: 960, margin: "0 auto", padding: "20px 12px" }}>
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl flex items-center justify-center shadow-xl shadow-slate-200">
-              <Shield size={26} className="text-white" />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{
+              width: 44, height: 44, background: C.primary,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Shield size={22} color="#fff" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-              <p className="text-gray-400 text-sm mt-0.5">Hash platformasını idarə et</p>
+              <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: C.text }}>Admin Panel</h1>
+              <p style={{ margin: 0, fontSize: 12, color: C.muted, marginTop: 2 }}>Hash platformasını idarə et</p>
             </div>
           </div>
           <button
-            onClick={() => { loadStats(); if (tab === "users") loadUsers(); if (tab === "posts") loadPosts(); if (tab === "logs") loadLogs(); if (tab === "reports") loadReports(); }}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all shadow-sm"
+            onClick={() => {
+              loadStats();
+              if (tab === "users") loadUsers();
+              if (tab === "posts") loadPosts();
+              if (tab === "logs") loadLogs();
+              if (tab === "reports") loadReports();
+            }}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "7px 14px", background: C.white,
+              border: `1px solid ${C.border}`, cursor: "pointer",
+              fontSize: 13, color: C.muted, fontWeight: 500,
+            }}
           >
-            <RefreshCw size={15} />
+            <RefreshCw size={14} />
             Yenilə
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-8 bg-white border border-gray-200 p-1.5 rounded-2xl shadow-sm">
+        {/* Tabs — classic underline style */}
+        <div style={{ display: "flex", borderBottom: `2px solid ${C.border}`, marginBottom: 24 }}>
           {tabs.map(({ id, icon: Icon, label }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
-              className={`flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                tab === id
-                  ? "bg-gradient-to-r from-slate-800 to-slate-900 text-white shadow-lg shadow-slate-200"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-              }`}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "10px 16px",
+                background: "none",
+                border: "none",
+                borderBottom: tab === id ? `2px solid ${C.primary}` : "2px solid transparent",
+                marginBottom: -2,
+                color: tab === id ? C.primary : C.muted,
+                fontWeight: tab === id ? 700 : 500,
+                fontSize: 13,
+                cursor: "pointer",
+              }}
             >
-              <Icon size={17} /> {label}
+              <Icon size={15} /> {label}
             </button>
           ))}
         </div>
@@ -216,40 +273,38 @@ export default function Admin() {
         {/* ═══════ DASHBOARD ═══════ */}
         {tab === "dashboard" && (
           <div>
-            {/* Stats Grid */}
             {stats && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-                <StatCard icon={Users} label="Ümumi istifadəçi" value={stats.total_users} color="slate" />
-                <StatCard icon={UserCheck} label="Aktiv istifadəçi" value={stats.active_users} color="emerald" subtitle={stats.total_users > 0 ? `${Math.round((stats.active_users / stats.total_users) * 100)}% aktiv` : null} />
-                <StatCard icon={FileText} label="Ümumi post" value={stats.total_posts} color="blue" />
-                <StatCard icon={Link2} label="Bağlantı istəyi" value={stats.total_connections} color="violet" />
-                <StatCard icon={CheckCircle} label="Qəbul edilmiş" value={stats.accepted_connections} color="teal" subtitle={stats.total_connections > 0 ? `${Math.round((stats.accepted_connections / stats.total_connections) * 100)}% qəbul` : null} />
-                <StatCard icon={MessageCircle} label="Ümumi mesaj" value={stats.total_messages} color="amber" />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+                <StatCard icon={Users} label="Ümumi istifadəçi" value={stats.total_users} />
+                <StatCard icon={UserCheck} label="Aktiv istifadəçi" value={stats.active_users}
+                  subtitle={stats.total_users > 0 ? `${Math.round((stats.active_users / stats.total_users) * 100)}% aktiv` : null} />
+                <StatCard icon={FileText} label="Ümumi post" value={stats.total_posts} />
+                <StatCard icon={Link2} label="Bağlantı istəyi" value={stats.total_connections} />
+                <StatCard icon={CheckCircle} label="Qəbul edilmiş" value={stats.accepted_connections}
+                  subtitle={stats.total_connections > 0 ? `${Math.round((stats.accepted_connections / stats.total_connections) * 100)}% qəbul` : null} />
+                <StatCard icon={MessageCircle} label="Ümumi mesaj" value={stats.total_messages} />
               </div>
             )}
 
-            {/* Quick overview cards */}
             {stats && (
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="font-bold text-gray-900">Platform xülasəsi</h3>
-                    <Activity size={18} className="text-gray-300" />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ background: C.white, border: `1px solid ${C.border}`, padding: "16px 20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.text }}>Platform xülasəsi</h3>
+                    <Activity size={16} color={C.faint} />
                   </div>
-                  <div className="space-y-4">
-                    <OverviewRow label="Orta post/istifadəçi" value={stats.total_users > 0 ? (stats.total_posts / stats.total_users).toFixed(1) : "0"} />
-                    <OverviewRow label="Orta mesaj/istifadəçi" value={stats.total_users > 0 ? (stats.total_messages / stats.total_users).toFixed(1) : "0"} />
-                    <OverviewRow label="Orta bağlantı/istifadəçi" value={stats.total_users > 0 ? (stats.accepted_connections / stats.total_users).toFixed(1) : "0"} />
-                    <OverviewRow label="Bloklanmış istifadəçi" value={stats.total_users - stats.active_users} highlight={stats.total_users - stats.active_users > 0} />
-                  </div>
+                  <OverviewRow label="Orta post/istifadəçi" value={stats.total_users > 0 ? (stats.total_posts / stats.total_users).toFixed(1) : "0"} />
+                  <OverviewRow label="Orta mesaj/istifadəçi" value={stats.total_users > 0 ? (stats.total_messages / stats.total_users).toFixed(1) : "0"} />
+                  <OverviewRow label="Orta bağlantı/istifadəçi" value={stats.total_users > 0 ? (stats.accepted_connections / stats.total_users).toFixed(1) : "0"} />
+                  <OverviewRow label="Bloklanmış istifadəçi" value={stats.total_users - stats.active_users} highlight={stats.total_users - stats.active_users > 0} />
                 </div>
 
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="font-bold text-gray-900">Sürətli əməliyyatlar</h3>
-                    <TrendingUp size={18} className="text-gray-300" />
+                <div style={{ background: C.white, border: `1px solid ${C.border}`, padding: "16px 20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: C.text }}>Sürətli əməliyyatlar</h3>
+                    <TrendingUp size={16} color={C.faint} />
                   </div>
-                  <div className="space-y-2.5">
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <QuickAction icon={Users} label="İstifadəçiləri idarə et" count={stats.total_users} onClick={() => setTab("users")} />
                     <QuickAction icon={FileText} label="Postları idarə et" count={stats.total_posts} onClick={() => setTab("posts")} />
                     <QuickAction icon={Ban} label="Bloklanmış hesablar" count={stats.total_users - stats.active_users} onClick={() => setTab("users")} warning={stats.total_users - stats.active_users > 0} />
@@ -259,8 +314,12 @@ export default function Admin() {
             )}
 
             {!stats && (
-              <div className="flex items-center justify-center py-20">
-                <div className="w-8 h-8 border-3 border-gray-200 border-t-slate-800 rounded-full animate-spin" />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0" }}>
+                <div style={{
+                  width: 28, height: 28, border: `3px solid ${C.border}`,
+                  borderTopColor: C.primary, borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite",
+                }} />
               </div>
             )}
           </div>
@@ -269,30 +328,48 @@ export default function Admin() {
         {/* ═══════ ONLINE ═══════ */}
         {tab === "online" && (
           <div>
-            <div className="flex items-center justify-between mb-6">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Hal-hazırda onlayn</h2>
-                <p className="text-sm text-gray-400 mt-0.5">Son 3 dəqiqə ərzində aktiv olan istifadəçilər</p>
+                <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text }}>Hal-hazırda onlayn</h2>
+                <p style={{ margin: "2px 0 0", fontSize: 12, color: C.muted }}>Son 3 dəqiqə ərzində aktiv olan istifadəçilər</p>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-2 rounded-xl font-bold text-sm border border-green-100">
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  background: "#f0faf0", border: "1px solid #b6e2b6",
+                  padding: "5px 12px", fontSize: 13, fontWeight: 700, color: "#166534",
+                }}>
+                  <span style={{
+                    width: 8, height: 8, background: "#16a34a", borderRadius: "50%",
+                    display: "inline-block",
+                  }} />
                   {onlineUsers.length} onlayn
                 </div>
-                <button onClick={loadOnline} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-500 hover:bg-gray-50 transition shadow-sm">
-                  <RefreshCw size={14} /> Yenilə
+                <button
+                  onClick={loadOnline}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "5px 12px", background: C.white,
+                    border: `1px solid ${C.border}`, cursor: "pointer",
+                    fontSize: 12, color: C.muted,
+                  }}
+                >
+                  <RefreshCw size={13} /> Yenilə
                 </button>
               </div>
             </div>
 
             {onlineUsers.length === 0 ? (
-              <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
-                <Globe size={36} className="mx-auto text-gray-200 mb-3" />
-                <p className="text-gray-400 font-medium">Hal-hazırda onlayn istifadəçi yoxdur</p>
+              <div style={{
+                textAlign: "center", padding: "60px 0",
+                background: C.white, border: `1px solid ${C.border}`,
+              }}>
+                <Globe size={32} color={C.faint} style={{ display: "block", margin: "0 auto 10px" }} />
+                <p style={{ margin: 0, color: C.muted, fontSize: 14 }}>Hal-hazırda onlayn istifadəçi yoxdur</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {onlineUsers.map(u => {
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {onlineUsers.map((u, idx) => {
                   const pageLabels = {
                     "/feed": "Feed-ə baxır",
                     "/search": "Axtarış edir",
@@ -308,20 +385,40 @@ export default function Admin() {
                   const seenLabel = seenSec === null ? "" : seenSec < 60 ? `${seenSec}s əvvəl` : `${Math.floor(seenSec / 60)}dəq əvvəl`;
 
                   return (
-                    <div key={u.id} className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-                      <div className="relative">
-                        <div className="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                    <div
+                      key={u.id}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 12,
+                        padding: "12px 16px",
+                        background: idx % 2 === 0 ? C.white : "#f9f9f9",
+                        borderBottom: `1px solid #ebebeb`,
+                      }}
+                    >
+                      <div style={{ position: "relative", flexShrink: 0 }}>
+                        <div style={{
+                          width: 38, height: 38, background: C.primary,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          color: "#fff", fontWeight: 700, fontSize: 16,
+                        }}>
                           {u.full_name?.charAt(0)}
                         </div>
-                        <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" />
+                        <span style={{
+                          position: "absolute", bottom: -2, right: -2,
+                          width: 11, height: 11, background: "#16a34a",
+                          border: "2px solid #fff", borderRadius: "50%", display: "block",
+                        }} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 text-sm">{u.full_name}</p>
-                        <p className="text-xs text-gray-400 truncate">{u.email}</p>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: C.text }}>{u.full_name}</p>
+                        <p style={{ margin: 0, fontSize: 11, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.email}</p>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">{pageLabel}</p>
-                        <p className="text-xs text-gray-300 mt-1">{seenLabel}</p>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <span style={{
+                          fontSize: 11, fontWeight: 600, color: C.primary,
+                          background: "#eef3fa", padding: "3px 8px",
+                          border: `1px solid #c5d5ea`,
+                        }}>{pageLabel}</span>
+                        <p style={{ margin: "3px 0 0", fontSize: 11, color: C.faint }}>{seenLabel}</p>
                       </div>
                     </div>
                   );
@@ -335,174 +432,237 @@ export default function Admin() {
         {tab === "users" && (
           <div>
             {/* Search + meta */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <form onSubmit={(e) => { e.preventDefault(); loadUsers(); }} className="flex-1">
-                <div className="relative">
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
-                  <input
-                    type="text"
-                    value={userSearch}
-                    onChange={(e) => setUserSearch(e.target.value)}
-                    placeholder="Ad ilə axtar..."
-                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all text-sm shadow-sm"
-                  />
-                </div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+              <form
+                onSubmit={(e) => { e.preventDefault(); loadUsers(); }}
+                style={{ flex: 1, minWidth: 200, position: "relative" }}
+              >
+                <Search size={15} color={C.faint} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
+                <input
+                  type="text"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="Ad ilə axtar..."
+                  style={{ ...inputStyle, paddingLeft: 32 }}
+                />
               </form>
-              <div className="flex gap-2">
-                <span className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 shadow-sm">
-                  <Users size={14} /> {users.length} istifadəçi
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "5px 12px", background: C.white, border: `1px solid ${C.border}`,
+                  fontSize: 12, fontWeight: 600, color: C.muted,
+                }}>
+                  <Users size={13} /> {users.length} istifadəçi
                 </span>
                 {adminCount > 0 && (
-                  <span className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 rounded-xl text-xs font-semibold text-white shadow-sm">
-                    <Shield size={14} /> {adminCount} admin
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "5px 12px", background: C.primary,
+                    fontSize: 12, fontWeight: 600, color: "#fff",
+                  }}>
+                    <Shield size={13} /> {adminCount} admin
                   </span>
                 )}
                 {banCount > 0 && (
-                  <span className="flex items-center gap-1.5 px-4 py-2 bg-red-50 border border-red-100 rounded-xl text-xs font-semibold text-red-500 shadow-sm">
-                    <Ban size={14} /> {banCount} blok
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    padding: "5px 12px", background: "#fff5f5", border: "1px solid #fca5a5",
+                    fontSize: 12, fontWeight: 600, color: C.danger,
+                  }}>
+                    <Ban size={13} /> {banCount} blok
                   </span>
                 )}
               </div>
             </div>
 
             {/* User Table */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div style={{ background: C.white, border: `1px solid ${C.border}` }}>
               {/* Table header */}
-              <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3.5 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                <div className="col-span-4">İstifadəçi</div>
-                <div className="col-span-2">İxtisas</div>
-                <div className="col-span-2">Status</div>
-                <div className="col-span-2">Qeydiyyat</div>
-                <div className="col-span-2 text-right">Əməliyyat</div>
+              <div style={{
+                display: "grid", gridTemplateColumns: "3fr 2fr 1.5fr 1.5fr 1.5fr",
+                padding: "8px 16px", background: "#f5f5f5",
+                borderBottom: `1px solid ${C.border}`,
+                fontSize: 11, fontWeight: 700, color: C.muted,
+                textTransform: "uppercase", letterSpacing: "0.05em",
+              }}>
+                <div>İstifadəçi</div>
+                <div>İxtisas</div>
+                <div>Status</div>
+                <div>Qeydiyyat</div>
+                <div style={{ textAlign: "right" }}>Əməliyyat</div>
               </div>
 
               {loading && (
-                <div className="flex items-center justify-center py-12">
-                  <div className="w-7 h-7 border-3 border-gray-200 border-t-slate-800 rounded-full animate-spin" />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 0" }}>
+                  <div style={{
+                    width: 24, height: 24, border: `3px solid ${C.border}`,
+                    borderTopColor: C.primary, borderRadius: "50%",
+                    animation: "spin 0.8s linear infinite",
+                  }} />
                 </div>
               )}
 
               {!loading && users.map((user, index) => (
-                <div
-                  key={user.id}
-                  className={`grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 px-6 py-4 items-center hover:bg-gray-50/50 transition-colors ${
-                    index !== users.length - 1 ? "border-b border-gray-50" : ""
-                  }`}
-                >
-                  {/* User info */}
-                  <div className="col-span-4 flex items-center gap-3">
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold shrink-0 shadow-sm ${
-                      !user.is_active
-                        ? "bg-gradient-to-br from-gray-400 to-gray-500"
-                        : user.is_admin
-                        ? "bg-gradient-to-br from-slate-700 to-slate-900"
-                        : "bg-gradient-to-br from-blue-500 to-indigo-600"
-                    }`}>
-                      {user.full_name?.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-gray-900 text-sm truncate">{user.full_name}</p>
-                        {user.is_admin && (
-                          <span className="bg-slate-800 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">ADMIN</span>
-                        )}
+                <div key={user.id}>
+                  <div
+                    style={{
+                      display: "grid", gridTemplateColumns: "3fr 2fr 1.5fr 1.5fr 1.5fr",
+                      padding: "10px 16px", alignItems: "center",
+                      background: index % 2 === 0 ? C.white : "#f9f9f9",
+                      borderBottom: `1px solid #ebebeb`,
+                    }}
+                  >
+                    {/* User info */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{
+                        width: 34, height: 34, flexShrink: 0,
+                        background: !user.is_active ? "#9ca3af" : user.is_admin ? C.primary : "#2563eb",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#fff", fontWeight: 700, fontSize: 14,
+                      }}>
+                        {user.full_name?.charAt(0)}
                       </div>
-                      <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {user.full_name}
+                          </p>
+                          {user.is_admin && (
+                            <span style={{
+                              background: C.primary, color: "#fff",
+                              fontSize: 9, padding: "1px 5px", fontWeight: 700,
+                            }}>ADMIN</span>
+                          )}
+                        </div>
+                        <p style={{ margin: 0, fontSize: 11, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</p>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Major */}
-                  <div className="col-span-2 hidden md:block">
-                    {user.major ? (
-                      <span className="text-sm text-gray-600">{user.major}</span>
-                    ) : (
-                      <span className="text-xs text-gray-300">—</span>
-                    )}
-                  </div>
+                    {/* Major */}
+                    <div>
+                      {user.major
+                        ? <span style={{ fontSize: 12, color: C.text }}>{user.major}</span>
+                        : <span style={{ fontSize: 12, color: C.faint }}>—</span>
+                      }
+                    </div>
 
-                  {/* Status */}
-                  <div className="col-span-2 hidden md:flex items-center gap-2">
-                    <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-semibold ${
-                      user.is_active
-                        ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                        : "bg-red-50 text-red-500 border border-red-100"
-                    }`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${user.is_active ? "bg-emerald-500" : "bg-red-500"}`} />
-                      {user.is_active ? "Aktiv" : "Bloklanıb"}
-                    </span>
-                  </div>
+                    {/* Status */}
+                    <div>
+                      <span style={{
+                        display: "inline-flex", alignItems: "center", gap: 5,
+                        fontSize: 11, padding: "3px 8px", fontWeight: 600,
+                        background: user.is_active ? "#f0faf0" : "#fff5f5",
+                        color: user.is_active ? C.success : C.danger,
+                        border: `1px solid ${user.is_active ? "#b6e2b6" : "#fca5a5"}`,
+                      }}>
+                        <span style={{
+                          width: 6, height: 6, borderRadius: "50%",
+                          background: user.is_active ? C.success : C.danger, display: "inline-block",
+                        }} />
+                        {user.is_active ? "Aktiv" : "Bloklanıb"}
+                      </span>
+                    </div>
 
-                  {/* Date */}
-                  <div className="col-span-2 hidden md:block">
-                    <span className="text-xs text-gray-400">{formatBakuDate(user.created_at)}</span>
-                  </div>
+                    {/* Date */}
+                    <div>
+                      <span style={{ fontSize: 11, color: C.muted }}>{formatBakuDate(user.created_at)}</span>
+                    </div>
 
-                  {/* Actions */}
-                  <div className="col-span-2 flex gap-1.5 justify-end">
-                    <button
-                      onClick={() => setSelectedUser(selectedUser?.id === user.id ? null : user)}
-                      className="p-2 rounded-lg bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all border border-gray-100"
-                      title="Bax"
-                    >
-                      <Eye size={15} />
-                    </button>
-                    <button
-                      onClick={() => toggleActive(user.id)}
-                      className={`p-2 rounded-lg transition-all border ${
-                        user.is_active
-                          ? "bg-orange-50 text-orange-500 hover:bg-orange-100 border-orange-100"
-                          : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-emerald-100"
-                      }`}
-                      title={user.is_active ? "Blokla" : "Aktiv et"}
-                    >
-                      {user.is_active ? <Ban size={15} /> : <CheckCircle size={15} />}
-                    </button>
-                    <button
-                      onClick={() => toggleAdmin(user.id)}
-                      className={`p-2 rounded-lg transition-all border ${
-                        user.is_admin
-                          ? "bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200"
-                          : "bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-100"
-                      }`}
-                      title={user.is_admin ? "Admin çıxar" : "Admin et"}
-                    >
-                      {user.is_admin ? <ShieldOff size={15} /> : <Shield size={15} />}
-                    </button>
-                    <button
-                      onClick={() => deleteUser(user.id, user.full_name)}
-                      className="p-2 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-all border border-red-100"
-                      title="Sil"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    {/* Actions */}
+                    <div style={{ display: "flex", gap: 4, justifyContent: "flex-end" }}>
+                      <button
+                        onClick={() => setSelectedUser(selectedUser?.id === user.id ? null : user)}
+                        style={{ ...flatBtnStyle("#f5f5f5", C.muted), padding: "5px 8px" }}
+                        title="Bax"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      <button
+                        onClick={() => toggleActive(user.id)}
+                        style={{
+                          ...flatBtnStyle(
+                            user.is_active ? "#fff7ed" : "#f0faf0",
+                            user.is_active ? "#c2410c" : C.success
+                          ),
+                          padding: "5px 8px",
+                          border: `1px solid ${user.is_active ? "#fed7aa" : "#b6e2b6"}`,
+                        }}
+                        title={user.is_active ? "Blokla" : "Aktiv et"}
+                      >
+                        {user.is_active ? <Ban size={14} /> : <CheckCircle size={14} />}
+                      </button>
+                      <button
+                        onClick={() => toggleAdmin(user.id)}
+                        style={{
+                          ...flatBtnStyle(
+                            user.is_admin ? "#f0f4ff" : "#eef3fa",
+                            user.is_admin ? "#4338ca" : C.primary
+                          ),
+                          padding: "5px 8px",
+                          border: `1px solid ${user.is_admin ? "#c7d2fe" : "#c5d5ea"}`,
+                        }}
+                        title={user.is_admin ? "Admin çıxar" : "Admin et"}
+                      >
+                        {user.is_admin ? <ShieldOff size={14} /> : <Shield size={14} />}
+                      </button>
+                      <button
+                        onClick={() => deleteUser(user.id, user.full_name)}
+                        style={{ ...flatBtnStyle("#fff5f5", C.danger), padding: "5px 8px", border: "1px solid #fca5a5" }}
+                        title="Sil"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Expanded detail */}
                   {selectedUser?.id === user.id && (
-                    <div className="col-span-full bg-gray-50 rounded-xl p-4 mt-1 border border-gray-100">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div style={{
+                      padding: "14px 16px",
+                      background: "#f5f7fa",
+                      borderBottom: `1px solid ${C.border}`,
+                      borderTop: `1px solid ${C.border}`,
+                    }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                         <div>
-                          <p className="text-xs text-gray-400 mb-1">Email</p>
-                          <p className="text-gray-700 font-medium flex items-center gap-1.5"><Mail size={13} /> {user.email}</p>
+                          <p style={{ margin: "0 0 4px", fontSize: 11, color: C.faint }}>Email</p>
+                          <p style={{ margin: 0, fontSize: 13, color: C.text, fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+                            <Mail size={12} color={C.muted} /> {user.email}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-400 mb-1">İxtisas</p>
-                          <p className="text-gray-700 font-medium flex items-center gap-1.5"><GraduationCap size={13} /> {user.major || "—"}</p>
+                          <p style={{ margin: "0 0 4px", fontSize: 11, color: C.faint }}>İxtisas</p>
+                          <p style={{ margin: 0, fontSize: 13, color: C.text, fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+                            <GraduationCap size={12} color={C.muted} /> {user.major || "—"}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-400 mb-1">Kurs</p>
-                          <p className="text-gray-700 font-medium">{user.course ? `${user.course}-ci kurs` : "—"}</p>
+                          <p style={{ margin: "0 0 4px", fontSize: 11, color: C.faint }}>Kurs</p>
+                          <p style={{ margin: 0, fontSize: 13, color: C.text, fontWeight: 600 }}>
+                            {user.course ? `${user.course}-ci kurs` : "—"}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-400 mb-1">Qeydiyyat tarixi</p>
-                          <p className="text-gray-700 font-medium flex items-center gap-1.5"><Calendar size={13} /> {formatBakuDate(user.created_at)}</p>
+                          <p style={{ margin: "0 0 4px", fontSize: 11, color: C.faint }}>Qeydiyyat tarixi</p>
+                          <p style={{ margin: 0, fontSize: 13, color: C.text, fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+                            <Calendar size={12} color={C.muted} /> {formatBakuDate(user.created_at)}
+                          </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-200">
-                        <span className={`text-xs px-2.5 py-1 rounded-lg font-medium ${user.is_open_for_team ? "bg-green-50 text-green-600 border border-green-100" : "bg-gray-100 text-gray-400"}`}>
+                      <div style={{ display: "flex", gap: 8, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.border}` }}>
+                        <span style={{
+                          fontSize: 11, padding: "3px 8px", fontWeight: 600,
+                          background: user.is_open_for_team ? "#f0faf0" : "#f5f5f5",
+                          color: user.is_open_for_team ? C.success : C.muted,
+                          border: `1px solid ${user.is_open_for_team ? "#b6e2b6" : C.border}`,
+                        }}>
                           {user.is_open_for_team ? "Komanda üçün açıq" : "Komanda üçün bağlı"}
                         </span>
-                        <span className={`text-xs px-2.5 py-1 rounded-lg font-medium ${user.is_admin ? "bg-slate-800 text-white" : "bg-gray-100 text-gray-400"}`}>
+                        <span style={{
+                          fontSize: 11, padding: "3px 8px", fontWeight: 600,
+                          background: user.is_admin ? C.primary : "#f5f5f5",
+                          color: user.is_admin ? "#fff" : C.muted,
+                        }}>
                           {user.is_admin ? "Admin" : "Normal istifadəçi"}
                         </span>
                       </div>
@@ -512,12 +672,10 @@ export default function Admin() {
               ))}
 
               {!loading && users.length === 0 && (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <Users size={28} className="text-gray-300" />
-                  </div>
-                  <p className="text-gray-500 font-medium">İstifadəçi tapılmadı</p>
-                  <p className="text-gray-400 text-xs mt-1">Axtarış sorğunuzu dəyişin</p>
+                <div style={{ textAlign: "center", padding: "48px 0" }}>
+                  <Users size={28} color={C.faint} style={{ display: "block", margin: "0 auto 10px" }} />
+                  <p style={{ margin: 0, color: C.muted, fontWeight: 600, fontSize: 14 }}>İstifadəçi tapılmadı</p>
+                  <p style={{ margin: "4px 0 0", color: C.faint, fontSize: 12 }}>Axtarış sorğunuzu dəyişin</p>
                 </div>
               )}
             </div>
@@ -527,42 +685,61 @@ export default function Admin() {
         {/* ═══════ POSTS ═══════ */}
         {tab === "posts" && (
           <div>
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <form onSubmit={(e) => { e.preventDefault(); loadPosts(); }} className="flex-1">
-                <div className="relative">
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
-                  <input
-                    type="text"
-                    value={postSearch}
-                    onChange={(e) => setPostSearch(e.target.value)}
-                    placeholder="Post içəriğində axtar..."
-                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition-all text-sm shadow-sm"
-                  />
-                </div>
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+              <form
+                onSubmit={(e) => { e.preventDefault(); loadPosts(); }}
+                style={{ flex: 1, minWidth: 200, position: "relative" }}
+              >
+                <Search size={15} color={C.faint} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }} />
+                <input
+                  type="text"
+                  value={postSearch}
+                  onChange={(e) => setPostSearch(e.target.value)}
+                  placeholder="Post içəriğində axtar..."
+                  style={{ ...inputStyle, paddingLeft: 32 }}
+                />
               </form>
-              <span className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 shadow-sm">
-                <FileText size={14} /> {posts.length} post
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "5px 12px", background: C.white, border: `1px solid ${C.border}`,
+                fontSize: 12, fontWeight: 600, color: C.muted,
+              }}>
+                <FileText size={13} /> {posts.length} post
               </span>
             </div>
 
             {loading && (
-              <div className="flex items-center justify-center py-20">
-                <div className="w-7 h-7 border-3 border-gray-200 border-t-slate-800 rounded-full animate-spin" />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0" }}>
+                <div style={{
+                  width: 24, height: 24, border: `3px solid ${C.border}`,
+                  borderTopColor: C.primary, borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite",
+                }} />
               </div>
             )}
 
-            <div className="space-y-3">
-              {!loading && posts.map((post) => (
-                <div key={post.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {!loading && posts.map((post, idx) => (
+                <div
+                  key={post.id}
+                  style={{ background: C.white, border: `1px solid ${C.border}` }}
+                >
                   {/* Post header */}
-                  <div className="flex items-center justify-between px-5 pt-5 pb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold shadow-sm">
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "12px 16px", borderBottom: `1px solid #ebebeb`,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{
+                        width: 34, height: 34, background: C.primary,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#fff", fontWeight: 700, fontSize: 14, flexShrink: 0,
+                      }}>
                         {post.author_name?.charAt(0)}
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900 text-sm">{post.author_name}</p>
-                        <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                        <p style={{ margin: 0, fontWeight: 600, fontSize: 13, color: C.text }}>{post.author_name}</p>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: C.muted, marginTop: 1 }}>
                           <span>{formatBakuDate(post.created_at)}</span>
                           <span>·</span>
                           <span>{formatBakuHM(post.created_at)}</span>
@@ -571,55 +748,60 @@ export default function Admin() {
                         </div>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      {post.is_pinned && (
-                        <span className="bg-amber-50 text-amber-600 text-[10px] px-2.5 py-1 rounded-lg font-bold border border-amber-100 uppercase tracking-wide">
-                          Sabit
-                        </span>
-                      )}
-                    </div>
+                    {post.is_pinned && (
+                      <span style={{
+                        fontSize: 10, padding: "2px 8px", fontWeight: 700,
+                        background: "#fffbeb", color: "#92400e",
+                        border: "1px solid #fde68a", textTransform: "uppercase", letterSpacing: "0.05em",
+                      }}>
+                        Sabit
+                      </span>
+                    )}
                   </div>
 
                   {/* Post content */}
                   {post.content && (
-                    <div className="px-5 pb-4">
-                      <p className="text-gray-700 text-sm leading-relaxed">
+                    <div style={{ padding: "10px 16px" }}>
+                      <p style={{ margin: 0, color: C.text, fontSize: 13, lineHeight: 1.6 }}>
                         {post.content.length > 300 ? post.content.slice(0, 300) + "..." : post.content}
                       </p>
                     </div>
                   )}
 
                   {/* Post footer */}
-                  <div className="flex items-center justify-between px-5 py-3 bg-gray-50/50 border-t border-gray-100">
-                    <div className="flex items-center gap-5">
-                      <span className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-                        <Heart size={14} className="text-red-400" />
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "8px 16px", background: "#f9f9f9", borderTop: `1px solid #ebebeb`,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: C.muted }}>
+                        <Heart size={13} color="#dc2626" />
                         {post.like_count} bəyəni
                       </span>
-                      <span className="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
-                        <MessageCircle size={14} className="text-blue-400" />
+                      <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, color: C.muted }}>
+                        <MessageCircle size={13} color="#2563eb" />
                         {post.comment_count} şərh
                       </span>
                     </div>
-
-                    <div className="flex gap-1.5">
+                    <div style={{ display: "flex", gap: 6 }}>
                       <button
                         onClick={() => togglePin(post.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                          post.is_pinned
-                            ? "bg-amber-100 text-amber-600 hover:bg-amber-200 border border-amber-200"
-                            : "bg-gray-100 text-gray-500 hover:bg-gray-200 border border-gray-200"
-                        }`}
+                        style={{
+                          ...flatBtnStyle(
+                            post.is_pinned ? "#fffbeb" : "#f5f5f5",
+                            post.is_pinned ? "#92400e" : C.muted
+                          ),
+                          border: `1px solid ${post.is_pinned ? "#fde68a" : C.border}`,
+                        }}
                       >
-                        {post.is_pinned ? <PinOff size={13} /> : <Pin size={13} />}
+                        {post.is_pinned ? <PinOff size={12} /> : <Pin size={12} />}
                         {post.is_pinned ? "Unpin" : "Pin"}
                       </button>
                       <button
                         onClick={() => deletePost(post.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-500 hover:bg-red-100 transition-all border border-red-100"
+                        style={{ ...flatBtnStyle(C.danger, "#fff"), border: "none" }}
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={12} />
                         Sil
                       </button>
                     </div>
@@ -629,12 +811,10 @@ export default function Admin() {
             </div>
 
             {!loading && posts.length === 0 && (
-              <div className="text-center py-20">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-sm">
-                  <FileText size={32} className="text-gray-300" />
-                </div>
-                <p className="text-gray-600 font-semibold text-lg">Post tapılmadı</p>
-                <p className="text-gray-400 text-sm mt-2">Axtarış sorğunuzu dəyişin</p>
+              <div style={{ textAlign: "center", padding: "60px 0" }}>
+                <FileText size={32} color={C.faint} style={{ display: "block", margin: "0 auto 10px" }} />
+                <p style={{ margin: 0, color: C.text, fontWeight: 600, fontSize: 15 }}>Post tapılmadı</p>
+                <p style={{ margin: "4px 0 0", color: C.muted, fontSize: 13 }}>Axtarış sorğunuzu dəyişin</p>
               </div>
             )}
           </div>
@@ -644,80 +824,112 @@ export default function Admin() {
         {tab === "reports" && (
           <div>
             {loading ? (
-              <div className="flex justify-center py-20">
-                <div className="w-8 h-8 border-3 border-red-200 border-t-red-500 rounded-full animate-spin" />
+              <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
+                <div style={{
+                  width: 24, height: 24, border: `3px solid #fca5a5`,
+                  borderTopColor: C.danger, borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite",
+                }} />
               </div>
             ) : reports.length === 0 ? (
-              <div className="text-center py-20">
-                <div className="w-20 h-20 bg-green-50 rounded-3xl flex items-center justify-center mx-auto mb-5">
-                  <CheckCircle size={32} className="text-green-400" />
-                </div>
-                <p className="text-gray-700 font-semibold text-lg">Açıq şikayət yoxdur</p>
-                <p className="text-gray-400 text-sm mt-2">Hər şey səliqəlidir</p>
+              <div style={{ textAlign: "center", padding: "60px 0" }}>
+                <CheckCircle size={32} color={C.success} style={{ display: "block", margin: "0 auto 10px" }} />
+                <p style={{ margin: 0, color: C.text, fontWeight: 600, fontSize: 15 }}>Açıq şikayət yoxdur</p>
+                <p style={{ margin: "4px 0 0", color: C.muted, fontSize: 13 }}>Hər şey səliqəlidir</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {reports.map((r) => (
-                  <div key={r.post_id} className="bg-white rounded-2xl border border-red-100 shadow-sm overflow-hidden">
-                    <div className="px-5 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-                          <Flag size={14} className="text-white" />
+                  <div
+                    key={r.post_id}
+                    style={{ background: C.white, border: `1px solid #fca5a5` }}
+                  >
+                    {/* Report header */}
+                    <div style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "10px 16px", background: "#fff5f5", borderBottom: "1px solid #fca5a5",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{
+                          width: 30, height: 30, background: C.danger,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          <Flag size={13} color="#fff" />
                         </div>
                         <div>
-                          <p className="font-bold text-red-700 text-sm">{r.report_count} şikayət</p>
-                          <p className="text-xs text-red-500">Son: {formatBakuDate(r.latest_reported_at)} · {formatBakuHM(r.latest_reported_at)}</p>
+                          <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: C.danger }}>{r.report_count} şikayət</p>
+                          <p style={{ margin: 0, fontSize: 11, color: "#b91c1c" }}>
+                            Son: {formatBakuDate(r.latest_reported_at)} · {formatBakuHM(r.latest_reported_at)}
+                          </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="px-5 py-4">
-                      <p className="text-xs text-gray-400 mb-1">Müəllif</p>
-                      <p className="text-sm font-semibold text-gray-800 mb-3">{r.author_name}</p>
+                    {/* Report body */}
+                    <div style={{ padding: "12px 16px" }}>
+                      <p style={{ margin: "0 0 2px", fontSize: 11, color: C.faint }}>Müəllif</p>
+                      <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 600, color: C.text }}>{r.author_name}</p>
 
                       {r.post_content && (
-                        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap mb-3">
+                        <p style={{ margin: "0 0 10px", color: C.text, fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
                           {r.post_content.length > 300 ? r.post_content.slice(0, 300) + "..." : r.post_content}
                         </p>
                       )}
 
                       {r.post_image_url && (
-                        <div className="mb-3 rounded-xl overflow-hidden border border-gray-100">
-                          <img src={r.post_image_url} alt="" className="w-full max-h-64 object-cover" />
+                        <div style={{ marginBottom: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                          <img src={r.post_image_url} alt="" style={{ width: "100%", maxHeight: 240, objectFit: "cover", display: "block" }} />
                         </div>
                       )}
 
                       {r.post_video_url && (
-                        <div className="mb-3 rounded-xl overflow-hidden border border-gray-100 bg-black">
-                          <video src={r.post_video_url} controls className="w-full max-h-64" />
+                        <div style={{ marginBottom: 10, border: `1px solid ${C.border}`, background: "#000" }}>
+                          <video src={r.post_video_url} controls style={{ width: "100%", maxHeight: 240, display: "block" }} />
                         </div>
                       )}
 
                       {r.reasons.length > 0 && (
-                        <div className="mt-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                          <p className="text-xs font-semibold text-gray-500 mb-2">Səbəblər:</p>
-                          <ul className="space-y-1">
+                        <div style={{
+                          marginTop: 10, background: "#f9f9f9",
+                          border: `1px solid ${C.border}`, padding: "10px 14px",
+                        }}>
+                          <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 700, color: C.muted }}>Səbəblər:</p>
+                          <ul style={{ margin: 0, paddingLeft: 0, listStyle: "none" }}>
                             {r.reasons.map((reason, i) => (
-                              <li key={i} className="text-sm text-gray-600">• {reason}</li>
+                              <li key={i} style={{ fontSize: 13, color: C.text, padding: "2px 0" }}>• {reason}</li>
                             ))}
                           </ul>
                         </div>
                       )}
                     </div>
 
-                    <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex gap-2 justify-end">
+                    {/* Report actions */}
+                    <div style={{
+                      display: "flex", gap: 8, justifyContent: "flex-end",
+                      padding: "10px 16px", background: "#f9f9f9", borderTop: `1px solid ${C.border}`,
+                    }}>
                       <button
                         onClick={() => dismissReports(r.post_id)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition"
+                        style={{
+                          display: "flex", alignItems: "center", gap: 6,
+                          padding: "6px 14px", background: C.white,
+                          border: `1px solid ${C.border}`, cursor: "pointer",
+                          fontSize: 13, fontWeight: 500, color: C.text,
+                        }}
                       >
-                        <CheckCircle size={15} />
+                        <CheckCircle size={14} />
                         Rədd et
                       </button>
                       <button
                         onClick={() => deleteReportedPost(r.post_id)}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded-xl hover:bg-red-600 transition"
+                        style={{
+                          display: "flex", alignItems: "center", gap: 6,
+                          padding: "6px 14px", background: C.danger,
+                          border: "none", cursor: "pointer",
+                          fontSize: 13, fontWeight: 600, color: "#fff",
+                        }}
                       >
-                        <Trash2 size={15} />
+                        <Trash2 size={14} />
                         Postu sil
                       </button>
                     </div>
@@ -732,68 +944,87 @@ export default function Admin() {
         {tab === "logs" && (
           <div>
             {/* Filters */}
-            <div className="flex flex-col md:flex-row gap-3 mb-6">
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
               <select
                 value={logAction}
                 onChange={(e) => setLogAction(e.target.value)}
-                className="px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500"
+                style={{ ...inputStyle, width: "auto", padding: "7px 10px" }}
               >
                 <option value="">Bütün əməliyyatlar</option>
                 <option value="login_success">Uğurlu giriş</option>
                 <option value="login_failed">Uğursuz giriş</option>
                 <option value="register">Qeydiyyat</option>
               </select>
-              <form onSubmit={(e) => { e.preventDefault(); loadLogs(); }} className="flex-1 flex gap-3">
-                <div className="relative flex-1">
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+              <form
+                onSubmit={(e) => { e.preventDefault(); loadLogs(); }}
+                style={{ flex: 1, minWidth: 180, display: "flex", gap: 8 }}
+              >
+                <div style={{ flex: 1, position: "relative" }}>
+                  <Search size={14} color={C.faint} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)" }} />
                   <input
                     type="text"
                     value={logEmail}
                     onChange={(e) => setLogEmail(e.target.value)}
                     placeholder="Email ilə axtar..."
-                    className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-500 text-sm shadow-sm"
+                    style={{ ...inputStyle, paddingLeft: 28 }}
                   />
                 </div>
                 <button
                   type="submit"
-                  className="px-5 py-3 bg-slate-800 text-white rounded-xl text-sm font-semibold hover:bg-slate-900 transition"
+                  style={{
+                    padding: "7px 16px", background: C.primary, color: "#fff",
+                    border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600,
+                  }}
                 >
                   Filtrələ
                 </button>
               </form>
-              <span className="flex items-center gap-1.5 px-4 py-2 bg-white border border-gray-200 rounded-xl text-xs font-semibold text-gray-500 shadow-sm">
-                <Activity size={14} /> {logs.length} log
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "5px 12px", background: C.white, border: `1px solid ${C.border}`,
+                fontSize: 12, fontWeight: 600, color: C.muted,
+              }}>
+                <Activity size={13} /> {logs.length} log
               </span>
             </div>
 
             {loading && (
-              <div className="flex items-center justify-center py-20">
-                <div className="w-7 h-7 border-3 border-gray-200 border-t-slate-800 rounded-full animate-spin" />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0" }}>
+                <div style={{
+                  width: 24, height: 24, border: `3px solid ${C.border}`,
+                  borderTopColor: C.primary, borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite",
+                }} />
               </div>
             )}
 
             {/* Logs table */}
             {!loading && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3.5 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  <div className="col-span-3">İstifadəçi</div>
-                  <div className="col-span-2">Əməliyyat</div>
-                  <div className="col-span-3">Vaxt</div>
-                  <div className="col-span-2">IP</div>
-                  <div className="col-span-2">Ətraflı</div>
+              <div style={{ background: C.white, border: `1px solid ${C.border}` }}>
+                {/* Table header */}
+                <div style={{
+                  display: "grid", gridTemplateColumns: "2fr 1.5fr 2fr 1.5fr 2fr",
+                  padding: "8px 16px", background: "#f5f5f5",
+                  borderBottom: `1px solid ${C.border}`,
+                  fontSize: 11, fontWeight: 700, color: C.muted,
+                  textTransform: "uppercase", letterSpacing: "0.05em",
+                }}>
+                  <div>İstifadəçi</div>
+                  <div>Əməliyyat</div>
+                  <div>Vaxt</div>
+                  <div>IP</div>
+                  <div>Ətraflı</div>
                 </div>
 
                 {logs.map((log, i) => (
-                  <LogRow key={log.id} log={log} isLast={i === logs.length - 1} />
+                  <LogRow key={log.id} log={log} isLast={i === logs.length - 1} isEven={i % 2 === 0} />
                 ))}
 
                 {logs.length === 0 && (
-                  <div className="text-center py-16">
-                    <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Activity size={28} className="text-gray-300" />
-                    </div>
-                    <p className="text-gray-500 font-medium">Log qeydi yoxdur</p>
-                    <p className="text-gray-400 text-xs mt-1">Filtri dəyişin və ya yenilə</p>
+                  <div style={{ textAlign: "center", padding: "48px 0" }}>
+                    <Activity size={28} color={C.faint} style={{ display: "block", margin: "0 auto 10px" }} />
+                    <p style={{ margin: 0, color: C.muted, fontWeight: 600, fontSize: 14 }}>Log qeydi yoxdur</p>
+                    <p style={{ margin: "4px 0 0", color: C.faint, fontSize: 12 }}>Filtri dəyişin və ya yenilə</p>
                   </div>
                 )}
               </div>
@@ -801,6 +1032,10 @@ export default function Admin() {
           </div>
         )}
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }
@@ -808,50 +1043,58 @@ export default function Admin() {
 
 /* ─── Log Row ─── */
 const actionMeta = {
-  login_success: { label: "Uğurlu giriş", icon: LogIn, color: "emerald" },
-  login_failed: { label: "Uğursuz giriş", icon: Ban, color: "red" },
-  register: { label: "Qeydiyyat", icon: UserPlus, color: "blue" },
-  profile_picture_update: { label: "Profil şəkli", icon: Image, color: "violet" },
-  message_send: { label: "Mesaj", icon: Send, color: "amber" },
+  login_success: { label: "Uğurlu giriş", icon: LogIn, color: "#16a34a", bg: "#f0faf0", border: "#b6e2b6" },
+  login_failed: { label: "Uğursuz giriş", icon: Ban, color: "#dc2626", bg: "#fff5f5", border: "#fca5a5" },
+  register: { label: "Qeydiyyat", icon: UserPlus, color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe" },
+  profile_picture_update: { label: "Profil şəkli", icon: Image, color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe" },
+  message_send: { label: "Mesaj", icon: Send, color: "#b45309", bg: "#fffbeb", border: "#fde68a" },
 };
 
-const actionColors = {
-  emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-  red: "bg-red-50 text-red-500 border-red-100",
-  blue: "bg-blue-50 text-blue-600 border-blue-100",
-  violet: "bg-violet-50 text-violet-600 border-violet-100",
-  amber: "bg-amber-50 text-amber-600 border-amber-100",
-  gray: "bg-gray-50 text-gray-500 border-gray-100",
-};
-
-function LogRow({ log, isLast }) {
-  const meta = actionMeta[log.action] || { label: log.action, icon: Activity, color: "gray" };
+function LogRow({ log, isLast, isEven }) {
+  const meta = actionMeta[log.action] || {
+    label: log.action, icon: Activity,
+    color: "#666", bg: "#f5f5f5", border: "#d4d4d4",
+  };
   const Icon = meta.icon;
   const date = formatBakuDate(log.created_at);
   const time = formatBakuTime(log.created_at);
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-5 py-3.5 items-center hover:bg-gray-50/50 transition-colors ${!isLast ? "border-b border-gray-50" : ""}`}>
-      <div className="col-span-3 min-w-0">
-        <p className="font-semibold text-gray-900 text-sm truncate">{log.full_name || "—"}</p>
-        <p className="text-xs text-gray-400 truncate">{log.email || "—"}</p>
+    <div style={{
+      display: "grid", gridTemplateColumns: "2fr 1.5fr 2fr 1.5fr 2fr",
+      padding: "9px 16px", alignItems: "center",
+      background: isEven ? "#ffffff" : "#f9f9f9",
+      borderBottom: isLast ? "none" : "1px solid #ebebeb",
+    }}>
+      <div style={{ minWidth: 0 }}>
+        <p style={{ margin: 0, fontWeight: 600, fontSize: 12, color: "#1a1a1a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {log.full_name || "—"}
+        </p>
+        <p style={{ margin: 0, fontSize: 11, color: "#666", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {log.email || "—"}
+        </p>
       </div>
-      <div className="col-span-2">
-        <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg font-semibold border ${actionColors[meta.color]}`}>
-          <Icon size={12} />
+      <div>
+        <span style={{
+          display: "inline-flex", alignItems: "center", gap: 4,
+          fontSize: 11, padding: "3px 7px", fontWeight: 600,
+          background: meta.bg, color: meta.color, border: `1px solid ${meta.border}`,
+        }}>
+          <Icon size={11} />
           {meta.label}
         </span>
       </div>
-      <div className="col-span-3 flex items-center gap-1.5 text-xs text-gray-500">
-        <Clock size={13} className="text-gray-300" />
-        <span className="font-medium text-gray-700">{date}</span>
-        <span className="text-gray-400">{time}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#666" }}>
+        <Clock size={12} color="#999" />
+        <span style={{ fontWeight: 600, color: "#1a1a1a" }}>{date}</span>
+        <span style={{ color: "#999" }}>{time}</span>
       </div>
-      <div className="col-span-2 flex items-center gap-1.5 text-xs text-gray-500 font-mono">
-        <Globe size={12} className="text-gray-300" />
+      <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#666", fontFamily: "monospace" }}>
+        <Globe size={11} color="#999" />
         {log.ip_address || "—"}
       </div>
-      <div className="col-span-2 text-xs text-gray-400 truncate" title={log.user_agent || log.details || ""}>
+      <div style={{ fontSize: 11, color: "#999", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        title={log.user_agent || log.details || ""}>
         {log.details || (log.user_agent ? log.user_agent.split(" ")[0] : "—")}
       </div>
     </div>
@@ -860,29 +1103,29 @@ function LogRow({ log, isLast }) {
 
 
 /* ─── Stat Card ─── */
-const colorMap = {
-  slate: { bg: "from-slate-700 to-slate-900", shadow: "shadow-slate-200", text: "text-slate-600", light: "bg-slate-50" },
-  emerald: { bg: "from-emerald-500 to-teal-600", shadow: "shadow-emerald-200", text: "text-emerald-600", light: "bg-emerald-50" },
-  blue: { bg: "from-blue-500 to-blue-600", shadow: "shadow-blue-200", text: "text-blue-600", light: "bg-blue-50" },
-  violet: { bg: "from-violet-500 to-purple-600", shadow: "shadow-violet-200", text: "text-violet-600", light: "bg-violet-50" },
-  teal: { bg: "from-teal-500 to-cyan-600", shadow: "shadow-teal-200", text: "text-teal-600", light: "bg-teal-50" },
-  amber: { bg: "from-amber-500 to-orange-600", shadow: "shadow-amber-200", text: "text-amber-600", light: "bg-amber-50" },
-};
-
-function StatCard({ icon: Icon, label, value, color, subtitle }) {
-  const c = colorMap[color];
+function StatCard({ icon: Icon, label, value, subtitle }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all duration-300 group">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`w-12 h-12 bg-gradient-to-br ${c.bg} ${c.shadow} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform`}>
-          <Icon size={22} className="text-white" />
+    <div style={{
+      background: "#ffffff",
+      border: "1px solid #d4d4d4",
+      padding: "14px 18px",
+    }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+        <div style={{
+          width: 36, height: 36, background: "#1a4a8a",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <Icon size={18} color="#fff" />
         </div>
         {subtitle && (
-          <span className={`text-[11px] font-semibold ${c.text} ${c.light} px-2.5 py-1 rounded-lg`}>{subtitle}</span>
+          <span style={{
+            fontSize: 11, fontWeight: 600, color: "#1a4a8a",
+            background: "#eef3fa", padding: "2px 7px", border: "1px solid #c5d5ea",
+          }}>{subtitle}</span>
         )}
       </div>
-      <p className="text-3xl font-bold text-gray-900 tracking-tight">{value}</p>
-      <p className="text-sm text-gray-400 mt-1">{label}</p>
+      <p style={{ margin: "0 0 2px", fontSize: 28, fontWeight: 700, color: "#1a1a1a", lineHeight: 1 }}>{value}</p>
+      <p style={{ margin: 0, fontSize: 12, color: "#666" }}>{label}</p>
     </div>
   );
 }
@@ -891,9 +1134,12 @@ function StatCard({ icon: Icon, label, value, color, subtitle }) {
 /* ─── Overview Row ─── */
 function OverviewRow({ label, value, highlight }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-      <span className="text-sm text-gray-500">{label}</span>
-      <span className={`text-sm font-bold ${highlight ? "text-red-500" : "text-gray-900"}`}>{value}</span>
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "8px 0", borderBottom: "1px solid #ebebeb",
+    }}>
+      <span style={{ fontSize: 13, color: "#666" }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: highlight ? "#dc2626" : "#1a1a1a" }}>{value}</span>
     </div>
   );
 }
@@ -904,19 +1150,28 @@ function QuickAction({ icon: Icon, label, count, onClick, warning }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all group text-left ${
-        warning ? "bg-red-50 hover:bg-red-100 border border-red-100" : "bg-gray-50 hover:bg-gray-100 border border-gray-100"
-      }`}
+      style={{
+        width: "100%", display: "flex", alignItems: "center", gap: 10,
+        padding: "10px 12px", cursor: "pointer", textAlign: "left",
+        background: warning ? "#fff5f5" : "#f5f5f5",
+        border: `1px solid ${warning ? "#fca5a5" : "#d4d4d4"}`,
+      }}
     >
-      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${warning ? "bg-red-100 text-red-500" : "bg-white text-gray-500 shadow-sm"}`}>
-        <Icon size={17} />
+      <div style={{
+        width: 32, height: 32,
+        background: warning ? "#fee2e2" : "#ffffff",
+        border: `1px solid ${warning ? "#fca5a5" : "#d4d4d4"}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        color: warning ? "#dc2626" : "#666", flexShrink: 0,
+      }}>
+        <Icon size={15} />
       </div>
-      <div className="flex-1">
-        <p className={`text-sm font-medium ${warning ? "text-red-700" : "text-gray-700"}`}>{label}</p>
+      <div style={{ flex: 1 }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: warning ? "#991b1b" : "#1a1a1a" }}>{label}</p>
       </div>
-      <div className="flex items-center gap-2">
-        <span className={`text-sm font-bold ${warning ? "text-red-600" : "text-gray-900"}`}>{count}</span>
-        <ChevronRight size={16} className="text-gray-300 group-hover:translate-x-0.5 transition-transform" />
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: warning ? "#dc2626" : "#1a1a1a" }}>{count}</span>
+        <ChevronRight size={14} color="#999" />
       </div>
     </button>
   );

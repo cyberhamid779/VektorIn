@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import { Send, MessageCircle, ArrowLeft, Circle } from "lucide-react";
 import api from "../api/client";
 import { formatBakuHM, isActiveNow, formatLastSeen } from "../utils/time";
-import { useDarkClasses } from "../hooks/useDarkClasses";
 import { useLang } from "../hooks/useLang";
 
 export default function Messages() {
@@ -11,6 +10,7 @@ export default function Messages() {
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
+  const [inputFocused, setInputFocused] = useState(false);
   const messagesEndRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -64,112 +64,125 @@ export default function Messages() {
     } catch (err) {}
   };
 
-  const d = useDarkClasses();
   const { t } = useLang();
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4">
-      <div className="mb-6">
-        <h2 className={`text-2xl font-bold ${d.heading}`}>{t("messages_title")}</h2>
-        <p className={`${d.textFaint} text-sm mt-1`}>{t("messages_subtitle")}</p>
+    <div style={{ maxWidth: 900, margin: "0 auto", padding: "32px 16px" }}>
+      <div style={{ marginBottom: 20 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a", margin: 0 }}>{t("messages_title")}</h2>
+        <p style={{ fontSize: 13, color: "#999", marginTop: 4, marginBottom: 0 }}>{t("messages_subtitle")}</p>
       </div>
 
-      <div className={`flex ${d.card} rounded-3xl shadow-sm overflow-hidden`} style={{ height: "560px" }}>
-        {/* Chat siyahısı */}
-        <div className={`w-full md:w-80 border-r ${d.border} overflow-y-auto ${activeChat ? "hidden md:block" : ""}`}>
-          <div className={`p-4 border-b ${d.border}`}>
-            <h3 className={`text-sm font-semibold ${d.textMuted} uppercase tracking-wider`}>{t("messages_chats")}</h3>
+      <div style={{ display: "flex", height: 560, border: "1px solid #d4d4d4", background: "#fff", overflow: "hidden" }}>
+        {/* Chat list sidebar */}
+        <div
+          style={{
+            width: 260,
+            borderRight: "1px solid #d4d4d4",
+            overflowY: "auto",
+            flexShrink: 0,
+            display: activeChat ? "none" : "flex",
+            flexDirection: "column",
+          }}
+          className="messages-sidebar"
+        >
+          <div style={{ padding: "12px 14px", borderBottom: "1px solid #d4d4d4" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#666", textTransform: "uppercase", letterSpacing: 1 }}>{t("messages_chats")}</span>
           </div>
+
           {chats.length === 0 && (
-            <div className={`flex flex-col items-center justify-center h-[calc(100%-57px)] ${d.textFaint} px-6`}>
-              <div className={`w-16 h-16 ${d.dark ? "bg-gray-700" : "bg-gray-50"} rounded-2xl flex items-center justify-center mb-3`}>
-                <MessageCircle size={28} />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#999", padding: "0 20px", textAlign: "center" }}>
+              <div style={{ width: 48, height: 48, background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                <MessageCircle size={24} color="#bbb" />
               </div>
-              <p className="text-sm font-medium">{t("messages_empty")}</p>
-              <p className={`text-xs ${d.textFaint} mt-1 text-center`}>{t("messages_empty_sub")}</p>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#666", margin: 0 }}>{t("messages_empty")}</p>
+              <p style={{ fontSize: 12, color: "#999", marginTop: 4 }}>{t("messages_empty_sub")}</p>
             </div>
           )}
-          {chats.map((chat) => (
-            <div
-              key={chat.user_id}
-              onClick={() => openChat(chat.user_id, chat.full_name, chat.last_seen)}
-              className={`p-4 cursor-pointer border-b ${d.borderLight} transition-all duration-200 ${
-                activeChat?.userId === chat.user_id
-                  ? d.dark ? "bg-blue-500/10 border-l-2 border-l-blue-500" : "bg-gradient-to-r from-blue-50 to-indigo-50 border-l-2 border-l-blue-500"
-                  : d.dark ? "hover:bg-gray-700/50" : "hover:bg-gray-50"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white font-bold shrink-0 shadow-md ${
-                  activeChat?.userId === chat.user_id
-                    ? "bg-gradient-to-br from-blue-600 to-indigo-600 shadow-blue-200"
-                    : "bg-gradient-to-br from-blue-500 to-indigo-500 shadow-blue-100"
-                }`}>
-                  {chat.full_name?.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className={`font-semibold ${d.text} text-sm`}>{chat.full_name}</p>
-                    {chat.unread_count > 0 && (
-                      <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm shadow-blue-200">
-                        {chat.unread_count}
-                      </span>
-                    )}
+
+          {chats.map((chat) => {
+            const isActive = activeChat?.userId === chat.user_id;
+            return (
+              <div
+                key={chat.user_id}
+                onClick={() => openChat(chat.user_id, chat.full_name, chat.last_seen)}
+                style={{
+                  padding: "10px 14px",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #ececec",
+                  borderLeft: isActive ? "2px solid #1a4a8a" : "2px solid transparent",
+                  background: isActive ? "#eef3fb" : "transparent",
+                }}
+                onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = "#f5f5f5"; }}
+                onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 40, height: 40, background: "#1a4a8a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
+                    {chat.full_name?.charAt(0)}
                   </div>
-                  <p className={`text-xs ${d.textFaint} truncate mt-1`}>{chat.last_message}</p>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: "#1a1a1a" }}>{chat.full_name}</span>
+                      {chat.unread_count > 0 && (
+                        <span style={{ background: "#1a4a8a", color: "#fff", fontSize: 11, fontWeight: 700, width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          {chat.unread_count}
+                        </span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: 12, color: "#999", margin: 0, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{chat.last_message}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Mesaj sahəsi */}
-        <div className={`flex-1 flex flex-col ${!activeChat ? "hidden md:flex" : ""}`}>
+        {/* Message area */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
           {activeChat ? (
             <>
-              <div className={`px-6 py-4 border-b ${d.border} ${d.dark ? "bg-gray-800/80" : "bg-white/80"} backdrop-blur-sm flex items-center gap-3`}>
+              {/* Chat header */}
+              <div style={{ padding: "12px 16px", borderBottom: "1px solid #d4d4d4", background: "#fff", display: "flex", alignItems: "center", gap: 10 }}>
                 <button
                   onClick={() => setActiveChat(null)}
-                  className={`md:hidden p-2 -ml-2 rounded-xl ${d.dark ? "hover:bg-gray-700 text-gray-400" : "hover:bg-gray-100 text-gray-500"} transition`}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#666", padding: 4, display: "flex", alignItems: "center" }}
                 >
-                  <ArrowLeft size={20} />
+                  <ArrowLeft size={18} />
                 </button>
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold shadow-md shadow-blue-100">
+                <div style={{ width: 36, height: 36, background: "#1a4a8a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, flexShrink: 0 }}>
                   {activeChat.fullName?.charAt(0)}
                 </div>
                 <div>
-                  <p className={`font-semibold ${d.text} text-sm`}>{activeChat.fullName}</p>
+                  <p style={{ fontWeight: 600, fontSize: 14, color: "#1a1a1a", margin: 0 }}>{activeChat.fullName}</p>
                   {(() => {
                     const active = isActiveNow(activeChat.lastSeen);
                     return (
-                      <div className="flex items-center gap-1.5">
-                        <Circle size={8} fill={active ? "#22c55e" : "#9ca3af"} className={active ? "text-green-500" : "text-gray-400"} />
-                        <p className={`text-xs font-medium ${active ? "text-green-500" : "text-gray-400"}`}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
+                        <Circle size={7} fill={active ? "#22c55e" : "#9ca3af"} color={active ? "#22c55e" : "#9ca3af"} />
+                        <span style={{ fontSize: 11, fontWeight: 500, color: active ? "#22c55e" : "#999" }}>
                           {active ? t("messages_active") : formatLastSeen(activeChat.lastSeen)}
-                        </p>
+                        </span>
                       </div>
                     );
                   })()}
                 </div>
               </div>
 
-              <div className={`flex-1 overflow-y-auto p-6 space-y-3 ${d.dark ? "bg-gray-900/50" : "bg-gradient-to-b from-gray-50 to-white"}`}>
+              {/* Messages list */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", background: "#fafafa", display: "flex", flexDirection: "column", gap: 8 }}>
                 {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.is_mine ? "justify-end" : "justify-start"}`}
-                  >
+                  <div key={msg.id} style={{ display: "flex", justifyContent: msg.is_mine ? "flex-end" : "flex-start" }}>
                     <div
-                      className={`max-w-[70%] px-4 py-3 ${
-                        msg.is_mine
-                          ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl rounded-br-md shadow-md shadow-blue-100"
-                          : d.dark
-                          ? "bg-gray-700 text-gray-100 border border-gray-600 rounded-2xl rounded-bl-md shadow-sm"
-                          : "bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-bl-md shadow-sm"
-                      }`}
+                      style={{
+                        maxWidth: "70%",
+                        padding: "8px 12px",
+                        borderRadius: 4,
+                        background: msg.is_mine ? "#1a4a8a" : "#f0f0f0",
+                        color: msg.is_mine ? "#fff" : "#222",
+                      }}
                     >
-                      <p className="text-sm leading-relaxed">{msg.content}</p>
-                      <p className={`text-[11px] mt-1.5 ${msg.is_mine ? "text-blue-200" : d.textFaint}`}>
+                      <p style={{ fontSize: 14, lineHeight: 1.5, margin: 0 }}>{msg.content}</p>
+                      <p style={{ fontSize: 11, marginTop: 4, marginBottom: 0, color: msg.is_mine ? "rgba(255,255,255,0.65)" : "#999" }}>
                         {formatBakuHM(msg.created_at)}
                       </p>
                     </div>
@@ -178,34 +191,67 @@ export default function Messages() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <form onSubmit={sendMessage} className={`p-4 border-t ${d.border} ${d.dark ? "bg-gray-800" : "bg-white"} flex gap-3`}>
+              {/* Input area */}
+              <form
+                onSubmit={sendMessage}
+                style={{ padding: "10px 14px", borderTop: "1px solid #d4d4d4", background: "#fff", display: "flex", gap: 10, alignItems: "center" }}
+              >
                 <input
                   type="text"
                   value={newMsg}
                   onChange={(e) => setNewMsg(e.target.value)}
+                  onFocus={() => setInputFocused(true)}
+                  onBlur={() => setInputFocused(false)}
                   placeholder={t("messages_placeholder")}
-                  className={`flex-1 px-5 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-sm ${d.inputAlt}`}
+                  style={{
+                    flex: 1,
+                    padding: "9px 12px",
+                    border: inputFocused ? "1px solid #1a4a8a" : "1px solid #ccc",
+                    fontSize: 14,
+                    color: "#1a1a1a",
+                    background: "#fff",
+                    outline: "none",
+                    borderRadius: 2,
+                  }}
                 />
                 <button
                   type="submit"
                   disabled={!newMsg.trim()}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3 rounded-2xl hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 disabled:opacity-30 disabled:shadow-none"
+                  style={{
+                    background: newMsg.trim() ? "#1a4a8a" : "#a0b4d0",
+                    color: "#fff",
+                    border: "none",
+                    padding: "9px 14px",
+                    cursor: newMsg.trim() ? "pointer" : "not-allowed",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 2,
+                  }}
                 >
-                  <Send size={18} />
+                  <Send size={17} />
                 </button>
               </form>
             </>
           ) : (
-            <div className={`flex-1 flex flex-col items-center justify-center ${d.textFaint} px-6`}>
-              <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-5 shadow-sm ${d.dark ? "bg-blue-500/10" : "bg-gradient-to-br from-blue-50 to-indigo-50"}`}>
-                <MessageCircle size={32} className="text-blue-400" />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#999", padding: "0 24px", textAlign: "center" }}>
+              <div style={{ width: 56, height: 56, background: "#eef3fb", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
+                <MessageCircle size={28} color="#1a4a8a" />
               </div>
-              <p className={`font-semibold ${d.text} text-lg`}>{t("messages_select")}</p>
-              <p className={`text-sm mt-2 ${d.textFaint} text-center max-w-xs`}>{t("messages_select_sub")}</p>
+              <p style={{ fontWeight: 600, fontSize: 16, color: "#1a1a1a", margin: 0 }}>{t("messages_select")}</p>
+              <p style={{ fontSize: 13, color: "#999", marginTop: 6 }}>{t("messages_select_sub")}</p>
             </div>
           )}
         </div>
       </div>
+
+      <style>{`
+        @media (min-width: 768px) {
+          .messages-sidebar {
+            display: flex !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

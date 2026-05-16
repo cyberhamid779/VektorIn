@@ -5,9 +5,105 @@ import { Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2,
 import api from "../api/client";
 import UserAvatar from "../components/UserAvatar";
 import { formatBakuDate, formatBakuHM } from "../utils/time";
-import { useDarkClasses } from "../hooks/useDarkClasses";
 
 const API_BASE = import.meta.env.VITE_API_URL?.replace("/api", "") || "http://localhost:8000";
+
+const S = {
+  page: {
+    maxWidth: 760,
+    margin: "0 auto",
+    padding: "20px 12px",
+  },
+  card: {
+    background: "#ffffff",
+    border: "1px solid #d4d4d4",
+    marginBottom: 12,
+  },
+  sectionPad: {
+    padding: "16px 20px",
+  },
+  label: {
+    display: "block",
+    fontSize: 12,
+    fontWeight: 600,
+    color: "#1a1a1a",
+    marginBottom: 6,
+  },
+  input: {
+    width: "100%",
+    padding: "8px 10px",
+    border: "1px solid #ccc",
+    borderRadius: 2,
+    fontSize: 14,
+    color: "#1a1a1a",
+    background: "#fff",
+    outline: "none",
+    boxSizing: "border-box",
+  },
+  textarea: {
+    width: "100%",
+    padding: "8px 10px",
+    border: "1px solid #ccc",
+    borderRadius: 2,
+    fontSize: 14,
+    color: "#1a1a1a",
+    background: "#fff",
+    outline: "none",
+    resize: "vertical",
+    boxSizing: "border-box",
+  },
+  btnPrimary: {
+    background: "#1a4a8a",
+    color: "#fff",
+    border: "1px solid #1a4a8a",
+    padding: "7px 18px",
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: "pointer",
+    borderRadius: 2,
+  },
+  btnGhost: {
+    background: "#fff",
+    color: "#333",
+    border: "1px solid #ccc",
+    padding: "7px 18px",
+    fontSize: 13,
+    fontWeight: 500,
+    cursor: "pointer",
+    borderRadius: 2,
+  },
+  btnDanger: {
+    background: "transparent",
+    border: "none",
+    color: "#c0392b",
+    cursor: "pointer",
+    padding: 4,
+    lineHeight: 1,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: "#666",
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 12,
+  },
+  chip: {
+    border: "1px solid #ccc",
+    padding: "2px 8px",
+    fontSize: 11,
+    color: "#333",
+    background: "#fafafa",
+    borderRadius: 2,
+    display: "inline-block",
+  },
+  muted: { color: "#666", fontSize: 13 },
+  faint: { color: "#999", fontSize: 12 },
+  heading: { color: "#1a1a1a", fontWeight: 700 },
+};
 
 export default function Profile() {
   const { id } = useParams();
@@ -30,7 +126,6 @@ export default function Profile() {
   const [inbox, setInbox] = useState([]);
   const [showInbox, setShowInbox] = useState(false);
   const fileInputRef = useRef(null);
-  const d = useDarkClasses();
 
   useEffect(() => {
     loadProfile();
@@ -204,302 +299,406 @@ export default function Profile() {
   };
 
   if (!user) return (
-    <div className="max-w-2xl mx-auto py-8 px-4 animate-pulse">
-      <div className={`bg-gradient-to-r from-blue-500 to-indigo-600 rounded-t-3xl h-36`} />
-      <div className={`${d.dark ? "bg-gray-800" : "bg-white"} rounded-b-3xl px-6 pb-8`}>
-        <div className="flex items-end justify-between -mt-12 mb-5">
-          <div className={`w-24 h-24 rounded-2xl ${d.dark ? "bg-gray-700" : "bg-gray-200"} border-4 ${d.dark ? "border-gray-800" : "border-white"}`} />
-          <div className={`h-10 w-24 rounded-xl ${d.dark ? "bg-gray-700" : "bg-gray-200"}`} />
+    <div style={{ ...S.page, paddingTop: 40 }}>
+      <div style={{ ...S.card, padding: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+          <div style={{ width: 72, height: 72, background: "#e8e8e8", border: "1px solid #d4d4d4" }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ height: 16, background: "#e8e8e8", width: 160, marginBottom: 8 }} />
+            <div style={{ height: 12, background: "#e8e8e8", width: 120 }} />
+          </div>
         </div>
-        <div className={`h-6 w-48 rounded ${d.dark ? "bg-gray-700" : "bg-gray-200"} mb-2`} />
-        <div className={`h-4 w-32 rounded ${d.dark ? "bg-gray-700" : "bg-gray-200"} mb-6`} />
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className={`h-20 rounded-xl ${d.dark ? "bg-gray-700" : "bg-gray-100"}`} />
-          ))}
-        </div>
+        {[1, 2, 3].map((i) => (
+          <div key={i} style={{ height: 60, background: "#f0f0f0", border: "1px solid #e0e0e0", marginBottom: 8 }} />
+        ))}
       </div>
     </div>
   );
 
   const completionPercent = getCompletionPercent();
-  const completionColor = completionPercent < 50 ? "from-amber-400 to-orange-500" : completionPercent < 80 ? "from-blue-400 to-blue-600" : "from-green-400 to-emerald-500";
+  const completionBarColor = completionPercent < 50 ? "#e67e22" : completionPercent < 80 ? "#2980b9" : "#27ae60";
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
-      {/* Cover */}
-      <div className="relative">
-        <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 rounded-t-3xl h-36 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDJ2LTJoMzR6TTAgMjR2LTJIMTJ2Mkg2djJIMHoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
-        </div>
-      </div>
+    <div style={{ background: "#f2f2f2", minHeight: "100vh" }}>
+      <div style={S.page}>
 
-      {/* Profile Card */}
-      <div className={`${d.dark ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"} rounded-b-3xl border border-t-0 shadow-sm px-6 pb-8 relative`}>
-        <div className="flex items-end justify-between -mt-12 mb-5">
-          {/* Avatar with upload */}
-          <div className="relative group">
-            <div className="border-4 border-white shadow-xl shadow-blue-200 ring-4 ring-blue-50 rounded-2xl overflow-hidden">
-              <UserAvatar user={user} size="lg" className="rounded-none" />
-            </div>
-            {isOwn && (
-              <>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingPic}
-                  className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                >
-                  <Camera size={24} className="text-white" />
-                </button>
-                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleUploadPic} />
-              </>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {isOwn && (
-              <button
-                onClick={() => setEditing(!editing)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                  editing
-                    ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 hover:shadow-md hover:shadow-blue-100 border border-blue-100"
-                }`}
-              >
-                {editing ? <><X size={16} /> Ləğv et</> : <><Edit3 size={16} /> Redaktə</>}
-              </button>
-            )}
-          </div>
-        </div>
-
-        <h2 className={`text-2xl font-bold ${d.heading}`}>{user.full_name}</h2>
-        <p className={`${d.textFaint} text-sm mt-1`}>{user.email}</p>
-
-        {user.is_open_for_team && (
-          <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-green-50 to-emerald-50 text-green-600 text-xs px-4 py-1.5 rounded-full mt-3 font-semibold border border-green-100">
-            <Award size={13} /> Komanda üçün açıq
-          </span>
-        )}
-
-        {isOwn && completionPercent < 100 && (
-          <div className={`mt-4 ${d.dark ? "bg-gray-700/50" : "bg-gray-50"} p-4 rounded-xl border ${d.border}`}>
-            <div className="flex items-center justify-between mb-2">
-              <p className={`text-xs font-semibold ${d.textMuted}`}>Profil tamamlanması</p>
-              <p className={`text-xs font-bold ${d.textSecondary}`}>{completionPercent}%</p>
-            </div>
-            <div className={`w-full ${d.dark ? "bg-gray-600" : "bg-gray-200"} rounded-full h-2`}>
+        {/* Profile Header Card */}
+        <div style={S.card}>
+          <div style={{ padding: "20px 20px 0 20px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+            {/* Avatar */}
+            <div style={{ position: "relative", flexShrink: 0 }}>
               <div
-                className={`bg-gradient-to-r ${completionColor} h-2 rounded-full transition-all duration-500`}
-                style={{ width: `${completionPercent}%` }}
-              />
+                style={{ width: 80, height: 80, border: "1px solid #d4d4d4", overflow: "hidden", cursor: isOwn ? "pointer" : "default" }}
+                className={isOwn ? "avatar-upload-wrap" : ""}
+                onClick={isOwn ? () => fileInputRef.current?.click() : undefined}
+              >
+                <UserAvatar user={user} size="lg" className="rounded-none" />
+                {isOwn && (
+                  <div
+                    className="avatar-overlay"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "rgba(0,0,0,0.45)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      opacity: 0,
+                      transition: "opacity 0.15s",
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                    onMouseLeave={e => e.currentTarget.style.opacity = 0}
+                  >
+                    <Camera size={22} color="#fff" />
+                  </div>
+                )}
+              </div>
+              {isOwn && (
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={handleUploadPic} />
+              )}
             </div>
-            <p className={`text-xs ${d.textFaint} mt-2`}>
-              {!user.profile_picture && "Profil şəkli, "}
-              {!user.bio && "haqqında, "}
-              {!user.skills && "bacarıqlar, "}
-              {certificates.length === 0 && "sertifikat, "}
-              {projects.length === 0 && "layihə "}
-              əlavə et
-            </p>
+
+            {/* Name / Info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h2 style={{ ...S.heading, fontSize: 18, margin: "0 0 2px 0" }}>{user.full_name}</h2>
+              <p style={{ ...S.faint, margin: "0 0 6px 0" }}>{user.email}</p>
+              {user.major && (
+                <p style={{ ...S.muted, margin: 0 }}>
+                  <GraduationCap size={13} style={{ display: "inline", verticalAlign: "middle", marginRight: 4, color: "#666" }} />
+                  {user.major}{user.course && ` · ${user.course}-ci kurs`}
+                </p>
+              )}
+              {user.is_open_for_team && (
+                <span style={{ display: "inline-block", marginTop: 8, border: "1px solid #aac4e8", padding: "2px 10px", fontSize: 11, color: "#1a4a8a", background: "#edf3fb" }}>
+                  Komanda üçün açıq
+                </span>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-end", flexShrink: 0 }}>
+              {isOwn ? (
+                <>
+                  <button
+                    onClick={() => setEditing(!editing)}
+                    style={S.btnGhost}
+                  >
+                    {editing ? <><X size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />Ləğv et</> : <><Edit3 size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />Redaktə</>}
+                  </button>
+                  <button onClick={loadInbox} style={S.btnGhost}>
+                    <Inbox size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />Gələn qutusu
+                  </button>
+                </>
+              ) : (
+                <button onClick={() => setShowQuickMsg(true)} style={S.btnGhost}>
+                  <Mail size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />Mesaj
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Completion bar */}
+          {isOwn && completionPercent < 100 && (
+            <div style={{ margin: "16px 20px 0 20px", padding: "12px 14px", background: "#fafafa", border: "1px solid #e0e0e0" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontSize: 11, color: "#666", fontWeight: 600 }}>Profil tamamlanması</span>
+                <span style={{ fontSize: 11, color: "#1a4a8a", fontWeight: 700 }}>{completionPercent}%</span>
+              </div>
+              <div style={{ height: 4, background: "#e0e0e0", width: "100%" }}>
+                <div style={{ height: 4, background: completionBarColor, width: `${completionPercent}%`, transition: "width 0.4s" }} />
+              </div>
+              <p style={{ fontSize: 11, color: "#999", marginTop: 6 }}>
+                {!user.profile_picture && "Profil şəkli, "}
+                {!user.bio && "haqqında, "}
+                {!user.skills && "bacarıqlar, "}
+                {certificates.length === 0 && "sertifikat, "}
+                {projects.length === 0 && "layihə "}
+                əlavə et
+              </p>
+            </div>
+          )}
+
+          <div style={{ height: 20 }} />
+        </div>
+
+        {/* Edit Form */}
+        {editing && (
+          <div style={S.card}>
+            <div style={S.sectionPad}>
+              <p style={{ ...S.sectionTitle, marginBottom: 16 }}>Profili redaktə et</p>
+
+              <div style={{ marginBottom: 14 }}>
+                <label style={S.label}>Ad Soyad</label>
+                <input
+                  type="text"
+                  value={form.full_name || ""}
+                  onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+                  style={S.input}
+                />
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <label style={S.label}>Kurs</label>
+                <select
+                  value={form.course || ""}
+                  onChange={(e) => setForm({ ...form, course: parseInt(e.target.value) || null })}
+                  style={S.input}
+                >
+                  <option value="">Seçin</option>
+                  <option value="1">1-ci kurs</option>
+                  <option value="2">2-ci kurs</option>
+                  <option value="3">3-cü kurs</option>
+                  <option value="4">4-cü kurs</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <label style={S.label}>Haqqında</label>
+                <textarea
+                  value={form.bio || ""}
+                  onChange={(e) => setForm({ ...form, bio: e.target.value })}
+                  style={S.textarea}
+                  rows={3}
+                />
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <label style={S.label}>Bacarıqlar</label>
+                <input
+                  type="text"
+                  value={form.skills || ""}
+                  onChange={(e) => setForm({ ...form, skills: e.target.value })}
+                  placeholder="Python, React, Design"
+                  style={S.input}
+                />
+              </div>
+
+              <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", border: "1px solid #e0e0e0", background: "#fafafa", cursor: "pointer", marginBottom: 16 }}>
+                <input
+                  type="checkbox"
+                  checked={form.is_open_for_team || false}
+                  onChange={(e) => setForm({ ...form, is_open_for_team: e.target.checked })}
+                  style={{ width: 15, height: 15 }}
+                />
+                <div>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "#1a1a1a" }}>Komanda üçün açığam</span>
+                  <p style={{ fontSize: 11, color: "#999", margin: "2px 0 0 0" }}>Başqaları sizi komandaya dəvət edə bilər</p>
+                </div>
+              </label>
+
+              <button onClick={handleSave} style={S.btnPrimary}>
+                <Save size={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                Yadda saxla
+              </button>
+            </div>
           </div>
         )}
 
-        {editing ? (
-          <div className="space-y-5 mt-8">
-            <div>
-              <label className={`block text-sm font-semibold ${d.textSecondary} mb-2`}>Ad Soyad</label>
-              <input
-                type="text"
-                value={form.full_name || ""}
-                onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${d.inputAlt}`}
-              />
+        {/* Bio section */}
+        {!editing && user.bio && (
+          <div style={S.card}>
+            <div style={S.sectionPad}>
+              <p style={S.sectionTitle}>
+                <BookOpen size={13} color="#666" /> Haqqında
+              </p>
+              <p style={{ ...S.muted, lineHeight: 1.6, margin: 0 }}>{user.bio}</p>
             </div>
-            <div>
-              <label className={`block text-sm font-semibold ${d.textSecondary} mb-2`}>Kurs</label>
-              <select
-                value={form.course || ""}
-                onChange={(e) => setForm({ ...form, course: parseInt(e.target.value) || null })}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${d.inputAlt}`}
-              >
-                <option value="">Seçin</option>
-                <option value="1">1-ci kurs</option>
-                <option value="2">2-ci kurs</option>
-                <option value="3">3-cü kurs</option>
-                <option value="4">4-cü kurs</option>
-              </select>
-            </div>
-            <div>
-              <label className={`block text-sm font-semibold ${d.textSecondary} mb-2`}>Haqqında</label>
-              <textarea
-                value={form.bio || ""}
-                onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all ${d.inputAlt}`}
-                rows={3}
-              />
-            </div>
-            <div>
-              <label className={`block text-sm font-semibold ${d.textSecondary} mb-2`}>Bacarıqlar</label>
-              <input
-                type="text"
-                value={form.skills || ""}
-                onChange={(e) => setForm({ ...form, skills: e.target.value })}
-                placeholder="Python, React, Design"
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${d.inputAlt}`}
-              />
-            </div>
-            <label className={`flex items-center gap-3 cursor-pointer ${d.dark ? "bg-gray-700/50 hover:bg-gray-700" : "bg-gray-50 hover:bg-gray-100"} p-4 rounded-xl transition`}>
-              <input
-                type="checkbox"
-                checked={form.is_open_for_team || false}
-                onChange={(e) => setForm({ ...form, is_open_for_team: e.target.checked })}
-                className="w-5 h-5 text-blue-600 rounded-lg border-gray-300"
-              />
-              <div>
-                <span className={`text-sm font-medium ${d.textSecondary}`}>Komanda üçün açığam</span>
-                <p className={`text-xs ${d.textFaint} mt-0.5`}>Başqaları sizi komandaya dəvət edə bilər</p>
-              </div>
-            </label>
-            <button
-              onClick={handleSave}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 flex items-center gap-2"
-            >
-              <Save size={18} /> Yadda saxla
-            </button>
           </div>
-        ) : (
-          <div className="mt-8 space-y-4">
-            {user.major && (
-              <div className={`flex items-center gap-3 ${d.surface} p-4 rounded-xl border ${d.border}`}>
-                <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                  <GraduationCap size={20} className="text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-400 font-medium">İxtisas</p>
-                  <p className={`${d.text} font-semibold`}>{user.major} {user.course && `· ${user.course}-ci kurs`}</p>
-                </div>
-              </div>
-            )}
+        )}
 
-            {user.bio && (
-              <div className={`${d.surface} p-5 rounded-xl border ${d.border}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <BookOpen size={16} className="text-gray-400" />
-                  <p className="text-sm text-gray-400 font-medium">Haqqında</p>
-                </div>
-                <p className={`${d.textSecondary} leading-relaxed`}>{user.bio}</p>
+        {/* Skills section */}
+        {!editing && user.skills && (
+          <div style={S.card}>
+            <div style={S.sectionPad}>
+              <p style={S.sectionTitle}>
+                <Sparkles size={13} color="#666" /> Bacarıqlar
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {user.skills.split(",").map((s, i) => (
+                  <span key={i} style={S.chip}>{s.trim()}</span>
+                ))}
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {user.skills && (
-              <div className={`${d.surface} p-5 rounded-xl border ${d.border}`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles size={16} className="text-gray-400" />
-                  <p className="text-sm text-gray-400 font-medium">Bacarıqlar</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {user.skills.split(",").map((s, i) => (
-                    <span key={i} className={`px-4 py-2 rounded-xl text-sm font-semibold border ${d.dark ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 border-blue-100"}`}>
-                      {s.trim()}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Sertifikatlar */}
-            <div className={`${d.surface} p-5 rounded-xl border ${d.border}`}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Award size={16} className="text-gray-400" />
-                  <p className="text-sm text-gray-400 font-medium">Sertifikatlar</p>
-                </div>
+        {/* Certificates section */}
+        {!editing && (
+          <div style={S.card}>
+            <div style={S.sectionPad}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <p style={{ ...S.sectionTitle, margin: 0 }}>
+                  <Award size={13} color="#666" /> Sertifikatlar
+                </p>
                 {isOwn && (
-                  <button onClick={() => setShowCertForm(!showCertForm)} className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700 transition">
-                    <Plus size={16} /> Əlavə et
+                  <button
+                    onClick={() => setShowCertForm(!showCertForm)}
+                    style={{ ...S.btnGhost, padding: "4px 10px", fontSize: 12 }}
+                  >
+                    <Plus size={12} style={{ verticalAlign: "middle", marginRight: 3 }} />Əlavə et
                   </button>
                 )}
               </div>
 
               {isOwn && showCertForm && (
-                <div className={`${d.dark ? "bg-gray-700" : "bg-white"} p-4 rounded-xl border ${d.dark ? "border-blue-500/20" : "border-blue-100"} mb-4 space-y-3`}>
-                  <input type="text" placeholder="Sertifikat adı" value={certForm.name} onChange={(e) => setCertForm({ ...certForm, name: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
-                  <input type="text" placeholder="Verən təşkilat (məsələn: Google, ISC2)" value={certForm.issuer} onChange={(e) => setCertForm({ ...certForm, issuer: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input type="date" value={certForm.issue_date} onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
-                    <input type="url" placeholder="Doğrulama linki" value={certForm.credential_url} onChange={(e) => setCertForm({ ...certForm, credential_url: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
+                <div style={{ border: "1px solid #d4d4d4", padding: 14, marginBottom: 12, background: "#fafafa" }}>
+                  <div style={{ marginBottom: 8 }}>
+                    <input type="text" placeholder="Sertifikat adı" value={certForm.name} onChange={(e) => setCertForm({ ...certForm, name: e.target.value })} style={{ ...S.input, marginBottom: 8 }} />
+                    <input type="text" placeholder="Verən təşkilat (məsələn: Google, ISC2)" value={certForm.issuer} onChange={(e) => setCertForm({ ...certForm, issuer: e.target.value })} style={{ ...S.input, marginBottom: 8 }} />
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                      <input type="date" value={certForm.issue_date} onChange={(e) => setCertForm({ ...certForm, issue_date: e.target.value })} style={S.input} />
+                      <input type="url" placeholder="Doğrulama linki" value={certForm.credential_url} onChange={(e) => setCertForm({ ...certForm, credential_url: e.target.value })} style={S.input} />
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={handleAddCert} disabled={!certForm.name || !certForm.issuer} className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-40">Əlavə et</button>
-                    <button onClick={() => setShowCertForm(false)} className={`${d.dark ? "bg-gray-600 text-gray-300 hover:bg-gray-500" : "bg-gray-100 text-gray-600 hover:bg-gray-200"} px-5 py-2 rounded-xl text-sm font-medium transition`}>Ləğv et</button>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={handleAddCert} disabled={!certForm.name || !certForm.issuer} style={{ ...S.btnPrimary, opacity: (!certForm.name || !certForm.issuer) ? 0.4 : 1 }}>Əlavə et</button>
+                    <button onClick={() => setShowCertForm(false)} style={S.btnGhost}>Ləğv et</button>
                   </div>
                 </div>
               )}
 
               {certificates.length > 0 ? (
-                <div className="space-y-3">
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {certificates.map((cert) => (
-                    <div key={cert.id} className={`flex items-center justify-between ${d.dark ? "bg-gray-700/50" : "bg-white"} p-4 rounded-xl border ${d.border}`}>
-                      <div className="flex-1">
-                        <p className={`${d.text} font-semibold text-sm`}>{cert.name}</p>
-                        <p className={`${d.textFaint} text-xs mt-0.5`}>{cert.issuer}{cert.issue_date && ` · ${cert.issue_date}`}</p>
+                    <div key={cert.id} style={{ border: "1px solid #d4d4d4", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff" }}>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ margin: "0 0 2px 0", fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>{cert.name}</p>
+                        <p style={{ margin: 0, fontSize: 11, color: "#999" }}>{cert.issuer}{cert.issue_date && ` · ${cert.issue_date}`}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {cert.credential_url && (
-                          <a href={cert.credential_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 transition"><ExternalLink size={16} /></a>
+                          <a href={cert.credential_url} target="_blank" rel="noopener noreferrer" style={{ color: "#1a4a8a", lineHeight: 1 }}><ExternalLink size={15} /></a>
                         )}
                         {isOwn && (
-                          <button onClick={() => handleDeleteCert(cert.id)} className="text-red-400 hover:text-red-500 transition"><Trash2 size={16} /></button>
+                          <button onClick={() => handleDeleteCert(cert.id)} style={S.btnDanger}><Trash2 size={15} /></button>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-300 text-sm text-center py-4">{isOwn ? "Hələ sertifikat əlavə olunmayıb" : "Sertifikat yoxdur"}</p>
+                <p style={{ ...S.faint, textAlign: "center", padding: "12px 0", margin: 0 }}>
+                  {isOwn ? "Hələ sertifikat əlavə olunmayıb" : "Sertifikat yoxdur"}
+                </p>
               )}
             </div>
+          </div>
+        )}
 
-            {/* Postlar */}
-            <div className={`${d.surface} p-5 rounded-xl border ${d.border}`}>
-              <div className="flex items-center gap-2 mb-3">
-                <FileText size={16} className="text-gray-400" />
-                <p className="text-sm text-gray-400 font-medium">Postlar</p>
-                <span className="text-xs text-gray-300 ml-1">({userPosts.length})</span>
+        {/* Projects section */}
+        {!editing && (
+          <div style={S.card}>
+            <div style={S.sectionPad}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <p style={{ ...S.sectionTitle, margin: 0 }}>
+                  <FolderGit2 size={13} color="#666" /> Layihələr
+                </p>
+                {isOwn && (
+                  <button
+                    onClick={() => setShowProjForm(!showProjForm)}
+                    style={{ ...S.btnGhost, padding: "4px 10px", fontSize: 12 }}
+                  >
+                    <Plus size={12} style={{ verticalAlign: "middle", marginRight: 3 }} />Əlavə et
+                  </button>
+                )}
               </div>
 
+              {isOwn && showProjForm && (
+                <div style={{ border: "1px solid #d4d4d4", padding: 14, marginBottom: 12, background: "#fafafa" }}>
+                  <div style={{ marginBottom: 8 }}>
+                    <input type="text" placeholder="Layihə adı" value={projForm.title} onChange={(e) => setProjForm({ ...projForm, title: e.target.value })} style={{ ...S.input, marginBottom: 8 }} />
+                    <textarea placeholder="Qısa təsvir" value={projForm.description} onChange={(e) => setProjForm({ ...projForm, description: e.target.value })} rows={2} style={{ ...S.textarea, marginBottom: 8 }} />
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                      <input type="text" placeholder="Texnologiyalar (React, Python...)" value={projForm.technologies} onChange={(e) => setProjForm({ ...projForm, technologies: e.target.value })} style={S.input} />
+                      <input type="url" placeholder="GitHub linki" value={projForm.github_url} onChange={(e) => setProjForm({ ...projForm, github_url: e.target.value })} style={S.input} />
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={handleAddProject} disabled={!projForm.title} style={{ ...S.btnPrimary, opacity: !projForm.title ? 0.4 : 1 }}>Əlavə et</button>
+                    <button onClick={() => setShowProjForm(false)} style={S.btnGhost}>Ləğv et</button>
+                  </div>
+                </div>
+              )}
+
+              {projects.length > 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {projects.map((proj) => (
+                    <div key={proj.id} style={{ border: "1px solid #d4d4d4", padding: "12px 14px", background: "#fff" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ margin: "0 0 4px 0", fontSize: 13, fontWeight: 600, color: "#1a1a1a" }}>{proj.title}</p>
+                          {proj.description && <p style={{ margin: "0 0 6px 0", fontSize: 12, color: "#666" }}>{proj.description}</p>}
+                          {proj.technologies && (
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                              {proj.technologies.split(",").map((t, i) => (
+                                <span key={i} style={S.chip}>{t.trim()}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: 12 }}>
+                          {proj.github_url && (
+                            <a href={proj.github_url} target="_blank" rel="noopener noreferrer" style={{ color: "#666", lineHeight: 1 }}><Code2 size={15} /></a>
+                          )}
+                          {isOwn && (
+                            <button onClick={() => handleDeleteProject(proj.id)} style={S.btnDanger}><Trash2 size={15} /></button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ ...S.faint, textAlign: "center", padding: "12px 0", margin: 0 }}>
+                  {isOwn ? "Hələ layihə əlavə olunmayıb" : "Layihə yoxdur"}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Posts section */}
+        {!editing && (
+          <div style={S.card}>
+            <div style={S.sectionPad}>
+              <p style={S.sectionTitle}>
+                <FileText size={13} color="#666" /> Postlar
+                <span style={{ color: "#bbb", fontSize: 11, fontWeight: 400, marginLeft: 4 }}>({userPosts.length})</span>
+              </p>
+
               {userPosts.length > 0 ? (
-                <div className="space-y-3">
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {userPosts.map((post) => (
-                    <div key={post.id} className={`${d.dark ? "bg-gray-700/50" : "bg-white"} p-4 rounded-xl border ${d.border}`}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
+                    <div key={post.id} style={{ border: "1px solid #d4d4d4", padding: "12px 14px", background: "#fff" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                        <div style={{ flex: 1 }}>
                           {post.content && (
-                            <p className={`${d.textSecondary} text-sm whitespace-pre-wrap line-clamp-3`}>{post.content}</p>
+                            <p style={{ margin: "0 0 8px 0", fontSize: 13, color: "#333", whiteSpace: "pre-wrap", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.content}</p>
                           )}
                           {!post.content && post.image_url && (
-                            <p className={`${d.textFaint} text-sm italic`}>Şəkil post</p>
+                            <p style={{ margin: "0 0 8px 0", fontSize: 12, color: "#999", fontStyle: "italic" }}>Şəkil post</p>
                           )}
                           {!post.content && post.video_url && (
-                            <p className={`${d.textFaint} text-sm italic`}>Video post</p>
+                            <p style={{ margin: "0 0 8px 0", fontSize: 12, color: "#999", fontStyle: "italic" }}>Video post</p>
                           )}
-                          <div className="flex items-center gap-4 mt-2">
-                            <span className="flex items-center gap-1 text-xs text-gray-400">
-                              <Heart size={12} /> {post.like_count}
+                          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#999" }}>
+                              <Heart size={11} /> {post.like_count}
                             </span>
                             {post.show_dislikes && (
-                              <span className="flex items-center gap-1 text-xs text-gray-400">
-                                <ThumbsDown size={12} /> {post.dislike_count}
+                              <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#999" }}>
+                                <ThumbsDown size={11} /> {post.dislike_count}
                               </span>
                             )}
-                            <span className="flex items-center gap-1 text-xs text-gray-400">
-                              <MessageCircle size={12} /> {post.comment_count}
+                            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#999" }}>
+                              <MessageCircle size={11} /> {post.comment_count}
                             </span>
-                            <span className="text-xs text-gray-300">{formatBakuDate(post.created_at)}</span>
+                            <span style={{ fontSize: 11, color: "#bbb" }}>{formatBakuDate(post.created_at)}</span>
                           </div>
                         </div>
                         {isOwn && (
-                          <button onClick={() => handleDeletePost(post.id)} className="text-red-400 hover:text-red-500 transition ml-3">
-                            <Trash2 size={16} />
+                          <button onClick={() => handleDeletePost(post.id)} style={{ ...S.btnDanger, marginLeft: 12 }}>
+                            <Trash2 size={15} />
                           </button>
                         )}
                       </div>
@@ -507,161 +706,125 @@ export default function Profile() {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-300 text-sm text-center py-4">{isOwn ? "Hələ post paylaşmamısan" : "Post yoxdur"}</p>
-              )}
-            </div>
-
-            {/* Layihələr */}
-            <div className={`${d.surface} p-5 rounded-xl border ${d.border}`}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <FolderGit2 size={16} className="text-gray-400" />
-                  <p className="text-sm text-gray-400 font-medium">Layihələr</p>
-                </div>
-                {isOwn && (
-                  <button onClick={() => setShowProjForm(!showProjForm)} className="flex items-center gap-1 text-blue-600 text-sm font-medium hover:text-blue-700 transition">
-                    <Plus size={16} /> Əlavə et
-                  </button>
-                )}
-              </div>
-
-              {isOwn && showProjForm && (
-                <div className={`${d.dark ? "bg-gray-700" : "bg-white"} p-4 rounded-xl border ${d.dark ? "border-blue-500/20" : "border-blue-100"} mb-4 space-y-3`}>
-                  <input type="text" placeholder="Layihə adı" value={projForm.title} onChange={(e) => setProjForm({ ...projForm, title: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
-                  <textarea placeholder="Qısa təsvir" value={projForm.description} onChange={(e) => setProjForm({ ...projForm, description: e.target.value })} rows={2} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt} resize-none`} />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input type="text" placeholder="Texnologiyalar (React, Python...)" value={projForm.technologies} onChange={(e) => setProjForm({ ...projForm, technologies: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
-                    <input type="url" placeholder="GitHub linki" value={projForm.github_url} onChange={(e) => setProjForm({ ...projForm, github_url: e.target.value })} className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${d.inputAlt}`} />
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={handleAddProject} disabled={!projForm.title} className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-40">Əlavə et</button>
-                    <button onClick={() => setShowProjForm(false)} className={`${d.dark ? "bg-gray-600 text-gray-300 hover:bg-gray-500" : "bg-gray-100 text-gray-600 hover:bg-gray-200"} px-5 py-2 rounded-xl text-sm font-medium transition`}>Ləğv et</button>
-                  </div>
-                </div>
-              )}
-
-              {projects.length > 0 ? (
-                <div className="space-y-3">
-                  {projects.map((proj) => (
-                    <div key={proj.id} className={`${d.dark ? "bg-gray-700/50" : "bg-white"} p-4 rounded-xl border ${d.border}`}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className={`${d.text} font-semibold text-sm`}>{proj.title}</p>
-                          {proj.description && <p className={`${d.textMuted} text-xs mt-1`}>{proj.description}</p>}
-                          {proj.technologies && (
-                            <div className="flex flex-wrap gap-1.5 mt-2">
-                              {proj.technologies.split(",").map((t, i) => (
-                                <span key={i} className={`${d.dark ? "bg-gray-600 text-gray-300" : "bg-gray-100 text-gray-600"} px-2.5 py-1 rounded-lg text-xs font-medium`}>{t.trim()}</span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 ml-3">
-                          {proj.github_url && (
-                            <a href={proj.github_url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600 transition"><Code2 size={16} /></a>
-                          )}
-                          {isOwn && (
-                            <button onClick={() => handleDeleteProject(proj.id)} className="text-red-400 hover:text-red-500 transition"><Trash2 size={16} /></button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-300 text-sm text-center py-4">{isOwn ? "Hələ layihə əlavə olunmayıb" : "Layihə yoxdur"}</p>
+                <p style={{ ...S.faint, textAlign: "center", padding: "12px 0", margin: 0 }}>
+                  {isOwn ? "Hələ post paylaşmamısan" : "Post yoxdur"}
+                </p>
               )}
             </div>
           </div>
         )}
-      </div>
 
-      {/* Quick Message Modal */}
-      {showQuickMsg && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={() => !sendingMsg && setShowQuickMsg(false)}>
-          <div className={`${d.dark ? "bg-gray-800" : "bg-white"} rounded-2xl p-6 max-w-md w-full shadow-xl`} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-5">
-              <div className={`w-10 h-10 ${d.dark ? "bg-blue-500/10" : "bg-blue-50"} rounded-xl flex items-center justify-center`}>
-                <Send size={18} className="text-blue-500" />
-              </div>
-              <div>
-                <h3 className={`font-bold ${d.heading}`}>{user?.full_name}-a mesaj</h3>
-                <p className={`text-xs ${d.textFaint}`}>Şablon seçin və göndərin</p>
-              </div>
-              <button onClick={() => setShowQuickMsg(false)} className="ml-auto text-gray-400 hover:text-gray-600 transition">
-                <X size={20} />
-              </button>
-            </div>
-
-            {msgSent ? (
-              <div className="text-center py-6">
-                <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Send size={24} className="text-green-500" />
-                </div>
-                <p className="font-semibold text-green-600">Göndərildi!</p>
-                <p className="text-sm text-gray-400 mt-1">"{msgSent}"</p>
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                {templates.map((msg, i) => (
-                  <button
-                    key={i}
-                    onClick={() => sendQuickMessage(i)}
-                    disabled={sendingMsg}
-                    className={`w-full text-left px-4 py-3 rounded-xl border ${d.dark ? "border-gray-600 hover:border-blue-500/30 hover:bg-blue-500/10 text-gray-300" : "border-gray-100 hover:border-blue-200 hover:bg-blue-50 text-gray-700"} text-sm font-medium transition-all disabled:opacity-50 flex items-center justify-between group`}
-                  >
-                    <span>{msg}</span>
-                    <Send size={14} className="text-gray-300 group-hover:text-blue-500 transition" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Inbox Modal */}
-      {showInbox && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={() => setShowInbox(false)}>
-          <div className={`${d.dark ? "bg-gray-800" : "bg-white"} rounded-2xl p-6 max-w-md w-full shadow-xl`} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-5">
-              <div className={`w-10 h-10 ${d.dark ? "bg-green-500/10" : "bg-green-50"} rounded-xl flex items-center justify-center`}>
-                <Inbox size={18} className="text-green-500" />
-              </div>
-              <div>
-                <h3 className={`font-bold ${d.heading}`}>Gələn mesajlar</h3>
-                <p className={`text-xs ${d.textFaint}`}>{inbox.length} mesaj</p>
-              </div>
-              <button onClick={() => setShowInbox(false)} className="ml-auto text-gray-400 hover:text-gray-600 transition">
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {inbox.length === 0 ? (
-                <p className={`${d.textFaint} text-sm text-center py-8`}>Hələ mesaj yoxdur</p>
-              ) : (
-                inbox.map((m) => (
-                  <div key={m.id} className={`flex gap-3 p-3 rounded-xl border ${d.border} ${d.dark ? "hover:bg-gray-700/50" : "hover:bg-gray-50"} transition`}>
-                    <Link to={`/profile/${m.sender_id}`} onClick={() => setShowInbox(false)} className="shrink-0">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-sm font-bold">
-                        {m.sender_name?.charAt(0)}
-                      </div>
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Link to={`/profile/${m.sender_id}`} onClick={() => setShowInbox(false)} className={`text-sm font-semibold ${d.text} hover:text-blue-600 transition truncate`}>{m.sender_name}</Link>
-                        <span className={`text-xs ${d.textFaint} shrink-0`}>{formatBakuHM(m.created_at)}</span>
-                      </div>
-                      <p className={`text-sm ${d.textMuted} mt-0.5`}>{m.content}</p>
-                    </div>
+        {/* Quick Message Modal */}
+        {showQuickMsg && (
+          <div
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 16px" }}
+            onClick={() => !sendingMsg && setShowQuickMsg(false)}
+          >
+            <div
+              style={{ background: "#fff", border: "1px solid #d4d4d4", padding: 24, width: "100%", maxWidth: 420 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Send size={16} color="#1a4a8a" />
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}>{user?.full_name}-a mesaj</h3>
+                    <p style={{ margin: 0, fontSize: 11, color: "#999" }}>Şablon seçin və göndərin</p>
                   </div>
-                ))
+                </div>
+                <button onClick={() => setShowQuickMsg(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#666", padding: 4 }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              {msgSent ? (
+                <div style={{ textAlign: "center", padding: "24px 0" }}>
+                  <Send size={28} color="#27ae60" style={{ marginBottom: 8 }} />
+                  <p style={{ fontWeight: 600, color: "#27ae60", margin: "0 0 4px 0" }}>Göndərildi!</p>
+                  <p style={{ fontSize: 12, color: "#999", margin: 0 }}>"{msgSent}"</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 320, overflowY: "auto" }}>
+                  {templates.map((msg, i) => (
+                    <button
+                      key={i}
+                      onClick={() => sendQuickMessage(i)}
+                      disabled={sendingMsg}
+                      style={{
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "10px 12px",
+                        border: "1px solid #d4d4d4",
+                        background: "#fafafa",
+                        fontSize: 13,
+                        color: "#333",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        opacity: sendingMsg ? 0.5 : 1,
+                      }}
+                    >
+                      <span>{msg}</span>
+                      <Send size={12} color="#bbb" />
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Inbox Modal */}
+        {showInbox && (
+          <div
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 16px" }}
+            onClick={() => setShowInbox(false)}
+          >
+            <div
+              style={{ background: "#fff", border: "1px solid #d4d4d4", padding: 24, width: "100%", maxWidth: 420 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Inbox size={16} color="#1a4a8a" />
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}>Gələn mesajlar</h3>
+                    <p style={{ margin: 0, fontSize: 11, color: "#999" }}>{inbox.length} mesaj</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowInbox(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#666", padding: 4 }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 380, overflowY: "auto" }}>
+                {inbox.length === 0 ? (
+                  <p style={{ ...S.faint, textAlign: "center", padding: "24px 0", margin: 0 }}>Hələ mesaj yoxdur</p>
+                ) : (
+                  inbox.map((m) => (
+                    <div key={m.id} style={{ display: "flex", gap: 12, padding: "10px 12px", border: "1px solid #e8e8e8", background: "#fafafa" }}>
+                      <Link to={`/profile/${m.sender_id}`} onClick={() => setShowInbox(false)} style={{ flexShrink: 0, textDecoration: "none" }}>
+                        <div style={{ width: 38, height: 38, background: "#1a4a8a", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14, fontWeight: 700 }}>
+                          {m.sender_name?.charAt(0)}
+                        </div>
+                      </Link>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                          <Link to={`/profile/${m.sender_id}`} onClick={() => setShowInbox(false)} style={{ fontSize: 13, fontWeight: 600, color: "#1a1a1a", textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.sender_name}</Link>
+                          <span style={{ fontSize: 11, color: "#bbb", flexShrink: 0 }}>{formatBakuHM(m.created_at)}</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: 12, color: "#666" }}>{m.content}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }

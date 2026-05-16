@@ -1,20 +1,48 @@
 import { useState } from "react";
 import { Settings as SettingsIcon, Check, Moon, Sun, Image as ImageIcon, Globe, Lock, Eye, EyeOff } from "lucide-react";
-import { useDarkClasses } from "../hooks/useDarkClasses";
 import { useLang, setLang } from "../hooks/useLang";
 import api from "../api/client";
 import { toast } from "../components/Toast";
 
 const BG_OPTIONS = [
-  { id: "default", labelKey: "bg_default", preview: "bg-gray-50" },
-  { id: "navy", labelKey: "bg_navy", preview: "bg-[#0f172a]" },
-  { id: "vectors", labelKey: "bg_vectors", preview: "bg-[#1a1a2e]", local: true },
+  { id: "default", labelKey: "bg_default", previewColor: "#f9f9f9" },
+  { id: "navy", labelKey: "bg_navy", previewColor: "#0f172a" },
+  { id: "vectors", labelKey: "bg_vectors", previewColor: "#1a1a2e", local: true },
 ];
 
 const LANG_OPTIONS = [
   { id: "az", flag: "🇦🇿", labelKey: "settings_lang_az" },
   { id: "en", flag: "🇬🇧", labelKey: "settings_lang_en" },
 ];
+
+const sectionCard = {
+  background: "#ffffff",
+  border: "1px solid #d4d4d4",
+  padding: "16px 18px",
+  marginBottom: 12,
+};
+
+const sectionLabel = {
+  fontSize: 14,
+  fontWeight: 700,
+  color: "#222",
+  marginBottom: 12,
+  display: "flex",
+  alignItems: "center",
+  gap: 8,
+};
+
+const baseInput = {
+  width: "100%",
+  padding: "10px 12px",
+  border: "1px solid #ccc",
+  fontSize: 14,
+  color: "#1a1a1a",
+  background: "#fff",
+  outline: "none",
+  boxSizing: "border-box",
+  borderRadius: 2,
+};
 
 export default function Settings() {
   const [selected, setSelected] = useState(localStorage.getItem("bg_theme") || "default");
@@ -23,6 +51,7 @@ export default function Settings() {
   const [pwLoading, setPwLoading] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [focusedInput, setFocusedInput] = useState(null);
   const { lang, t } = useLang();
 
   const handleChangePassword = async (e) => {
@@ -62,78 +91,91 @@ export default function Settings() {
     window.dispatchEvent(new Event("dark_mode_change"));
   };
 
-  const d = useDarkClasses();
+  const inputStyle = (id) => ({
+    ...baseInput,
+    borderColor: focusedInput === id ? "#1a4a8a" : "#ccc",
+  });
+
+  const submitDisabled = pwLoading || !pwForm.current || !pwForm.newPw || !pwForm.confirm;
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
-          <SettingsIcon size={24} className="text-white" />
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "32px 16px" }}>
+      {/* Page Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 28 }}>
+        <div style={{ background: "#1a4a8a", padding: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <SettingsIcon size={22} color="#fff" />
         </div>
         <div>
-          <h1 className={`text-2xl font-bold ${d.heading}`}>{t("settings_title")}</h1>
-          <p className={d.textFaint + " text-sm"}>{t("settings_subtitle")}</p>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: "#1a1a1a", margin: 0 }}>{t("settings_title")}</h1>
+          <p style={{ fontSize: 13, color: "#999", margin: 0, marginTop: 2 }}>{t("settings_subtitle")}</p>
         </div>
       </div>
 
       {/* Dark Mode Toggle */}
-      <div className={`${d.card} rounded-2xl shadow-sm p-6 mb-6`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {darkMode ? <Moon size={20} className="text-indigo-500" /> : <Sun size={20} className="text-amber-500" />}
+      <div style={sectionCard}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {darkMode ? <Moon size={18} color="#666" /> : <Sun size={18} color="#666" />}
             <div>
-              <h2 className={`text-lg font-semibold ${d.text}`}>{t("settings_dark_mode")}</h2>
-              <p className={`text-xs ${d.textFaint}`}>{t("settings_dark_desc")}</p>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#222" }}>{t("settings_dark_mode")}</div>
+              <div style={{ fontSize: 12, color: "#999", marginTop: 2 }}>{t("settings_dark_desc")}</div>
             </div>
           </div>
-          <button
-            onClick={toggleDarkMode}
-            className={`relative w-14 h-8 rounded-full transition-all duration-300 ${
-              darkMode ? "bg-indigo-500" : "bg-gray-300"
-            }`}
-          >
-            <div
-              className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 flex items-center justify-center ${
-                darkMode ? "left-7" : "left-1"
-              }`}
-            >
-              {darkMode ? <Moon size={12} className="text-indigo-500" /> : <Sun size={12} className="text-amber-500" />}
-            </div>
-          </button>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={darkMode}
+              onChange={toggleDarkMode}
+              style={{ width: 16, height: 16, accentColor: "#1a4a8a", cursor: "pointer" }}
+            />
+            <span style={{ fontSize: 13, color: "#666" }}>{darkMode ? t("settings_on") || "On" : t("settings_off") || "Off"}</span>
+          </label>
         </div>
       </div>
 
       {/* Password Change */}
-      <div className={`${d.card} rounded-2xl shadow-sm p-6 mb-6`}>
-        <div className="flex items-center gap-2 mb-5">
-          <Lock size={18} className={d.textMuted} />
-          <h2 className={`text-lg font-semibold ${d.text}`}>Şifrəni dəyişdir</h2>
+      <div style={sectionCard}>
+        <div style={sectionLabel}>
+          <Lock size={15} color="#444" />
+          <span>Şifrəni dəyişdir</span>
         </div>
-        <form onSubmit={handleChangePassword} className="space-y-3">
-          <div className="relative">
+        <form onSubmit={handleChangePassword} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ position: "relative" }}>
             <input
               type={showCurrent ? "text" : "password"}
               placeholder="Cari şifrə"
               value={pwForm.current}
               onChange={(e) => setPwForm({ ...pwForm, current: e.target.value })}
-              className={`w-full px-4 py-3 pr-11 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${d.inputAlt}`}
+              onFocus={() => setFocusedInput("current")}
+              onBlur={() => setFocusedInput(null)}
+              style={{ ...inputStyle("current"), paddingRight: 38 }}
               required
             />
-            <button type="button" onClick={() => setShowCurrent(v => !v)} className={`absolute right-3 top-3.5 ${d.textFaint} hover:opacity-80`}>
-              {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
+            <button
+              type="button"
+              onClick={() => setShowCurrent(v => !v)}
+              style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#999", padding: 0, display: "flex", alignItems: "center" }}
+            >
+              {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
-          <div className="relative">
+          <div style={{ position: "relative" }}>
             <input
               type={showNew ? "text" : "password"}
               placeholder="Yeni şifrə (min. 6 simvol)"
               value={pwForm.newPw}
               onChange={(e) => setPwForm({ ...pwForm, newPw: e.target.value })}
-              className={`w-full px-4 py-3 pr-11 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${d.inputAlt}`}
+              onFocus={() => setFocusedInput("newPw")}
+              onBlur={() => setFocusedInput(null)}
+              style={{ ...inputStyle("newPw"), paddingRight: 38 }}
               required
             />
-            <button type="button" onClick={() => setShowNew(v => !v)} className={`absolute right-3 top-3.5 ${d.textFaint} hover:opacity-80`}>
-              {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
+            <button
+              type="button"
+              onClick={() => setShowNew(v => !v)}
+              style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "#999", padding: 0, display: "flex", alignItems: "center" }}
+            >
+              {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
           <input
@@ -141,16 +183,29 @@ export default function Settings() {
             placeholder="Yeni şifrəni təkrarla"
             value={pwForm.confirm}
             onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })}
-            className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${d.inputAlt}`}
+            onFocus={() => setFocusedInput("confirm")}
+            onBlur={() => setFocusedInput(null)}
+            style={inputStyle("confirm")}
             required
           />
           {pwForm.newPw && pwForm.confirm && pwForm.newPw !== pwForm.confirm && (
-            <p className="text-xs text-red-500 mt-1">Şifrələr uyğun gəlmir</p>
+            <p style={{ fontSize: 12, color: "#c0392b", margin: 0 }}>Şifrələr uyğun gəlmir</p>
           )}
           <button
             type="submit"
-            disabled={pwLoading || !pwForm.current || !pwForm.newPw || !pwForm.confirm}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+            disabled={submitDisabled}
+            style={{
+              background: submitDisabled ? "#a0b4d0" : "#1a4a8a",
+              color: "#fff",
+              border: "none",
+              padding: "10px 0",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: submitDisabled ? "not-allowed" : "pointer",
+              width: "100%",
+              borderRadius: 2,
+              marginTop: 2,
+            }}
           >
             {pwLoading ? "Dəyişdirilir..." : "Şifrəni dəyişdir"}
           </button>
@@ -158,78 +213,107 @@ export default function Settings() {
       </div>
 
       {/* Language Selector */}
-      <div className={`${d.card} rounded-2xl shadow-sm p-6 mb-6`}>
-        <div className="flex items-center gap-2 mb-5">
-          <Globe size={18} className={d.textMuted} />
-          <h2 className={`text-lg font-semibold ${d.text}`}>{t("settings_lang")}</h2>
+      <div style={sectionCard}>
+        <div style={sectionLabel}>
+          <Globe size={15} color="#444" />
+          <span>{t("settings_lang")}</span>
         </div>
-        <p className={`text-xs ${d.textFaint} mb-4`}>{t("settings_lang_desc")}</p>
-        <div className="flex gap-3">
-          {LANG_OPTIONS.map((opt) => (
-            <button
-              key={opt.id}
-              onClick={() => setLang(opt.id)}
-              className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-xl border-2 font-semibold text-sm transition-all duration-200 ${
-                lang === opt.id
-                  ? "border-blue-500 shadow-md shadow-blue-100 " + (d.dark ? "bg-blue-500/10 text-blue-400" : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600")
-                  : (d.dark ? "border-gray-700 text-gray-400 hover:border-gray-600" : "border-gray-200 text-gray-500 hover:border-gray-300")
-              }`}
-            >
-              <span className="text-lg">{opt.flag}</span>
-              <span>{t(opt.labelKey)}</span>
-              {lang === opt.id && (
-                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                  <Check size={10} className="text-white" />
-                </div>
-              )}
-            </button>
-          ))}
+        <p style={{ fontSize: 12, color: "#999", margin: 0, marginBottom: 12 }}>{t("settings_lang_desc")}</p>
+        <div style={{ display: "flex", gap: 10 }}>
+          {LANG_OPTIONS.map((opt) => {
+            const isActive = lang === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => setLang(opt.id)}
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  padding: "10px 0",
+                  border: isActive ? "2px solid #1a4a8a" : "1px solid #d4d4d4",
+                  background: isActive ? "#eef3fb" : "#fff",
+                  color: isActive ? "#1a4a8a" : "#555",
+                  fontSize: 13,
+                  fontWeight: isActive ? 700 : 500,
+                  cursor: "pointer",
+                  borderRadius: 2,
+                }}
+              >
+                <span style={{ fontSize: 16 }}>{opt.flag}</span>
+                <span>{t(opt.labelKey)}</span>
+                {isActive && <Check size={13} color="#1a4a8a" />}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Background */}
-      <div className={`${d.card} rounded-2xl shadow-sm p-6`}>
-        <div className="flex items-center gap-2 mb-5">
-          <ImageIcon size={18} className={d.textMuted} />
-          <h2 className={`text-lg font-semibold ${d.text}`}>{t("settings_bg")}</h2>
+      {/* Background Selector */}
+      <div style={{ ...sectionCard, marginBottom: 0 }}>
+        <div style={sectionLabel}>
+          <ImageIcon size={15} color="#444" />
+          <span>{t("settings_bg")}</span>
         </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {BG_OPTIONS.map((opt) => (
-            <button
-              key={opt.id}
-              onClick={() => handleSelect(opt.id)}
-              className={`relative rounded-2xl border-2 overflow-hidden transition-all duration-200 ${
-                selected === opt.id
-                  ? "border-blue-500 shadow-lg shadow-blue-100 scale-[1.02]"
-                  : "border-gray-200 hover:border-gray-300 hover:shadow-md"
-              }`}
-            >
-              <div className={`h-24 ${opt.preview || ""} relative`}>
-                {opt.local && (
-                  <div
-                    className="absolute inset-0 bg-[#1a1a2e]"
-                    style={{
-                      backgroundImage: "url('/bg-vectors.png')",
-                      backgroundSize: "300px",
-                      backgroundRepeat: "repeat",
-                    }}
-                  />
-                )}
-                {selected === opt.id && (
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
-                    <Check size={14} className="text-white" />
-                  </div>
-                )}
-              </div>
-              <div className={`px-3 py-2 ${d.dark ? "bg-gray-800" : "bg-white"}`}>
-                <span className={`text-xs font-medium ${d.textSecondary}`}>{t(opt.labelKey)}</span>
-              </div>
-            </button>
-          ))}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+          {BG_OPTIONS.map((opt) => {
+            const isActive = selected === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => handleSelect(opt.id)}
+                style={{
+                  border: isActive ? "2px solid #1a4a8a" : "1px solid #d4d4d4",
+                  background: "none",
+                  padding: 0,
+                  cursor: "pointer",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  outline: "none",
+                }}
+              >
+                <div
+                  style={{
+                    height: 64,
+                    background: opt.previewColor,
+                    position: "relative",
+                    ...(opt.local
+                      ? {
+                          backgroundImage: "url('/bg-vectors.png')",
+                          backgroundSize: "300px",
+                          backgroundRepeat: "repeat",
+                        }
+                      : {}),
+                  }}
+                >
+                  {isActive && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 6,
+                        right: 6,
+                        width: 20,
+                        height: 20,
+                        background: "#1a4a8a",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Check size={12} color="#fff" />
+                    </div>
+                  )}
+                </div>
+                <div style={{ background: "#fff", padding: "6px 8px", borderTop: "1px solid #e5e5e5" }}>
+                  <span style={{ fontSize: 12, color: "#444", fontWeight: 500 }}>{t(opt.labelKey)}</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
-
-        <p className={`text-xs ${d.textFaint} mt-4 text-center`}>{t("settings_bg_note")}</p>
+        <p style={{ fontSize: 12, color: "#999", marginTop: 12, textAlign: "center" }}>{t("settings_bg_note")}</p>
       </div>
     </div>
   );
