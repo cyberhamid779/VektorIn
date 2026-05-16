@@ -1,37 +1,40 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ThumbsDown, MessageCircle, Send, Pin, TrendingUp, Image as ImageIcon, Film, Flag, X, ChevronDown, ChevronUp, Trash2, UserPlus, UserCheck, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
+import { Heart, ThumbsDown, MessageCircle, Send, Pin, Image as ImageIcon, Film, Flag, X, ChevronDown, ChevronUp, Trash2, UserPlus, UserCheck, ChevronLeft, ChevronRight, BookOpen, TrendingUp } from "lucide-react";
 import api from "../api/client";
 import UserAvatar from "../components/UserAvatar";
 import { formatBakuDate, formatBakuHM } from "../utils/time";
-import { useDarkClasses } from "../hooks/useDarkClasses";
 import { toast } from "../components/Toast";
 import { useLang } from "../hooks/useLang";
 
-function ImageCarousel({ images, dark }) {
+const C = {
+  border:   "1px solid #d4d4d4",
+  bg:       "#ffffff",
+  bgPage:   "#f2f2f2",
+  text:     "#1a1a1a",
+  muted:    "#666",
+  faint:    "#999",
+  primary:  "#1a4a8a",
+  btnPrimary: { background: "#1a4a8a", color: "#fff", border: "1px solid #1a4a8a" },
+  btnGhost:   { background: "#fff", color: "#444", border: "1px solid #ccc" },
+};
+
+function ImageCarousel({ images }) {
   const [idx, setIdx] = useState(0);
   if (!images?.length) return null;
-  if (images.length === 1) return (
-    <img src={images[0]} alt="post" className="w-full max-h-[500px] object-cover" />
-  );
+  if (images.length === 1) return <img src={images[0]} alt="post" style={{ width: "100%", maxHeight: 480, objectFit: "cover", display: "block" }} />;
   return (
-    <div className="relative select-none">
-      <img src={images[idx]} alt={`post-${idx}`} className="w-full max-h-[500px] object-cover" />
+    <div style={{ position: "relative", userSelect: "none" }}>
+      <img src={images[idx]} alt={`post-${idx}`} style={{ width: "100%", maxHeight: 480, objectFit: "cover", display: "block" }} />
       <button onClick={() => setIdx(i => (i - 1 + images.length) % images.length)}
-        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition">
-        <ChevronLeft size={16} />
+        style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", width: 28, height: 28, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <ChevronLeft size={14} />
       </button>
       <button onClick={() => setIdx(i => (i + 1) % images.length)}
-        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition">
-        <ChevronRight size={16} />
+        style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", width: 28, height: 28, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <ChevronRight size={14} />
       </button>
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-        {images.map((_, i) => (
-          <button key={i} onClick={() => setIdx(i)}
-            className={`w-2 h-2 rounded-full transition-all ${i === idx ? "bg-white scale-125" : "bg-white/50"}`} />
-        ))}
-      </div>
-      <span className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
+      <span style={{ position: "absolute", bottom: 8, right: 8, background: "rgba(0,0,0,0.5)", color: "#fff", fontSize: 11, padding: "2px 7px" }}>
         {idx + 1}/{images.length}
       </span>
     </div>
@@ -54,10 +57,8 @@ export default function Feed() {
   const [comments, setComments] = useState({});
   const [commentText, setCommentText] = useState({});
   const [loading, setLoading] = useState(true);
-  const [aiLoading, setAiLoading] = useState(false);
   const [connectedIds, setConnectedIds] = useState(new Set());
   const [pendingIds, setPendingIds] = useState(new Set());
-  const d = useDarkClasses();
   const { t } = useLang();
 
   useEffect(() => {
@@ -68,10 +69,7 @@ export default function Feed() {
 
   const loadConnections = async () => {
     try {
-      const [myRes, pendRes] = await Promise.all([
-        api.get("/connections/my"),
-        api.get("/connections/sent"),
-      ]);
+      const [myRes, pendRes] = await Promise.all([api.get("/connections/my"), api.get("/connections/sent")]);
       setConnectedIds(new Set(myRes.data.map(c => c.user_id)));
       setPendingIds(new Set(pendRes.data.map(c => c.receiver_id)));
     } catch {}
@@ -89,38 +87,25 @@ export default function Feed() {
   };
 
   const loadUser = async () => {
-    try {
-      const res = await api.get("/users/me");
-      setUser(res.data);
-    } catch (err) {}
+    try { const res = await api.get("/users/me"); setUser(res.data); } catch {}
   };
 
   const loadFeed = async () => {
-    try {
-      const res = await api.get("/posts");
-      setPosts(res.data);
-    } catch (err) {}
+    try { const res = await api.get("/posts"); setPosts(res.data); } catch {}
   };
 
   const handleImagePick = async (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    if (imageUrls.length + files.length > 10) {
-      toast.error("Maksimum 10 şəkil əlavə edə bilərsiniz");
-      return;
-    }
+    if (imageUrls.length + files.length > 10) { toast.error("Maksimum 10 şəkil əlavə edə bilərsiniz"); return; }
     setUploading(true);
     try {
       const formData = new FormData();
       files.forEach(f => formData.append("files", f));
-      const res = await api.post("/upload/multiple", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await api.post("/upload/multiple", formData, { headers: { "Content-Type": "multipart/form-data" } });
       setImageUrls(prev => [...prev, ...res.data.urls]);
       setVideoUrl("");
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Şəkil yüklənmədi");
-    }
+    } catch (err) { toast.error(err.response?.data?.detail || "Şəkil yüklənmədi"); }
     setUploading(false);
     e.target.value = "";
   };
@@ -132,14 +117,10 @@ export default function Feed() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await api.post("/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await api.post("/upload", formData, { headers: { "Content-Type": "multipart/form-data" } });
       setVideoUrl(res.data.url);
       setImageUrls([]);
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Video yüklənmədi");
-    }
+    } catch (err) { toast.error(err.response?.data?.detail || "Video yüklənmədi"); }
     setUploading(false);
     e.target.value = "";
   };
@@ -149,20 +130,10 @@ export default function Feed() {
     if (!newPost.trim() && !imageUrls.length && !videoUrl) return;
     setPosting(true);
     try {
-      await api.post("/posts", {
-        content: newPost.trim() || "",
-        images: imageUrls,
-        video_url: videoUrl || null,
-        show_dislikes: showDislikes,
-      });
-      setNewPost("");
-      setImageUrls([]);
-      setVideoUrl("");
-      setShowDislikes(true);
+      await api.post("/posts", { content: newPost.trim() || "", images: imageUrls, video_url: videoUrl || null, show_dislikes: showDislikes });
+      setNewPost(""); setImageUrls([]); setVideoUrl(""); setShowDislikes(true);
       loadFeed();
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Post yaradılmadı");
-    }
+    } catch (err) { toast.error(err.response?.data?.detail || "Post yaradılmadı"); }
     setPosting(false);
   };
 
@@ -170,36 +141,24 @@ export default function Feed() {
     setPosts(prev => prev.map(p => {
       if (p.id !== postId) return p;
       const wasLiked = p.is_liked;
-      return {
-        ...p,
-        is_liked: !wasLiked,
-        like_count: wasLiked ? p.like_count - 1 : p.like_count + 1,
-        is_disliked: !wasLiked ? false : p.is_disliked,
-        dislike_count: !wasLiked && p.is_disliked ? p.dislike_count - 1 : p.dislike_count,
-      };
+      return { ...p, is_liked: !wasLiked, like_count: wasLiked ? p.like_count - 1 : p.like_count + 1, is_disliked: !wasLiked ? false : p.is_disliked, dislike_count: !wasLiked && p.is_disliked ? p.dislike_count - 1 : p.dislike_count };
     }));
-    try { await api.post(`/posts/${postId}/like`); } catch (err) { loadFeed(); }
+    try { await api.post(`/posts/${postId}/like`); } catch { loadFeed(); }
   };
 
   const handleDislike = async (postId) => {
     setPosts(prev => prev.map(p => {
       if (p.id !== postId) return p;
       const wasDisliked = p.is_disliked;
-      return {
-        ...p,
-        is_disliked: !wasDisliked,
-        dislike_count: wasDisliked ? p.dislike_count - 1 : p.dislike_count + 1,
-        is_liked: !wasDisliked ? false : p.is_liked,
-        like_count: !wasDisliked && p.is_liked ? p.like_count - 1 : p.like_count,
-      };
+      return { ...p, is_disliked: !wasDisliked, dislike_count: wasDisliked ? p.dislike_count - 1 : p.dislike_count + 1, is_liked: !wasDisliked ? false : p.is_liked, like_count: !wasDisliked && p.is_liked ? p.like_count - 1 : p.like_count };
     }));
-    try { await api.post(`/posts/${postId}/dislike`); } catch (err) { loadFeed(); }
+    try { await api.post(`/posts/${postId}/dislike`); } catch { loadFeed(); }
   };
 
   const handleDelete = async (postId) => {
     if (!confirm("Bu postu silmək istədiyinə əminsən?")) return;
     setPosts(prev => prev.filter(p => p.id !== postId));
-    try { await api.delete(`/posts/${postId}`); } catch (err) { loadFeed(); toast.error(err.response?.data?.detail || "Post silinmədi"); }
+    try { await api.delete(`/posts/${postId}`); } catch { loadFeed(); toast.error("Post silinmədi"); }
   };
 
   const toggleComments = async (postId) => {
@@ -208,7 +167,7 @@ export default function Feed() {
       const res = await api.get(`/posts/${postId}/comments`);
       setComments({ ...comments, [postId]: res.data });
       setOpenComments({ ...openComments, [postId]: true });
-    } catch (err) {}
+    } catch {}
   };
 
   const submitComment = async (postId) => {
@@ -220,19 +179,7 @@ export default function Feed() {
       await api.post(`/posts/${postId}/comment`, { content: text });
       const res = await api.get(`/posts/${postId}/comments`);
       setComments({ ...comments, [postId]: res.data });
-    } catch (err) { loadFeed(); }
-  };
-
-  const handleAiEnhance = async () => {
-    if (!newPost.trim()) return;
-    setAiLoading(true);
-    try {
-      const res = await api.post("/posts/ai-enhance", { text: newPost });
-      setNewPost(res.data.text);
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "AI xəta verdi");
-    }
-    setAiLoading(false);
+    } catch { loadFeed(); }
   };
 
   const submitReport = async () => {
@@ -240,257 +187,278 @@ export default function Feed() {
     setReporting(true);
     try {
       await api.post(`/posts/${reportPostId}/report`, { reason: reportReason.trim() || null });
-      setReportPostId(null);
-      setReportReason("");
-      toast.success("Şikayət göndərildi. Admin yoxlayacaq.");
+      setReportPostId(null); setReportReason("");
+      toast.success("Şikayət göndərildi.");
     } catch (err) { toast.error(err.response?.data?.detail || "Şikayət göndərilmədi"); }
     setReporting(false);
   };
 
-  return (
-    <div className="max-w-3xl mx-auto py-8 px-4">
-      <div className="flex gap-5">
+  const card = { background: C.bg, border: C.border, marginBottom: 10, padding: "16px 18px" };
+  const btn = (active, color = C.primary) => ({
+    display: "inline-flex", alignItems: "center", gap: 5,
+    padding: "5px 12px", fontSize: 12, cursor: "pointer",
+    border: `1px solid ${active ? color : "#ddd"}`,
+    background: active ? `${color}18` : "#fff",
+    color: active ? color : "#666",
+  });
 
-      <div className="flex-1 min-w-0">
+  return (
+    <div style={{ maxWidth: 720, margin: "0 auto", padding: "20px 12px" }}>
+
+      {/* Header */}
       {user && (
-        <div className="flex items-center justify-between mb-6">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div>
-            <h1 className={`text-2xl font-bold ${d.heading}`}>
-              {t("feed_title")}
-            </h1>
-            <p className={d.textFaint + " text-sm mt-1"}>{t("feed_placeholder")}</p>
+            <h1 style={{ fontSize: 17, fontWeight: 700, color: C.text, margin: 0 }}>{t("feed_title")}</h1>
+            <p style={{ fontSize: 12, color: C.muted, margin: "3px 0 0" }}>{t("feed_placeholder")}</p>
           </div>
-          <div className="flex items-center gap-2">
-          <Link
-            to="/articles"
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition
-              ${d.dark ? "bg-gray-800 text-gray-300 hover:bg-gray-700" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
-          >
-            <BookOpen size={16} />
-            Məqalələr
+          <Link to="/articles" style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", fontSize: 12, color: "#444", border: "1px solid #ccc", background: "#fff", textDecoration: "none" }}>
+            <BookOpen size={13} /> Məqalələr
           </Link>
-          </div>
         </div>
       )}
 
-      {/* Yeni post */}
-      <form onSubmit={handlePost} className={`${d.card} rounded-2xl shadow-sm p-5 mb-8 hover:shadow-md transition-shadow duration-300`}>
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 shrink-0">
+      {/* New post form */}
+      <form onSubmit={handlePost} style={{ ...card, marginBottom: 16 }}>
+        <div style={{ display: "flex", gap: 12 }}>
+          <div style={{ flexShrink: 0 }}>
             <UserAvatar user={user} size="md" />
           </div>
-          <div className="flex-1">
+          <div style={{ flex: 1 }}>
             <textarea
               value={newPost}
-              onChange={(e) => setNewPost(e.target.value)}
+              onChange={e => setNewPost(e.target.value)}
               placeholder={t("feed_textarea")}
-              className={`w-full p-3 border-0 resize-none focus:outline-none ${d.textSecondary} ${d.dark ? "placeholder-gray-500 bg-transparent" : "placeholder-gray-300"} text-[15px] leading-relaxed`}
+              style={{ width: "100%", border: "none", borderBottom: "1px solid #e0e0e0", outline: "none", fontSize: 13, color: C.text, resize: "none", background: "transparent", padding: "4px 0", lineHeight: 1.6, boxSizing: "border-box" }}
               rows={3}
             />
+
             {imageUrls.length > 0 && (
-              <div className="mt-2 grid grid-cols-3 gap-2">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, marginTop: 8 }}>
                 {imageUrls.map((url, i) => (
-                  <div key={i} className={`relative rounded-xl overflow-hidden border ${d.border} aspect-square`}>
-                    <img src={url} alt={`preview-${i}`} className="w-full h-full object-cover" />
+                  <div key={i} style={{ position: "relative", border: C.border, aspectRatio: "1", overflow: "hidden" }}>
+                    <img src={url} alt={`preview-${i}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     <button type="button" onClick={() => setImageUrls(prev => prev.filter((_, j) => j !== i))}
-                      className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition">
-                      <X size={12} />
+                      style={{ position: "absolute", top: 3, right: 3, width: 20, height: 20, background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <X size={11} />
                     </button>
                   </div>
                 ))}
                 {imageUrls.length < 10 && (
-                  <label className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed ${d.dark ? "border-gray-600 text-gray-500 hover:border-blue-500" : "border-gray-200 text-gray-300 hover:border-blue-400"} aspect-square cursor-pointer transition`}>
-                    <ImageIcon size={20} />
-                    <span className="text-xs mt-1">Əlavə et</span>
-                    <input type="file" accept="image/*" multiple onChange={handleImagePick} disabled={uploading} className="hidden" />
+                  <label style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px dashed #bbb", aspectRatio: "1", cursor: "pointer", color: "#aaa", fontSize: 11 }}>
+                    <ImageIcon size={16} />
+                    <span style={{ marginTop: 4 }}>Əlavə et</span>
+                    <input type="file" accept="image/*" multiple onChange={handleImagePick} disabled={uploading} style={{ display: "none" }} />
                   </label>
                 )}
               </div>
             )}
+
             {videoUrl && (
-              <div className={`relative mt-2 rounded-xl overflow-hidden border ${d.border}`}>
-                <video src={videoUrl} controls className="w-full max-h-96" />
-                <button type="button" onClick={() => setVideoUrl("")} className="absolute top-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition"><X size={16} /></button>
+              <div style={{ position: "relative", marginTop: 8, border: C.border }}>
+                <video src={videoUrl} controls style={{ width: "100%", maxHeight: 360, display: "block" }} />
+                <button type="button" onClick={() => setVideoUrl("")} style={{ position: "absolute", top: 6, right: 6, width: 26, height: 26, background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <X size={13} />
+                </button>
               </div>
             )}
           </div>
         </div>
 
-        <div className={`flex items-center justify-between mt-3 pt-4 border-t ${d.borderLight}`}>
-          <div className="flex items-center gap-1">
-            <label className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:bg-blue-50/10 px-3 py-2 rounded-xl transition">
-              <ImageIcon size={16} /> Şəkil {imageUrls.length > 0 && <span className="bg-blue-100 text-blue-600 text-xs px-1.5 py-0.5 rounded-full">{imageUrls.length}</span>}
-              <input type="file" accept="image/*" multiple onChange={handleImagePick} disabled={uploading} className="hidden" />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 12, paddingTop: 10, borderTop: "1px solid #ebebeb" }}>
+          <div style={{ display: "flex", gap: 6 }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", fontSize: 12, color: C.primary, border: "1px solid #c8d8f0", background: "#f0f5ff", cursor: "pointer" }}>
+              <ImageIcon size={13} /> Şəkil {imageUrls.length > 0 && <span style={{ background: "#1a4a8a", color: "#fff", fontSize: 10, padding: "1px 5px", borderRadius: 8 }}>{imageUrls.length}</span>}
+              <input type="file" accept="image/*" multiple onChange={handleImagePick} disabled={uploading} style={{ display: "none" }} />
             </label>
-            <label className="flex items-center gap-2 text-sm text-blue-600 font-medium cursor-pointer hover:bg-blue-50/10 px-3 py-2 rounded-xl transition">
-              <Film size={16} /> Video
-              <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleVideoPick} disabled={uploading} className="hidden" />
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 10px", fontSize: 12, color: C.primary, border: "1px solid #c8d8f0", background: "#f0f5ff", cursor: "pointer" }}>
+              <Film size={13} /> Video
+              <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleVideoPick} disabled={uploading} style={{ display: "none" }} />
             </label>
-            {uploading && <span className={`text-xs ${d.textFaint} ml-2`}>Yüklənir...</span>}
+            {uploading && <span style={{ fontSize: 11, color: C.faint, alignSelf: "center" }}>Yüklənir...</span>}
           </div>
-          <div className="flex items-center gap-3">
-            <label className={`flex items-center gap-2 cursor-pointer text-xs ${d.textMuted}`}>
-              <input type="checkbox" checked={showDislikes} onChange={(e) => setShowDislikes(e.target.checked)} className="w-4 h-4 text-blue-600 rounded border-gray-300" />
-              <ThumbsDown size={14} /> göstər
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, color: C.muted, cursor: "pointer" }}>
+              <input type="checkbox" checked={showDislikes} onChange={e => setShowDislikes(e.target.checked)} style={{ accentColor: C.primary }} />
+              <ThumbsDown size={11} /> göstər
             </label>
-            <button type="submit" disabled={(!newPost.trim() && !imageUrls.length && !videoUrl) || posting || uploading} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none text-sm">
-              <Send size={15} /> {posting ? "..." : t("feed_share")}
+            <button type="submit" disabled={(!newPost.trim() && !imageUrls.length && !videoUrl) || posting || uploading}
+              style={{ ...C.btnPrimary, display: "inline-flex", alignItems: "center", gap: 5, padding: "6px 16px", fontSize: 12, cursor: "pointer", opacity: ((!newPost.trim() && !imageUrls.length && !videoUrl) || posting || uploading) ? 0.4 : 1 }}>
+              <Send size={12} /> {posting ? "..." : t("feed_share")}
             </button>
           </div>
         </div>
       </form>
 
-      {/* Skeleton loading */}
+      {/* Loading skeleton */}
       {loading && (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className={`${d.card} rounded-2xl shadow-sm p-5 animate-pulse`}>
-              <div className="flex items-center mb-4">
-                <div className={`w-12 h-12 rounded-full ${d.dark ? "bg-gray-700" : "bg-gray-200"}`} />
-                <div className="ml-3.5 flex-1">
-                  <div className={`h-4 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded w-32 mb-2`} />
-                  <div className={`h-3 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded w-24`} />
+        <div>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{ ...card, opacity: 0.5 }}>
+              <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+                <div style={{ width: 40, height: 40, background: "#e0e0e0", borderRadius: "50%", flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ height: 12, background: "#e0e0e0", width: "35%", marginBottom: 6 }} />
+                  <div style={{ height: 10, background: "#e8e8e8", width: "25%" }} />
                 </div>
               </div>
-              <div className={`h-4 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded w-full mb-2`} />
-              <div className={`h-4 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded w-3/4 mb-4`} />
-              <div className={`flex gap-4 pt-3 border-t ${d.borderLight}`}>
-                <div className={`h-8 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded-xl w-16`} />
-                <div className={`h-8 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded-xl w-16`} />
-                <div className={`h-8 ${d.dark ? "bg-gray-700" : "bg-gray-200"} rounded-xl w-16`} />
-              </div>
+              <div style={{ height: 11, background: "#e8e8e8", marginBottom: 5 }} />
+              <div style={{ height: 11, background: "#ebebeb", width: "70%" }} />
             </div>
           ))}
         </div>
       )}
 
-      {/* Postlar */}
-      {!loading && <div className="space-y-4">
-        {posts.map((post, index) => (
-          <div key={post.id} className={`${d.card} rounded-2xl shadow-sm p-5 hover:shadow-md transition-all duration-300 group`}>
-            <div className="flex items-center mb-4">
-              <Link to={`/profile/${post.author_id}`} className="shrink-0">
-                <UserAvatar user={{ full_name: post.author_name, profile_picture: post.author_picture }} size="md" />
-              </Link>
-              <div className="ml-3.5 flex-1">
-                <Link to={`/profile/${post.author_id}`} className={`font-semibold ${d.text} text-[15px] hover:text-blue-600 transition`}>{post.author_name}</Link>
-                <p className={`text-xs ${d.textFaint} mt-0.5`}>{formatBakuDate(post.created_at)} · {formatBakuHM(post.created_at)}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {post.is_pinned && (
-                  <span className="flex items-center gap-1.5 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-600 text-xs px-3.5 py-1.5 rounded-full font-semibold border border-amber-100">
-                    <Pin size={12} /> {t("feed_pinned")}
-                  </span>
-                )}
-                {user && post.author_id !== user.id && !connectedIds.has(post.author_id) && (
-                  <button
-                    onClick={() => handleConnect(post.author_id)}
-                    disabled={pendingIds.has(post.author_id)}
-                    title={pendingIds.has(post.author_id) ? "İstək göndərildi" : "Bağlantı istəyi göndər"}
-                    className={`p-1.5 rounded-lg transition-all duration-200 ${
-                      pendingIds.has(post.author_id)
-                        ? d.dark ? "text-green-400 bg-green-500/10" : "text-green-600 bg-green-50"
-                        : d.dark ? "text-gray-500 hover:text-blue-400 hover:bg-blue-500/10" : "text-gray-400 hover:text-blue-600 hover:bg-blue-50"
-                    }`}
-                  >
-                    {pendingIds.has(post.author_id) ? <UserCheck size={16} /> : <UserPlus size={16} />}
-                  </button>
-                )}
-                {user && post.author_id === user.id && (
-                  <button onClick={() => handleDelete(post.id)} className={`${d.textFaint} hover:text-red-500 transition p-1`} title="Postu sil"><Trash2 size={16} /></button>
-                )}
-              </div>
-            </div>
-
-            {post.content && <p className={`${d.textSecondary} leading-relaxed mb-4 text-[15px] whitespace-pre-wrap`}>{post.content}</p>}
-            {(post.images?.length > 0 || post.image_url) && (
-              <div className={`mb-4 rounded-xl overflow-hidden border ${d.border}`}>
-                <ImageCarousel images={post.images?.length > 0 ? post.images : [post.image_url]} dark={d.dark} />
-              </div>
-            )}
-            {post.video_url && <div className={`mb-4 rounded-xl overflow-hidden border ${d.border} bg-black`}><video src={post.video_url} controls className="w-full max-h-[500px]" /></div>}
-
-            <div className={`flex items-center gap-1 pt-3 border-t ${d.borderLight}`}>
-              <button onClick={() => handleLike(post.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${post.is_liked ? "text-red-500 bg-red-500/10" : `${d.textFaint} hover:text-red-500 hover:bg-red-500/10`}`}>
-                <Heart size={18} fill={post.is_liked ? "currentColor" : "none"} className={post.is_liked ? "scale-110" : ""} />
-                <span>{post.like_count}</span>
-              </button>
-              <button onClick={() => handleDislike(post.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${post.is_disliked ? "text-blue-500 bg-blue-500/10" : `${d.textFaint} hover:text-blue-500 hover:bg-blue-500/10`}`}>
-                <ThumbsDown size={18} fill={post.is_disliked ? "currentColor" : "none"} className={post.is_disliked ? "scale-110" : ""} />
-                {post.show_dislikes && <span>{post.dislike_count}</span>}
-              </button>
-              <button onClick={() => toggleComments(post.id)} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${openComments[post.id] ? "text-blue-500 bg-blue-500/10" : `${d.textFaint} hover:text-blue-500 hover:bg-blue-500/10`}`}>
-                <MessageCircle size={18} /> <span>{post.comment_count}</span>
-                {openComments[post.id] ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              </button>
-              {user && post.author_id !== user.id && (
-                <button onClick={() => setReportPostId(post.id)} className={`ml-auto flex items-center gap-2 px-3 py-2 rounded-xl text-xs ${d.textFaint} hover:text-red-500 hover:bg-red-500/10 transition`} title="Şikayət et"><Flag size={14} /></button>
-              )}
-            </div>
-
-            {/* Comments */}
-            {openComments[post.id] && (
-              <div className={`mt-4 pt-4 border-t ${d.border}`}>
-                <div className="flex gap-3 mb-4">
-                  <input type="text" value={commentText[post.id] || ""} onChange={(e) => setCommentText({ ...commentText, [post.id]: e.target.value })} onKeyDown={(e) => e.key === "Enter" && submitComment(post.id)} placeholder={t("feed_comment_placeholder")}
-                    className={`flex-1 px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300 transition ${d.input}`} />
-                  <button onClick={() => submitComment(post.id)} disabled={!commentText[post.id]?.trim()} className="bg-blue-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-30"><Send size={14} /></button>
+      {/* Posts */}
+      {!loading && (
+        <div>
+          {posts.map(post => (
+            <div key={post.id} style={card}>
+              {/* Post header */}
+              <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+                <Link to={`/profile/${post.author_id}`} style={{ flexShrink: 0 }}>
+                  <UserAvatar user={{ full_name: post.author_name, profile_picture: post.author_picture }} size="md" />
+                </Link>
+                <div style={{ flex: 1, marginLeft: 10 }}>
+                  <Link to={`/profile/${post.author_id}`} style={{ fontWeight: 600, fontSize: 13, color: C.text, textDecoration: "none" }}
+                    onMouseEnter={e => e.currentTarget.style.color = C.primary}
+                    onMouseLeave={e => e.currentTarget.style.color = C.text}>
+                    {post.author_name}
+                  </Link>
+                  <p style={{ fontSize: 11, color: C.faint, margin: "2px 0 0" }}>{formatBakuDate(post.created_at)} · {formatBakuHM(post.created_at)}</p>
                 </div>
-                <div className="space-y-3 max-h-80 overflow-y-auto">
-                  {(comments[post.id] || []).length === 0 ? (
-                    <p className={`${d.textFaint} text-sm text-center py-3`}>Hələ şərh yoxdur</p>
-                  ) : (
-                    (comments[post.id] || []).map((c) => (
-                      <div key={c.id} className="flex gap-3">
-                        <Link to={`/profile/${c.user_id}`} className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0">{c.user_name?.charAt(0)}</Link>
-                        <div className={`flex-1 ${d.dark ? "bg-gray-700/50" : "bg-gray-50"} rounded-xl px-4 py-3`}>
-                          <div className="flex items-center gap-2 mb-1">
-                            <Link to={`/profile/${c.user_id}`} className={`text-sm font-semibold ${d.text} hover:text-blue-600 transition`}>{c.user_name}</Link>
-                            <span className={`text-xs ${d.textFaint}`}>{formatBakuHM(c.created_at)}</span>
-                          </div>
-                          <p className={`text-sm ${d.textSecondary}`}>{c.content}</p>
-                        </div>
-                      </div>
-                    ))
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {post.is_pinned && (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#92600a", background: "#fef3c7", border: "1px solid #fde68a", padding: "2px 8px" }}>
+                      <Pin size={10} /> {t("feed_pinned")}
+                    </span>
+                  )}
+                  {user && post.author_id !== user.id && !connectedIds.has(post.author_id) && (
+                    <button onClick={() => handleConnect(post.author_id)} disabled={pendingIds.has(post.author_id)}
+                      style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: pendingIds.has(post.author_id) ? "#16a34a" : "#999" }}
+                      title={pendingIds.has(post.author_id) ? "İstək göndərildi" : "Bağlantı istəyi göndər"}>
+                      {pendingIds.has(post.author_id) ? <UserCheck size={15} /> : <UserPlus size={15} />}
+                    </button>
+                  )}
+                  {user && post.author_id === user.id && (
+                    <button onClick={() => handleDelete(post.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#aaa" }}
+                      onMouseEnter={e => e.currentTarget.style.color = "#dc2626"}
+                      onMouseLeave={e => e.currentTarget.style.color = "#aaa"}
+                      title="Postu sil"><Trash2 size={14} /></button>
                   )}
                 </div>
               </div>
-            )}
-          </div>
-        ))}
-      </div>}
+
+              {/* Post content */}
+              {post.content && (
+                <p style={{ fontSize: 13, color: C.text, lineHeight: 1.65, margin: "0 0 10px", whiteSpace: "pre-wrap" }}>{post.content}</p>
+              )}
+
+              {(post.images?.length > 0 || post.image_url) && (
+                <div style={{ border: C.border, overflow: "hidden", marginBottom: 10 }}>
+                  <ImageCarousel images={post.images?.length > 0 ? post.images : [post.image_url]} />
+                </div>
+              )}
+              {post.video_url && (
+                <div style={{ border: C.border, marginBottom: 10, background: "#000" }}>
+                  <video src={post.video_url} controls style={{ width: "100%", maxHeight: 460, display: "block" }} />
+                </div>
+              )}
+
+              {/* Actions */}
+              <div style={{ display: "flex", alignItems: "center", gap: 4, paddingTop: 8, borderTop: "1px solid #ebebeb" }}>
+                <button onClick={() => handleLike(post.id)} style={btn(post.is_liked, "#dc2626")}>
+                  <Heart size={14} fill={post.is_liked ? "currentColor" : "none"} /> {post.like_count}
+                </button>
+                <button onClick={() => handleDislike(post.id)} style={btn(post.is_disliked, "#1a4a8a")}>
+                  <ThumbsDown size={14} fill={post.is_disliked ? "currentColor" : "none"} />
+                  {post.show_dislikes && <span>{post.dislike_count}</span>}
+                </button>
+                <button onClick={() => toggleComments(post.id)} style={btn(openComments[post.id], "#1a4a8a")}>
+                  <MessageCircle size={14} /> {post.comment_count} {openComments[post.id] ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                </button>
+                {user && post.author_id !== user.id && (
+                  <button onClick={() => setReportPostId(post.id)}
+                    style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", padding: "4px 8px", color: "#bbb", display: "inline-flex", alignItems: "center" }}
+                    onMouseEnter={e => e.currentTarget.style.color = "#dc2626"}
+                    onMouseLeave={e => e.currentTarget.style.color = "#bbb"}
+                    title="Şikayət et"><Flag size={13} /></button>
+                )}
+              </div>
+
+              {/* Comments */}
+              {openComments[post.id] && (
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #ebebeb" }}>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                    <input
+                      type="text"
+                      value={commentText[post.id] || ""}
+                      onChange={e => setCommentText({ ...commentText, [post.id]: e.target.value })}
+                      onKeyDown={e => e.key === "Enter" && submitComment(post.id)}
+                      placeholder={t("feed_comment_placeholder")}
+                      style={{ flex: 1, padding: "6px 10px", border: "1px solid #ccc", fontSize: 12, color: C.text, outline: "none" }}
+                      onFocus={e => e.target.style.borderColor = "#1a4a8a"}
+                      onBlur={e => e.target.style.borderColor = "#ccc"}
+                    />
+                    <button onClick={() => submitComment(post.id)} disabled={!commentText[post.id]?.trim()}
+                      style={{ ...C.btnPrimary, display: "inline-flex", alignItems: "center", padding: "6px 12px", fontSize: 12, cursor: "pointer", opacity: !commentText[post.id]?.trim() ? 0.4 : 1 }}>
+                      <Send size={12} />
+                    </button>
+                  </div>
+                  <div style={{ maxHeight: 280, overflowY: "auto" }}>
+                    {(comments[post.id] || []).length === 0 ? (
+                      <p style={{ fontSize: 12, color: C.faint, textAlign: "center", padding: "10px 0" }}>Hələ şərh yoxdur</p>
+                    ) : (comments[post.id] || []).map(c => (
+                      <div key={c.id} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                        <Link to={`/profile/${c.user_id}`} style={{ width: 30, height: 30, background: "#1a4a8a", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700, textDecoration: "none", flexShrink: 0 }}>
+                          {c.user_name?.charAt(0)}
+                        </Link>
+                        <div style={{ flex: 1, background: "#f7f7f7", border: "1px solid #e8e8e8", padding: "7px 10px" }}>
+                          <div style={{ display: "flex", gap: 8, marginBottom: 3, alignItems: "center" }}>
+                            <Link to={`/profile/${c.user_id}`} style={{ fontSize: 12, fontWeight: 600, color: C.text, textDecoration: "none" }}>{c.user_name}</Link>
+                            <span style={{ fontSize: 10, color: C.faint }}>{formatBakuHM(c.created_at)}</span>
+                          </div>
+                          <p style={{ fontSize: 12, color: "#333", margin: 0 }}>{c.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && posts.length === 0 && (
+        <div style={{ textAlign: "center", padding: "60px 20px", color: C.muted }}>
+          <TrendingUp size={36} style={{ color: "#bbb", marginBottom: 12 }} />
+          <p style={{ fontWeight: 600, fontSize: 15, color: C.text, margin: "0 0 6px" }}>{t("feed_empty")}</p>
+          <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{t("feed_empty_sub")}</p>
+        </div>
+      )}
 
       {/* Report modal */}
       {reportPostId && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4" onClick={() => !reporting && setReportPostId(null)}>
-          <div className={`${d.card} rounded-2xl p-6 max-w-md w-full shadow-xl`} onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center"><Flag size={18} className="text-red-500" /></div>
-              <div>
-                <h3 className={`font-bold ${d.text}`}>Postu şikayət et</h3>
-                <p className={`text-xs ${d.textFaint}`}>Admin yoxladıqdan sonra tədbir görüləcək</p>
-              </div>
-            </div>
-            <textarea value={reportReason} onChange={(e) => setReportReason(e.target.value)} placeholder="Səbəb (istəyə bağlı)..." className={`w-full p-3 border rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-200 ${d.input}`} rows={3} maxLength={300} />
-            <div className="flex gap-2 mt-4 justify-end">
-              <button onClick={() => { setReportPostId(null); setReportReason(""); }} disabled={reporting} className={`px-4 py-2 text-sm font-medium ${d.textMuted} hover:opacity-80 rounded-xl transition`}>Ləğv et</button>
-              <button onClick={submitReport} disabled={reporting} className="px-5 py-2 bg-red-500 text-white text-sm font-semibold rounded-xl hover:bg-red-600 transition disabled:opacity-50">{reporting ? "Göndərilir..." : "Şikayət göndər"}</button>
+        <div onClick={() => !reporting && setReportPostId(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 16px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#fff", border: C.border, maxWidth: 400, width: "100%", padding: "20px 22px" }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: "0 0 4px" }}>Postu şikayət et</h3>
+            <p style={{ fontSize: 11, color: C.muted, margin: "0 0 12px" }}>Admin yoxladıqdan sonra tədbir görüləcək</p>
+            <textarea value={reportReason} onChange={e => setReportReason(e.target.value)} placeholder="Səbəb (istəyə bağlı)..."
+              style={{ width: "100%", border: "1px solid #ccc", padding: "8px 10px", fontSize: 12, resize: "none", outline: "none", boxSizing: "border-box" }} rows={3} maxLength={300} />
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+              <button onClick={() => { setReportPostId(null); setReportReason(""); }} disabled={reporting}
+                style={{ ...C.btnGhost, display: "inline-flex", padding: "6px 14px", fontSize: 12, cursor: "pointer" }}>Ləğv et</button>
+              <button onClick={submitReport} disabled={reporting}
+                style={{ background: "#dc2626", color: "#fff", border: "1px solid #dc2626", display: "inline-flex", padding: "6px 16px", fontSize: 12, cursor: "pointer", opacity: reporting ? 0.5 : 1 }}>
+                {reporting ? "Göndərilir..." : "Şikayət göndər"}
+              </button>
             </div>
           </div>
         </div>
       )}
-
-      {!loading && posts.length === 0 && (
-        <div className="text-center py-20">
-          <div className={`w-20 h-20 ${d.dark ? "bg-blue-500/10" : "bg-gradient-to-br from-blue-50 to-indigo-50"} rounded-3xl flex items-center justify-center mx-auto mb-5 shadow-sm`}>
-            <TrendingUp size={32} className="text-blue-400" />
-          </div>
-          <p className={`${d.text} font-semibold text-lg`}>{t("feed_empty")}</p>
-          <p className={`${d.textFaint} text-sm mt-2 max-w-xs mx-auto`}>{t("feed_empty_sub")}</p>
-        </div>
-      )}
-      </div>
-      </div>
     </div>
   );
 }

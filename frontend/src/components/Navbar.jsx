@@ -1,8 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Users, User, LogOut, Menu, X, Shield, Settings, Bell, Heart, MessageCircle, UserPlus, UserCheck } from "lucide-react";
+import { Bell, LogOut, Menu, X, Heart, MessageCircle, UserPlus, UserCheck } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import api from "../api/client";
-import { useDarkMode } from "../hooks/useTheme";
 import { useLang } from "../hooks/useLang";
 
 function timeAgo(dateStr, t) {
@@ -13,65 +12,47 @@ function timeAgo(dateStr, t) {
   return `${Math.floor(diff / 86400)} ${t("time_day")}`;
 }
 
-function NotificationDropdown({ dark, onClose }) {
+function NotificationDropdown({ onClose }) {
   const [notifs, setNotifs] = useState([]);
   const ref = useRef(null);
   const { t } = useLang();
 
   const NOTIF_LABELS = {
-    connection_request:  { icon: UserPlus,      textKey: "notif_connection_request",  color: "text-blue-500" },
-    connection_accepted: { icon: UserCheck,     textKey: "notif_connection_accepted", color: "text-green-500" },
-    post_liked:          { icon: Heart,         textKey: "notif_post_liked",          color: "text-red-500" },
-    post_commented:      { icon: MessageCircle, textKey: "notif_post_commented",      color: "text-indigo-500" },
+    connection_request:  { icon: UserPlus,      textKey: "notif_connection_request" },
+    connection_accepted: { icon: UserCheck,     textKey: "notif_connection_accepted" },
+    post_liked:          { icon: Heart,         textKey: "notif_post_liked" },
+    post_commented:      { icon: MessageCircle, textKey: "notif_post_commented" },
   };
 
   useEffect(() => {
     api.get("/notifications").then(res => setNotifs(res.data)).catch(() => {});
     api.put("/notifications/read-all").catch(() => {});
-
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   return (
-    <div
-      ref={ref}
-      className={`absolute right-0 top-12 w-80 rounded-2xl shadow-2xl border z-50 overflow-hidden
-        ${dark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-100"}`}
-    >
-      <div className={`px-4 py-3 border-b ${dark ? "border-gray-700" : "border-gray-100"} flex items-center justify-between`}>
-        <span className={`font-bold text-sm ${dark ? "text-white" : "text-gray-900"}`}>{t("notif_title")}</span>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
+    <div ref={ref} style={{ position: "absolute", right: 0, top: "100%", width: 280, background: "#fff", border: "1px solid #ccc", boxShadow: "0 2px 6px rgba(0,0,0,0.12)", zIndex: 50 }}>
+      <div style={{ padding: "8px 12px", borderBottom: "1px solid #ddd", background: "#f7f7f7", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontWeight: 600, fontSize: 13, color: "#222" }}>{t("notif_title")}</span>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", lineHeight: 1 }}><X size={14} /></button>
       </div>
-
-      <div className="max-h-96 overflow-y-auto">
+      <div style={{ maxHeight: 320, overflowY: "auto" }}>
         {notifs.length === 0 ? (
-          <div className="py-10 text-center">
-            <Bell size={28} className="mx-auto text-gray-300 mb-2" />
-            <p className={`text-sm ${dark ? "text-gray-500" : "text-gray-400"}`}>{t("notif_empty")}</p>
-          </div>
+          <div style={{ padding: "24px 16px", textAlign: "center", color: "#888", fontSize: 13 }}>{t("notif_empty")}</div>
         ) : notifs.map(n => {
           const cfg = NOTIF_LABELS[n.type] || {};
           const Icon = cfg.icon || Bell;
           return (
-            <div
-              key={n.id}
-              className={`flex items-start gap-3 px-4 py-3 border-b last:border-0 transition
-                ${dark ? "border-gray-800 hover:bg-gray-800" : "border-gray-50 hover:bg-gray-50"}
-                ${!n.is_read ? (dark ? "bg-blue-500/5" : "bg-blue-50/40") : ""}`}
-            >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${dark ? "bg-gray-800" : "bg-gray-100"}`}>
-                <Icon size={18} className={cfg.color || "text-gray-400"} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm leading-snug ${dark ? "text-gray-200" : "text-gray-800"}`}>
-                  <span className="font-semibold">{n.from_user_name}</span>{" "}
-                  {cfg.textKey ? t(cfg.textKey) : ""}
+            <div key={n.id} style={{ display: "flex", gap: 10, padding: "9px 12px", borderBottom: "1px solid #f0f0f0", background: n.is_read ? "#fff" : "#eef3fb" }}>
+              <Icon size={14} style={{ color: "#555", marginTop: 2, flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 13, color: "#222", margin: 0 }}>
+                  <strong>{n.from_user_name}</strong>{" "}{cfg.textKey ? t(cfg.textKey) : ""}
                 </p>
-                <p className={`text-xs mt-0.5 ${dark ? "text-gray-500" : "text-gray-400"}`}>{timeAgo(n.created_at, t)}</p>
+                <p style={{ fontSize: 11, color: "#888", margin: "2px 0 0" }}>{timeAgo(n.created_at, t)}</p>
               </div>
-              {!n.is_read && <span className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-1" />}
             </div>
           );
         })}
@@ -87,20 +68,14 @@ export default function Navbar() {
   const [currentUser, setCurrentUser] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifs, setShowNotifs] = useState(false);
-  const dark = useDarkMode();
   const { t } = useLang();
 
   useEffect(() => {
     api.get("/users/me").then(res => setCurrentUser(res.data)).catch(() => {});
     fetchUnread();
-    const sendHeartbeat = () => {
-      api.post("/users/me/heartbeat", { page: window.location.pathname }).catch(() => {});
-    };
+    const sendHeartbeat = () => api.post("/users/me/heartbeat", { page: window.location.pathname }).catch(() => {});
     sendHeartbeat();
-    const interval = setInterval(() => {
-      fetchUnread();
-      sendHeartbeat();
-    }, 60000);
+    const interval = setInterval(() => { fetchUnread(); sendHeartbeat(); }, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -108,150 +83,113 @@ export default function Navbar() {
     api.get("/notifications/unread-count").then(res => setUnreadCount(res.data.count)).catch(() => {});
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
-  const handleBellClick = () => {
-    setShowNotifs(v => !v);
-    setUnreadCount(0);
-  };
+  const logout = () => { localStorage.removeItem("token"); navigate("/login"); };
 
   const links = [
-    { path: "/feed", icon: Home, label: t("nav_feed") },
-    { path: "/search", icon: Search, label: t("nav_search") },
-    { path: "/connections", icon: Users, label: t("nav_connections") },
-    { path: "/profile", icon: User, label: t("nav_profile") },
-    { path: "/settings", icon: Settings, label: t("nav_settings") },
-    ...(currentUser?.is_admin ? [{ path: "/admin", icon: Shield, label: t("nav_admin") }] : []),
+    { path: "/feed",        label: t("nav_feed") },
+    { path: "/search",      label: t("nav_search") },
+    { path: "/connections", label: t("nav_connections") },
+    { path: "/profile",     label: t("nav_profile") },
+    { path: "/settings",    label: t("nav_settings") },
+    ...(currentUser?.is_admin ? [{ path: "/admin", label: t("nav_admin"), admin: true }] : []),
   ];
 
+  const linkStyle = (path, admin) => {
+    const isActive = location.pathname === path;
+    return {
+      display: "inline-block",
+      padding: "0 14px",
+      lineHeight: "46px",
+      fontSize: 13,
+      fontWeight: isActive ? 700 : 400,
+      color: admin ? (isActive ? "#b91c1c" : "#9a3232") : (isActive ? "#1a4a8a" : "#444"),
+      borderBottom: isActive ? `2px solid ${admin ? "#b91c1c" : "#1a4a8a"}` : "2px solid transparent",
+      textDecoration: "none",
+      whiteSpace: "nowrap",
+    };
+  };
+
   return (
-    <nav className={`${dark ? "bg-gray-900/90 border-gray-700/50" : "bg-white/80 border-gray-200/50"} backdrop-blur-xl border-b sticky top-0 z-50 shadow-sm`}>
-      <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-16">
-        <Link to="/feed" className="text-xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          Hash
+    <nav style={{ background: "#fff", borderBottom: "1px solid #c8c8c8", position: "sticky", top: 0, zIndex: 100 }}>
+      <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 16px", display: "flex", alignItems: "center", height: 48 }}>
+        {/* Logo */}
+        <Link to="/feed" style={{ fontWeight: 800, fontSize: 15, color: "#1a2a3a", textDecoration: "none", marginRight: 20, letterSpacing: "-0.3px", flexShrink: 0 }}>
+          VektorIn
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-1">
-          {links.map(({ path, icon: Icon, label }) => {
-            const isActive = location.pathname === path;
-            const isAdmin = path === "/admin";
-            return (
-              <Link
-                key={path}
-                to={path}
-                className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? isAdmin
-                      ? "bg-gradient-to-r from-red-50 to-rose-50 text-red-600 shadow-sm"
-                      : dark ? "bg-blue-500/20 text-blue-400 shadow-sm"
-                      : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 shadow-sm"
-                    : isAdmin
-                    ? "text-red-400 hover:bg-red-50 hover:text-red-500"
-                    : dark ? "text-gray-400 hover:bg-gray-800 hover:text-gray-200"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                }`}
-              >
-                <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                <span>{label}</span>
-                {isActive && (
-                  <span className={`absolute -bottom-[13px] left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full ${
-                    isAdmin ? "bg-gradient-to-r from-red-500 to-rose-500" : "bg-gradient-to-r from-blue-500 to-indigo-500"
-                  }`} />
-                )}
-              </Link>
-            );
-          })}
+        {/* Desktop links */}
+        <div className="hidden md:flex" style={{ flex: 1, alignItems: "center" }}>
+          {links.map(({ path, label, admin }) => (
+            <Link key={path} to={path} style={linkStyle(path, admin)}>{label}</Link>
+          ))}
+        </div>
 
-          <div className={`w-px h-8 ${dark ? "bg-gray-700" : "bg-gray-200"} mx-2`} />
-
-          {/* Bell */}
-          <div className="relative">
+        {/* Right side */}
+        <div className="hidden md:flex" style={{ alignItems: "center", gap: 4, marginLeft: "auto" }}>
+          <div style={{ position: "relative" }}>
             <button
-              onClick={handleBellClick}
-              className={`relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 ${
-                dark ? "text-gray-400 hover:bg-gray-800 hover:text-gray-200" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-              }`}
+              onClick={() => { setShowNotifs(v => !v); setUnreadCount(0); }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: "0 10px", lineHeight: "46px", color: "#555", display: "flex", alignItems: "center", gap: 4, position: "relative" }}
             >
-              <Bell size={20} />
+              <Bell size={16} />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] font-bold flex items-center justify-center">
+                <span style={{ position: "absolute", top: 8, right: 4, background: "#dc2626", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: "50%", width: 16, height: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </button>
-            {showNotifs && <NotificationDropdown dark={dark} onClose={() => setShowNotifs(false)} />}
+            {showNotifs && <NotificationDropdown onClose={() => setShowNotifs(false)} />}
           </div>
-
           <button
             onClick={logout}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${dark ? "text-gray-400 hover:bg-red-500/10 hover:text-red-400" : "text-gray-400 hover:bg-red-50 hover:text-red-500"} transition-all duration-200`}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: "0 10px", lineHeight: "46px", fontSize: 13, color: "#666", display: "flex", alignItems: "center", gap: 5 }}
+            onMouseEnter={e => e.currentTarget.style.color = "#dc2626"}
+            onMouseLeave={e => e.currentTarget.style.color = "#666"}
           >
-            <LogOut size={18} />
-            <span>{t("nav_logout")}</span>
+            <LogOut size={14} /> {t("nav_logout")}
           </button>
         </div>
 
-        {/* Mobile hamburger */}
-        <div className="md:hidden flex items-center gap-2">
-          <div className="relative">
-            <button
-              onClick={handleBellClick}
-              className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition ${dark ? "text-gray-400" : "text-gray-500"}`}
-            >
-              <Bell size={20} />
+        {/* Mobile right */}
+        <div className="md:hidden" style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
+          <div style={{ position: "relative" }}>
+            <button onClick={() => { setShowNotifs(v => !v); setUnreadCount(0); }} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 8px", lineHeight: "46px", color: "#555", position: "relative" }}>
+              <Bell size={17} />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-white text-[9px] font-bold flex items-center justify-center">
+                <span style={{ position: "absolute", top: 8, right: 2, background: "#dc2626", color: "#fff", fontSize: 9, fontWeight: 700, borderRadius: "50%", width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               )}
             </button>
-            {showNotifs && <NotificationDropdown dark={dark} onClose={() => setShowNotifs(false)} />}
+            {showNotifs && <NotificationDropdown onClose={() => setShowNotifs(false)} />}
           </div>
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className={`p-2 rounded-xl ${dark ? "text-gray-400 hover:bg-gray-800" : "text-gray-500 hover:bg-gray-100"} transition`}
-          >
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+          <button onClick={() => setMobileOpen(!mobileOpen)} style={{ background: "none", border: "none", cursor: "pointer", padding: "0 6px", lineHeight: "46px", color: "#555" }}>
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className={`md:hidden ${dark ? "bg-gray-900/95" : "bg-white/95"} backdrop-blur-xl border-t ${dark ? "border-gray-700" : "border-gray-100"} px-4 pb-4 pt-2 space-y-1`}>
-          {links.map(({ path, icon: Icon, label }) => {
+        <div className="md:hidden" style={{ background: "#fff", borderTop: "1px solid #e0e0e0", padding: "8px 0" }}>
+          {links.map(({ path, label, admin }) => {
             const isActive = location.pathname === path;
-            const isAdmin = path === "/admin";
             return (
               <Link
                 key={path}
                 to={path}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                  isActive
-                    ? isAdmin ? "bg-gradient-to-r from-red-50 to-rose-50 text-red-600"
-                      : dark ? "bg-blue-500/20 text-blue-400"
-                      : "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600"
-                    : isAdmin ? "text-red-400 hover:bg-red-50"
-                    : dark ? "text-gray-400 hover:bg-gray-800"
-                    : "text-gray-600 hover:bg-gray-50"
-                }`}
+                style={{ display: "block", padding: "10px 20px", fontSize: 13, color: admin ? "#b91c1c" : (isActive ? "#1a4a8a" : "#444"), fontWeight: isActive ? 700 : 400, background: isActive ? "#f0f5ff" : "transparent", textDecoration: "none", borderLeft: isActive ? `3px solid ${admin ? "#b91c1c" : "#1a4a8a"}` : "3px solid transparent" }}
               >
-                <Icon size={20} />
-                <span>{label}</span>
+                {label}
               </Link>
             );
           })}
           <button
             onClick={() => { setMobileOpen(false); logout(); }}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition w-full"
+            style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 20px", fontSize: 13, color: "#888", background: "none", border: "none", cursor: "pointer", borderLeft: "3px solid transparent" }}
           >
-            <LogOut size={20} />
-            <span>{t("nav_logout")}</span>
+            {t("nav_logout")}
           </button>
         </div>
       )}
