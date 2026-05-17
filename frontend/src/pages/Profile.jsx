@@ -471,24 +471,43 @@ export default function Profile() {
               <p style={S.sectionTitle}><FileText size={13} color="#666" /> Postlar <span style={{ color: "#bbb", fontSize: 11, fontWeight: 400 }}>({userPosts.length})</span></p>
               {userPosts.length > 0 ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  {userPosts.map(post => (
-                    <div key={post.id} style={{ border: "1px solid #d4d4d4", padding: "12px 14px", background: "#fff" }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                        <div style={{ flex: 1 }}>
-                          {post.content && <p style={{ margin: "0 0 8px 0", fontSize: 13, color: "#333", whiteSpace: "pre-wrap", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.content}</p>}
-                          {!post.content && post.image_url && <p style={{ margin: "0 0 8px 0", fontSize: 12, color: "#999", fontStyle: "italic" }}>Şəkil post</p>}
-                          {!post.content && post.video_url && <p style={{ margin: "0 0 8px 0", fontSize: 12, color: "#999", fontStyle: "italic" }}>Video post</p>}
-                          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#999" }}><Heart size={11} /> {post.like_count}</span>
-                            {post.show_dislikes && <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#999" }}><ThumbsDown size={11} /> {post.dislike_count}</span>}
-                            <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#999" }}><MessageCircle size={11} /> {post.comment_count}</span>
-                            <span style={{ fontSize: 11, color: "#bbb" }}>{formatBakuDate(post.created_at)}</span>
+                  {userPosts.map(post => {
+                    const imgs = (() => {
+                      if (!post.image_url) return [];
+                      try { const p = JSON.parse(post.image_url); return Array.isArray(p) ? p : [post.image_url]; }
+                      catch { return [post.image_url]; }
+                    })();
+                    return (
+                      <div key={post.id} style={{ border: "1px solid #d4d4d4", background: "#fff" }}>
+                        {imgs.length > 0 && (
+                          <div style={{ display: "grid", gridTemplateColumns: imgs.length > 1 ? "1fr 1fr" : "1fr", gap: 2 }}>
+                            {imgs.slice(0, 4).map((url, i) => (
+                              <a key={i} href={url} target="_blank" rel="noreferrer">
+                                <img src={url} alt="" style={{ width: "100%", height: imgs.length === 1 ? 220 : 110, objectFit: "cover", display: "block" }} />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                        {post.video_url && (
+                          <video src={post.video_url} controls style={{ width: "100%", maxHeight: 220, display: "block" }} />
+                        )}
+                        <div style={{ padding: "10px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                            <div style={{ flex: 1 }}>
+                              {post.content && <p style={{ margin: "0 0 8px 0", fontSize: 13, color: "#333", whiteSpace: "pre-wrap", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{post.content}</p>}
+                              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#999" }}><Heart size={11} /> {post.like_count}</span>
+                                {post.show_dislikes && <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#999" }}><ThumbsDown size={11} /> {post.dislike_count}</span>}
+                                <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#999" }}><MessageCircle size={11} /> {post.comment_count}</span>
+                                <span style={{ fontSize: 11, color: "#bbb" }}>{formatBakuDate(post.created_at)}</span>
+                              </div>
+                            </div>
+                            {isOwn && <button onClick={() => handleDeletePost(post.id)} style={{ ...S.btnDanger, marginLeft: 12 }}><Trash2 size={15} /></button>}
                           </div>
                         </div>
-                        {isOwn && <button onClick={() => handleDeletePost(post.id)} style={{ ...S.btnDanger, marginLeft: 12 }}><Trash2 size={15} /></button>}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p style={{ ...S.faint, textAlign: "center", padding: "12px 0", margin: 0 }}>{isOwn ? "Hələ post paylaşmamısan" : "Post yoxdur"}</p>
