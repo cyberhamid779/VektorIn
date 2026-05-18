@@ -13,9 +13,14 @@ router = APIRouter(prefix="/api/users", tags=["users"])
 limiter = Limiter(key_func=get_remote_address)
 
 
+import re
+
+USERNAME_RE = re.compile(r'^[a-z0-9_]{3,30}$')
+
 class UserResponse(BaseModel):
     id: int
     email: str
+    username: str | None = None
     full_name: str
     headline: str | None
     faculty: str | None
@@ -39,6 +44,7 @@ class UserResponse(BaseModel):
 
 class UpdateProfileRequest(BaseModel):
     full_name: str | None = None
+    username: str | None = None
     headline: str | None = None
     major: str | None = None
     course: int | None = None
@@ -60,7 +66,18 @@ def get_me(current_user: User = Depends(get_current_user)):
 
 @router.put("/me", response_model=UserResponse)
 def update_profile(data: UpdateProfileRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    for field, value in data.model_dump(exclude_unset=True).items():
+    fields = data.model_dump(exclude_unset=True)
+
+    if 'username' in fields and fields['username'] is not None:
+        uname = fields['username'].lower().strip()
+        if not USERNAME_RE.match(uname):
+            raise HTTPException(status_code=400, detail="Username yalnız kiçik hərf, rəqəm və _ ola bilər (3-30 simvol)")
+        taken = db.query(User).filter(User.username == uname, User.id != current_user.id).first()
+        if taken:
+            raise HTTPException(status_code=400, detail="Bu username artıq tutulub")
+        fields['username'] = uname
+
+    for field, value in fields.items():
         setattr(current_user, field, value)
     db.commit()
     db.refresh(current_user)

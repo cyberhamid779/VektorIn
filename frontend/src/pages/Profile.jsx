@@ -4,7 +4,7 @@ import { toast } from "../components/Toast";
 import {
   Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2,
   ExternalLink, Camera, FolderGit2, Code2, Heart, ThumbsDown, MessageCircle,
-  FileText, Send, Mail, Globe,
+  FileText, Send, Mail, Globe, Share2, Check,
 } from "lucide-react";
 
 const GithubIcon = () => (
@@ -68,6 +68,7 @@ export default function Profile() {
   const [isConnected, setIsConnected] = useState(false);
   const [cvParsing, setCvParsing] = useState(false);
   const [cvPreview, setCvPreview] = useState(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const fileInputRef = useRef(null);
   const cvInputRef = useRef(null);
 
@@ -243,10 +244,26 @@ export default function Profile() {
     toast.success("Profil CV əsasında yeniləndi!");
   };
 
+  const getPublicUrl = () => {
+    const base = window.location.origin;
+    return user?.username ? `${base}/u/${user.username}` : `${base}/u/${user?.id}`;
+  };
+
+  const handleShareCV = async () => {
+    try {
+      await navigator.clipboard.writeText(getPublicUrl());
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      prompt("CV linki:", getPublicUrl());
+    }
+  };
+
   const handleSave = async () => {
     try {
       await api.put("/users/me", {
         full_name:     form.full_name,
+        username:      form.username      || null,
         headline:      form.headline      || null,
         major:         form.major         || null,
         course:        form.course        || null,
@@ -258,7 +275,9 @@ export default function Profile() {
         is_open_for_team: form.is_open_for_team,
       });
       setEditing(false); loadProfile();
-    } catch {}
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Yadda saxlanmadı");
+    }
   };
 
   const getCompletionPercent = () => {
@@ -367,6 +386,15 @@ export default function Profile() {
                     <FileText size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />
                     {cvParsing ? "Oxunur..." : "CV yüklə"}
                   </button>
+                  <button
+                    onClick={handleShareCV}
+                    style={{ ...S.btnGhost, flex: isMobile ? 1 : undefined, color: linkCopied ? "#22c55e" : undefined, borderColor: linkCopied ? "#22c55e" : undefined }}
+                  >
+                    {linkCopied
+                      ? <><Check size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />Kopyalandı!</>
+                      : <><Share2 size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />CV paylaş</>
+                    }
+                  </button>
                   <button onClick={() => navigate("/messages")} style={{ ...S.btnGhost, flex: isMobile ? 1 : undefined }}>
                     <Mail size={13} style={{ verticalAlign: "middle", marginRight: 4 }} />Mesajlar
                   </button>
@@ -444,9 +472,22 @@ export default function Profile() {
                   <input type="text" value={form.full_name || ""} onChange={e => setForm({ ...form, full_name: e.target.value })} style={S.input} />
                 </div>
                 <div>
+                  <label style={S.label}>Username <span style={{ color: "#999", fontWeight: 400 }}>(hashcampus.site/u/...)</span></label>
+                  <div style={{ display: "flex", alignItems: "center", border: "1px solid #ccc", borderRadius: 2, overflow: "hidden" }}>
+                    <span style={{ padding: "8px 8px 8px 10px", fontSize: 13, color: "#999", background: "#f9f9f9", borderRight: "1px solid #ccc", whiteSpace: "nowrap" }}>u/</span>
+                    <input
+                      type="text"
+                      value={form.username || ""}
+                      onChange={e => setForm({ ...form, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "") })}
+                      placeholder="hamid_dev"
+                      style={{ ...S.input, border: "none", borderRadius: 0, flex: 1 }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginBottom: 14 }}>
                   <label style={S.label}>Başlıq (Headline)</label>
                   <input type="text" value={form.headline || ""} onChange={e => setForm({ ...form, headline: e.target.value })} placeholder="Frontend Dev · 3-cü kurs" style={S.input} />
-                </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12, marginBottom: 14 }}>
