@@ -156,41 +156,47 @@ def delete_user(user_id: int, db: Session = Depends(get_db), admin: User = Depen
     if not user:
         raise HTTPException(status_code=404, detail="İstifadəçi tapılmadı")
 
-    # Əlaqəli datanı sil
-    db.query(Notification).filter(
-        (Notification.user_id == user_id) | (Notification.from_user_id == user_id)
-    ).delete(synchronize_session=False)
-    db.query(Certificate).filter(Certificate.user_id == user_id).delete(synchronize_session=False)
-    db.query(Project).filter(Project.user_id == user_id).delete(synchronize_session=False)
-    db.query(PostReport).filter(PostReport.reporter_id == user_id).delete(synchronize_session=False)
-    db.query(PostDislike).filter(PostDislike.user_id == user_id).delete(synchronize_session=False)
-    db.query(PostLike).filter(PostLike.user_id == user_id).delete(synchronize_session=False)
-    db.query(Comment).filter(Comment.user_id == user_id).delete(synchronize_session=False)
-    db.query(ArticleLike).filter(ArticleLike.user_id == user_id).delete(synchronize_session=False)
-    db.query(ArticleComment).filter(ArticleComment.user_id == user_id).delete(synchronize_session=False)
-    articles = db.query(Article).filter(Article.author_id == user_id).all()
-    for article in articles:
-        db.query(ArticleLike).filter(ArticleLike.article_id == article.id).delete(synchronize_session=False)
-        db.query(ArticleComment).filter(ArticleComment.article_id == article.id).delete(synchronize_session=False)
-    db.query(Article).filter(Article.author_id == user_id).delete(synchronize_session=False)
-    posts = db.query(Post).filter(Post.author_id == user_id).all()
-    for post in posts:
-        db.query(Notification).filter(Notification.post_id == post.id).delete(synchronize_session=False)
-        db.query(PostReport).filter(PostReport.post_id == post.id).delete(synchronize_session=False)
-        db.query(PostDislike).filter(PostDislike.post_id == post.id).delete(synchronize_session=False)
-        db.query(PostLike).filter(PostLike.post_id == post.id).delete(synchronize_session=False)
-        db.query(Comment).filter(Comment.post_id == post.id).delete(synchronize_session=False)
-    db.query(Post).filter(Post.author_id == user_id).delete(synchronize_session=False)
-    db.query(Connection).filter(
-        (Connection.sender_id == user_id) | (Connection.receiver_id == user_id)
-    ).delete(synchronize_session=False)
-    db.query(Message).filter(
-        (Message.sender_id == user_id) | (Message.receiver_id == user_id)
-    ).delete(synchronize_session=False)
-    db.query(Event).filter(Event.created_by == user_id).delete(synchronize_session=False)
+    try:
+        # Əlaqəli datanı düzgün sırada sil (FK constraint-lərə görə)
+        db.query(ActivityLog).filter(ActivityLog.user_id == user_id).delete(synchronize_session=False)
+        db.query(Notification).filter(
+            (Notification.user_id == user_id) | (Notification.from_user_id == user_id)
+        ).delete(synchronize_session=False)
+        db.query(Certificate).filter(Certificate.user_id == user_id).delete(synchronize_session=False)
+        db.query(Project).filter(Project.user_id == user_id).delete(synchronize_session=False)
+        db.query(PostReport).filter(PostReport.reporter_id == user_id).delete(synchronize_session=False)
+        db.query(PostDislike).filter(PostDislike.user_id == user_id).delete(synchronize_session=False)
+        db.query(PostLike).filter(PostLike.user_id == user_id).delete(synchronize_session=False)
+        db.query(Comment).filter(Comment.user_id == user_id).delete(synchronize_session=False)
+        db.query(ArticleLike).filter(ArticleLike.user_id == user_id).delete(synchronize_session=False)
+        db.query(ArticleComment).filter(ArticleComment.user_id == user_id).delete(synchronize_session=False)
+        articles = db.query(Article).filter(Article.author_id == user_id).all()
+        for article in articles:
+            db.query(ArticleLike).filter(ArticleLike.article_id == article.id).delete(synchronize_session=False)
+            db.query(ArticleComment).filter(ArticleComment.article_id == article.id).delete(synchronize_session=False)
+        db.query(Article).filter(Article.author_id == user_id).delete(synchronize_session=False)
+        posts = db.query(Post).filter(Post.author_id == user_id).all()
+        for post in posts:
+            db.query(Notification).filter(Notification.post_id == post.id).delete(synchronize_session=False)
+            db.query(PostReport).filter(PostReport.post_id == post.id).delete(synchronize_session=False)
+            db.query(PostDislike).filter(PostDislike.post_id == post.id).delete(synchronize_session=False)
+            db.query(PostLike).filter(PostLike.post_id == post.id).delete(synchronize_session=False)
+            db.query(Comment).filter(Comment.post_id == post.id).delete(synchronize_session=False)
+        db.query(Post).filter(Post.author_id == user_id).delete(synchronize_session=False)
+        db.query(Connection).filter(
+            (Connection.sender_id == user_id) | (Connection.receiver_id == user_id)
+        ).delete(synchronize_session=False)
+        db.query(Message).filter(
+            (Message.sender_id == user_id) | (Message.receiver_id == user_id)
+        ).delete(synchronize_session=False)
+        db.query(Event).filter(Event.created_by == user_id).delete(synchronize_session=False)
 
-    db.delete(user)
-    db.commit()
+        db.delete(user)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Silmə xətası: {str(e)}")
+
     return {"message": "İstifadəçi silindi"}
 
 
