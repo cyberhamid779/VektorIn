@@ -4,9 +4,9 @@ import api from "../api/client";
 
 export default function Register() {
   const [form, setForm] = useState({
-    email: "", password: "", full_name: "", faculty: "", major: "", course: "",
+    email: "", password: "", full_name: "", university: "", faculty: "", major: "", course: "",
   });
-  const [faculties, setFaculties] = useState({});
+  const [universities, setUniversities] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState("form"); // "form" | "verify"
@@ -16,12 +16,13 @@ export default function Register() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get("/auth/faculties").then((res) => setFaculties(res.data));
+    api.get("/auth/faculties").then((res) => setUniversities(res.data));
   }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "faculty") setForm({ ...form, faculty: value, major: "" });
+    if (name === "university") setForm({ ...form, university: value, faculty: "", major: "" });
+    else if (name === "faculty") setForm({ ...form, faculty: value, major: "" });
     else setForm({ ...form, [name]: value });
   };
 
@@ -86,7 +87,9 @@ export default function Register() {
     } catch {}
   };
 
-  const specializations = form.faculty ? faculties[form.faculty] || [] : [];
+  const uniFaculties = form.university ? universities[form.university] || {} : {};
+  const specializations = form.faculty ? uniFaculties[form.faculty] || [] : [];
+  const emailPlaceholder = form.university === "UNEC" ? "ad.soyad@unec.edu.az" : "ad.soyad@naa.edu.az";
 
   const pageWrap = { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f2f2f2", padding: "0 16px" };
   const card = { background: "#fff", border: "1px solid #d4d4d4", padding: "24px 24px", boxSizing: "border-box" };
@@ -144,22 +147,33 @@ export default function Register() {
         <div style={card}>
           {error && <div style={errBox}>{error}</div>}
           <form onSubmit={handleSubmit}>
-            {[
-              { label: "Ad Soyad", name: "full_name", type: "text", placeholder: "Ad Soyad" },
-              { label: "Email", name: "email", type: "email", placeholder: "ad.soyad@naa.edu.az" },
-              { label: "Şifrə", name: "password", type: "password", placeholder: "Minimum 6 simvol" },
-            ].map(({ label, name, type, placeholder }) => (
-              <div key={name} style={{ marginBottom: 10 }}>
-                <label style={lbl}>{label}</label>
-                <input type={type} name={name} placeholder={placeholder} value={form[name]} onChange={handleChange}
-                  style={inp} onFocus={e => e.target.style.borderColor = "#1a4a8a"} onBlur={e => e.target.style.borderColor = "#ccc"} required />
-              </div>
-            ))}
+            <div style={{ marginBottom: 10 }}>
+              <label style={lbl}>Ad Soyad</label>
+              <input type="text" name="full_name" placeholder="Ad Soyad" value={form.full_name} onChange={handleChange}
+                style={inp} onFocus={e => e.target.style.borderColor = "#1a4a8a"} onBlur={e => e.target.style.borderColor = "#ccc"} required />
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <label style={lbl}>Universitet</label>
+              <select name="university" value={form.university} onChange={handleChange} style={{ ...inp, color: form.university ? "#1a1a1a" : "#999" }} required>
+                <option value="">Universitet seçin</option>
+                {Object.keys(universities).map(u => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <label style={lbl}>Email</label>
+              <input type="email" name="email" placeholder={emailPlaceholder} value={form.email} onChange={handleChange}
+                style={inp} onFocus={e => e.target.style.borderColor = "#1a4a8a"} onBlur={e => e.target.style.borderColor = "#ccc"} required />
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <label style={lbl}>Şifrə</label>
+              <input type="password" name="password" placeholder="Minimum 6 simvol" value={form.password} onChange={handleChange}
+                style={inp} onFocus={e => e.target.style.borderColor = "#1a4a8a"} onBlur={e => e.target.style.borderColor = "#ccc"} required />
+            </div>
             <div style={{ marginBottom: 10 }}>
               <label style={lbl}>Fakultə</label>
-              <select name="faculty" value={form.faculty} onChange={handleChange} style={{ ...inp, color: form.faculty ? "#1a1a1a" : "#999" }} required>
-                <option value="">Fakultə seçin</option>
-                {Object.keys(faculties).map(f => <option key={f} value={f}>{f}</option>)}
+              <select name="faculty" value={form.faculty} onChange={handleChange} style={{ ...inp, color: form.faculty ? "#1a1a1a" : "#999" }} required disabled={!form.university}>
+                <option value="">{form.university ? "Fakultə seçin" : "Əvvəlcə universitet seçin"}</option>
+                {Object.keys(uniFaculties).map(f => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
             <div style={{ marginBottom: 10 }}>
