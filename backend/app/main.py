@@ -34,6 +34,9 @@ def ensure_tables():
         "ALTER TABLE certificates ADD COLUMN IF NOT EXISTS image_url VARCHAR(500)",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(30)",
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username)",
+        # Mark pre-verification users as verified (no pending token = real users)
+        "UPDATE users SET is_verified = TRUE WHERE is_verified IS NULL",
+        "UPDATE users SET is_verified = TRUE WHERE is_verified = FALSE AND verification_token IS NULL",
     ]
     for stmt in _missing_ddl:
         try:
