@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from pydantic import BaseModel
 from app.services.database import get_db
-from app.services.auth import get_current_user
+from app.services.auth import get_current_user, hash_password
 from app.models.user import User
 from app.models.post import Post, PostLike, PostDislike, Comment, PostReport
 from app.models.connection import Connection
@@ -366,6 +366,47 @@ def get_activity_logs(
         )
         for log in logs
     ]
+
+
+class AdminCreateUserRequest(BaseModel):
+    email: str
+    password: str
+    full_name: str
+    faculty: str
+    major: str
+    course: int
+
+
+@router.post("/users/create", response_model=AdminUserResponse)
+def admin_create_user(data: AdminCreateUserRequest, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    existing = db.query(User).filter(User.email == data.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Bu email artıq mövcuddur")
+    user = User(
+        email=data.email,
+        password_hash=hash_password(data.password),
+        full_name=data.full_name,
+        faculty=data.faculty,
+        major=data.major,
+        course=data.course,
+        is_verified=True,
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return AdminUserResponse(
+        id=user.id,
+        email=user.email,
+        full_name=user.full_name,
+        major=user.major,
+        course=user.course,
+        is_active=user.is_active,
+        is_admin=user.is_admin,
+        is_open_for_team=user.is_open_for_team,
+        is_verified=user.is_verified,
+        created_at=user.created_at.isoformat() if user.created_at else None,
+    )
 
 
 @router.delete("/logs/purge-sensitive")

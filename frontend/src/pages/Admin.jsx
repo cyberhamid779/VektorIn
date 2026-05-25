@@ -38,6 +38,9 @@ export default function Admin() {
   const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({ full_name: "", email: "", password: "", faculty: "", major: "", course: "" });
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     loadStats();
@@ -153,6 +156,22 @@ export default function Admin() {
     } catch (err) {
       toast.error(err.response?.data?.detail || "Xəta baş verdi");
     }
+  };
+
+  const createUser = async (e) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      await api.post("/admin/users/create", { ...createForm, course: parseInt(createForm.course) });
+      toast.success("İstifadəçi yaradıldı!");
+      setShowCreateModal(false);
+      setCreateForm({ full_name: "", email: "", password: "", faculty: "", major: "", course: "" });
+      loadUsers();
+      loadStats();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Xəta baş verdi");
+    }
+    setCreating(false);
   };
 
   const togglePin = async (postId) => {
@@ -439,7 +458,13 @@ export default function Admin() {
         {tab === "users" && (
           <div>
             {/* Search + meta */}
-            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: C.primary, color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}
+              >
+                <UserPlus size={14} /> İstifadəçi yarat
+              </button>
               <form
                 onSubmit={(e) => { e.preventDefault(); loadUsers(); }}
                 style={{ flex: 1, minWidth: 200, position: "relative" }}
@@ -1048,6 +1073,68 @@ export default function Admin() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <div onClick={() => !creating && setShowCreateModal(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 16px" }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ background: dark ? "#1f2937" : "#fff", border: `1px solid ${C.border}`, width: "100%", maxWidth: 420, padding: "24px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: C.text, display: "flex", alignItems: "center", gap: 8 }}>
+                <UserPlus size={16} color={C.primary} /> Yeni İstifadəçi
+              </h3>
+              <button onClick={() => setShowCreateModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: C.faint, fontSize: 18, lineHeight: 1 }}>×</button>
+            </div>
+            <form onSubmit={createUser} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {[
+                { label: "Ad Soyad", key: "full_name", type: "text", placeholder: "Ad Soyad" },
+                { label: "Email", key: "email", type: "email", placeholder: "ad.soyad@naa.edu.az" },
+                { label: "Şifrə", key: "password", type: "password", placeholder: "Minimum 6 simvol" },
+                { label: "Fakultə", key: "faculty", type: "text", placeholder: "Məs: Aerokosmik fakültə" },
+                { label: "İxtisas", key: "major", type: "text", placeholder: "Məs: Kompüter mühəndisliyi" },
+              ].map(({ label, key, type, placeholder }) => (
+                <div key={key}>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 4 }}>{label}</label>
+                  <input
+                    type={type}
+                    placeholder={placeholder}
+                    value={createForm[key]}
+                    onChange={e => setCreateForm({ ...createForm, [key]: e.target.value })}
+                    style={{ ...inputStyle, borderRadius: 0 }}
+                    required
+                  />
+                </div>
+              ))}
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: C.muted, marginBottom: 4 }}>Kurs</label>
+                <select
+                  value={createForm.course}
+                  onChange={e => setCreateForm({ ...createForm, course: e.target.value })}
+                  style={{ ...inputStyle, borderRadius: 0 }}
+                  required
+                >
+                  <option value="">Kurs seçin</option>
+                  <option value="1">1-ci kurs</option>
+                  <option value="2">2-ci kurs</option>
+                  <option value="3">3-cü kurs</option>
+                  <option value="4">4-cü kurs</option>
+                </select>
+              </div>
+              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
+                <button type="button" onClick={() => setShowCreateModal(false)} disabled={creating}
+                  style={{ padding: "8px 16px", background: dark ? "#374151" : "#f3f4f6", color: C.muted, border: `1px solid ${C.border}`, fontSize: 13, cursor: "pointer" }}>
+                  Ləğv et
+                </button>
+                <button type="submit" disabled={creating}
+                  style={{ padding: "8px 18px", background: C.primary, color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: creating ? "not-allowed" : "pointer", opacity: creating ? 0.6 : 1 }}>
+                  {creating ? "Yaradılır..." : "Hesab yarat"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
