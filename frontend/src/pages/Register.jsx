@@ -135,8 +135,8 @@ export default function Register() {
             </p>
             <p style={{ textAlign: "center", marginTop: 8, fontSize: 11, color: "#bbb" }}>
               Kodu ala bilmirsənsə —{" "}
-              <a href="tel:+994504319040" style={{ color: "#1a4a8a", fontWeight: 600, textDecoration: "none", fontSize: 11 }}>
-                +994 50 431 90 40
+              <a href="https://wa.me/994504319040" target="_blank" rel="noopener noreferrer" style={{ color: "#25d366", fontWeight: 600, textDecoration: "none", fontSize: 11 }}>
+                WhatsApp: +994 50 431 90 40
               </a>
             </p>
           </div>
