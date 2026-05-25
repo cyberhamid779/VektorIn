@@ -133,6 +133,12 @@ export default function Register() {
                 Yenidən göndər
               </button>
             </p>
+            <p style={{ textAlign: "center", marginTop: 8, fontSize: 11, color: "#bbb" }}>
+              Kodu ala bilmirsənsə —{" "}
+              <a href="tel:+994504319040" style={{ color: "#1a4a8a", fontWeight: 600, textDecoration: "none", fontSize: 11 }}>
+                +994 50 431 90 40
+              </a>
+            </p>
           </div>
         </div>
       </div>
