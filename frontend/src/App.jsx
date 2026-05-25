@@ -45,10 +45,18 @@ function useBackgroundTheme() {
 }
 
 function useDarkMode() {
-  const [dark, setDark] = useState(localStorage.getItem("dark_mode") === "true");
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem("dark_mode") === "true";
+    document.documentElement.classList.toggle("dark", saved);
+    return saved;
+  });
 
   useEffect(() => {
-    const handler = () => setDark(localStorage.getItem("dark_mode") === "true");
+    const handler = () => {
+      const isDark = localStorage.getItem("dark_mode") === "true";
+      document.documentElement.classList.toggle("dark", isDark);
+      setDark(isDark);
+    };
     window.addEventListener("dark_mode_change", handler);
     return () => window.removeEventListener("dark_mode_change", handler);
   }, []);
@@ -65,7 +73,7 @@ function PrivateRoute({ children }) {
     <div className={dark ? "dark" : ""}>
       <Navbar />
       <div
-        className={`min-h-[calc(100vh-64px)] ${bg.style.backgroundColor || bg.style.backgroundImage ? "" : "bg-gray-50"}`}
+        className={`min-h-[calc(100vh-64px)] ${bg.style.backgroundColor || bg.style.backgroundImage ? "" : "bg-gray-50 dark:bg-gray-900"}`}
         style={bg.style}
       >
         {children}
@@ -97,7 +105,7 @@ function AdminRoute({ children }) {
     <div className={dark ? "dark" : ""}>
       <Navbar />
       <div
-        className={`min-h-[calc(100vh-64px)] ${bg.style.backgroundColor || bg.style.backgroundImage ? "" : "bg-gray-50"}`}
+        className={`min-h-[calc(100vh-64px)] ${bg.style.backgroundColor || bg.style.backgroundImage ? "" : "bg-gray-50 dark:bg-gray-900"}`}
         style={bg.style}
       >
         {children}

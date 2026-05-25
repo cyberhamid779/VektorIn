@@ -3,6 +3,7 @@ import { Bell, LogOut, Menu, X, Heart, MessageCircle, UserPlus, UserCheck } from
 import { useState, useEffect, useRef } from "react";
 import api from "../api/client";
 import { useLang } from "../hooks/useLang";
+import { useDarkMode } from "../hooks/useTheme";
 
 function timeAgo(dateStr, t) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
@@ -69,6 +70,7 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifs, setShowNotifs] = useState(false);
   const { t } = useLang();
+  const dark = useDarkMode();
 
   useEffect(() => {
     api.get("/users/me").then(res => setCurrentUser(res.data)).catch(() => {});
@@ -103,15 +105,15 @@ export default function Navbar() {
       lineHeight: "46px",
       fontSize: 13,
       fontWeight: isActive ? 700 : 400,
-      color: admin ? (isActive ? "#b91c1c" : "#9a3232") : (isActive ? "#1a4a8a" : "#444"),
-      borderBottom: isActive ? `2px solid ${admin ? "#b91c1c" : "#1a4a8a"}` : "2px solid transparent",
+      color: admin ? (isActive ? "#f87171" : "#fca5a5") : (isActive ? (dark ? "#93c5fd" : "#1a4a8a") : (dark ? "#d1d5db" : "#444")),
+      borderBottom: isActive ? `2px solid ${admin ? "#f87171" : (dark ? "#93c5fd" : "#1a4a8a")}` : "2px solid transparent",
       textDecoration: "none",
       whiteSpace: "nowrap",
     };
   };
 
   return (
-    <nav style={{ background: "#fff", borderBottom: "1px solid #c8c8c8", position: "sticky", top: 0, zIndex: 100 }}>
+    <nav style={{ background: dark ? "#1f2937" : "#fff", borderBottom: dark ? "1px solid #374151" : "1px solid #c8c8c8", position: "sticky", top: 0, zIndex: 100 }}>
       <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 16px", display: "flex", alignItems: "center", height: 48 }}>
         {/* Logo */}
         <Link to="/feed" style={{ textDecoration: "none", marginRight: 20, flexShrink: 0, display: "flex", alignItems: "center" }}>
@@ -172,7 +174,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden" style={{ background: "#fff", borderTop: "1px solid #e0e0e0", padding: "8px 0" }}>
+        <div className="md:hidden" style={{ background: dark ? "#1f2937" : "#fff", borderTop: dark ? "1px solid #374151" : "1px solid #e0e0e0", padding: "8px 0" }}>
           {links.map(({ path, label, admin }) => {
             const isActive = location.pathname === path;
             return (
@@ -180,7 +182,7 @@ export default function Navbar() {
                 key={path}
                 to={path}
                 onClick={() => setMobileOpen(false)}
-                style={{ display: "block", padding: "10px 20px", fontSize: 13, color: admin ? "#b91c1c" : (isActive ? "#1a4a8a" : "#444"), fontWeight: isActive ? 700 : 400, background: isActive ? "#f0f5ff" : "transparent", textDecoration: "none", borderLeft: isActive ? `3px solid ${admin ? "#b91c1c" : "#1a4a8a"}` : "3px solid transparent" }}
+                style={{ display: "block", padding: "10px 20px", fontSize: 13, color: admin ? "#f87171" : (isActive ? (dark ? "#93c5fd" : "#1a4a8a") : (dark ? "#d1d5db" : "#444")), fontWeight: isActive ? 700 : 400, background: isActive ? (dark ? "#1e3a5f" : "#f0f5ff") : "transparent", textDecoration: "none", borderLeft: isActive ? `3px solid ${admin ? "#f87171" : (dark ? "#93c5fd" : "#1a4a8a")}` : "3px solid transparent" }}
               >
                 {label}
               </Link>
