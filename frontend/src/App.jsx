@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { ToastContainer } from "./components/Toast";
+import FeedbackButton from "./components/FeedbackButton";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -77,6 +78,7 @@ function PrivateRoute({ children }) {
         style={bg.style}
       >
         {children}
+        <FeedbackButton />
       </div>
     </div>
   );
