@@ -20,8 +20,19 @@ def create_notification(db: Session, user_id: int, from_user_id: int, type: str,
 
     try:
         from app.services.push import send_push_to_user
+        from datetime import datetime, timezone, timedelta
         tmpl = PUSH_MESSAGES.get(type)
         if tmpl:
+            if type == "message":
+                cooldown = datetime.now(timezone.utc) - timedelta(minutes=2)
+                recent = db.query(Notification).filter(
+                    Notification.user_id == user_id,
+                    Notification.from_user_id == from_user_id,
+                    Notification.type == "message",
+                    Notification.created_at >= cooldown,
+                ).count()
+                if recent > 1:
+                    return
             sender = db.query(User.full_name).filter(User.id == from_user_id).scalar() or "Biri"
             title, body, url = tmpl
             body = body.format(name=sender)
