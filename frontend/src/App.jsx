@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import { ToastContainer } from "./components/Toast";
 import FeedbackButton from "./components/FeedbackButton";
+import InstallPrompt from "./components/InstallPrompt";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -126,6 +127,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ToastContainer />
+      <InstallPrompt />
       <Suspense fallback={<LazyFallback />}>
         <Routes>
           <Route path="/" element={<Landing />} />

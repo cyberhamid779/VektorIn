@@ -1,0 +1,27 @@
+{
+  "name": "Hash — Developer İcması",
+  "short_name": "Hash",
+  "description": "Azərbaycanlı developerlər üçün peşəkar icma platforması",
+  "start_url": "/feed",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1a4a8a",
+  "lang": "az",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["social", "education", "productivity"]
+}
