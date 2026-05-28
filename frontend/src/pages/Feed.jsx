@@ -86,6 +86,8 @@ export default function Feed() {
   const [suggestedPending, setSuggestedPending] = useState(new Set());
   const [contestBoard, setContestBoard] = useState([]);
   const [contestInfo, setContestInfo] = useState(null);
+  const [contestRemaining, setContestRemaining] = useState(0);
+  const [showAllSuggested, setShowAllSuggested] = useState(false);
   const { t } = useLang();
   const isMobile = useIsMobile();
   const dark = useDarkMode();
@@ -96,9 +98,15 @@ export default function Feed() {
     loadUser();
     loadConnections();
     api.get("/connections/suggested").then(r => setSuggested(r.data)).catch(() => {});
-    api.get("/contest/info").then(r => { if (r.data.active) setContestInfo(r.data); }).catch(() => {});
-    api.get("/contest/leaderboard").then(r => setContestBoard(r.data.slice(0, 3))).catch(() => {});
+    api.get("/contest/info").then(r => { if (r.data.active) { setContestInfo(r.data); setContestRemaining(r.data.remaining_seconds); } }).catch(() => {});
+    api.get("/contest/leaderboard").then(r => setContestBoard(r.data.slice(0, 5))).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (contestRemaining <= 0) return;
+    const t = setInterval(() => setContestRemaining(r => Math.max(0, r - 1)), 1000);
+    return () => clearInterval(t);
+  }, [contestRemaining > 0]);
 
   const loadConnections = async () => {
     try {
@@ -507,87 +515,96 @@ export default function Feed() {
     </div>
 
     {/* Sidebar */}
-    {(suggested.length > 0 || contestInfo) && (
-      <div style={{ width: 240, flexShrink: 0, position: "sticky", top: 68, display: isMobile ? "none" : "flex", flexDirection: "column", gap: 12 }}>
+    {(suggested.length > 0 || contestInfo) && !isMobile && (
+      <div style={{ width: 240, flexShrink: 0, position: "sticky", top: 68, display: "flex", flexDirection: "column", gap: 10, maxHeight: "calc(100vh - 80px)", overflowY: "auto" }}>
 
-    {/* Contest widget */}
-    {contestInfo && (
-      <div style={{ background: C.sidebarBg, border: C.border, padding: "14px 16px" }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: "#1a4a8a", textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 10px", display: "flex", alignItems: "center", gap: 5 }}>
-          🏆 Müsabiqə — {contestInfo.prize}
-        </p>
-        {contestBoard.length === 0 ? (
-          <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Hələ iştirakçı yoxdur. İlk sən ol!</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {contestBoard.map(entry => (
-              <div key={entry.post_id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 14, flexShrink: 0 }}>
-                  {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : "🥉"}
-                </span>
-                <div style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: "#1a4a8a", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 700 }}>
-                  {entry.author.profile_picture
-                    ? <img src={entry.author.profile_picture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : entry.author.full_name?.charAt(0)}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.author.full_name}</div>
-                </div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#e11d48", display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
-                  <Heart size={11} fill="#e11d48" /> {entry.like_count}
-                </div>
-              </div>
-            ))}
+        {/* Tanıya bilərsən */}
+        {suggested.length > 0 && (
+          <div style={{ background: C.sidebarBg, border: C.border, padding: "12px 14px" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 10px" }}>Tanıya bilərsən</p>
+            <div>
+              {(showAllSuggested ? suggested : suggested.slice(0, 2)).map(s => {
+                const sent = suggestedPending.has(s.id);
+                return (
+                  <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                    <Link to={`/profile/${s.id}`} style={{ width: 32, height: 32, background: "#1a4a8a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, textDecoration: "none", flexShrink: 0, overflow: "hidden", borderRadius: "50%" }}>
+                      {s.profile_picture ? <img src={s.profile_picture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : s.full_name?.charAt(0)}
+                    </Link>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Link to={`/profile/${s.id}`} style={{ fontSize: 12, fontWeight: 600, color: C.text, textDecoration: "none", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.full_name}</Link>
+                      <p style={{ fontSize: 11, color: C.muted, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.mutual_count > 0 ? `${s.mutual_count} ümumi` : (s.major || "Hash")}</p>
+                    </div>
+                    <button onClick={() => !sent && handleSuggestedConnect(s.id)} disabled={sent}
+                      style={{ flexShrink: 0, background: sent ? (dark ? "#374151" : "#f0f0f0") : (dark ? "#1e3a5f" : "#f0f5ff"), color: sent ? C.faint : C.primary, border: `1px solid ${sent ? (dark ? "#4b5563" : "#ddd") : (dark ? "#2563eb" : "#c8d8f0")}`, padding: "3px 7px", fontSize: 11, cursor: sent ? "default" : "pointer", display: "flex", alignItems: "center", gap: 3 }}>
+                      {sent ? <UserCheck size={11} /> : <UserPlus size={11} />}
+                      {sent ? "Göndərildi" : "Əlaqə"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            {suggested.length > 2 && (
+              <button onClick={() => setShowAllSuggested(v => !v)}
+                style={{ width: "100%", marginTop: 4, background: "none", border: "none", color: C.primary, fontSize: 12, fontWeight: 600, cursor: "pointer", textAlign: "left", padding: 0 }}>
+                {showAllSuggested ? "Azalt ▲" : `Ətraflı (${suggested.length - 2} daha) ▼`}
+              </button>
+            )}
           </div>
         )}
-        <p style={{ fontSize: 11, color: C.muted, margin: "10px 0 0" }}>
-          #{contestInfo.tags?.[0]?.replace("#","")} etiketini əlavə et
-        </p>
-      </div>
-    )}
 
-    {/* Suggested Profiles sidebar */}
-    {suggested.length > 0 && (
-      <div>
-        <div style={{ background: C.sidebarBg, border: C.border, padding: "14px 16px" }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: "0.05em", margin: "0 0 12px" }}>
-            Tanıya bilərsən
-          </p>
-          <div>
-            {suggested.map(s => {
-              const sent = suggestedPending.has(s.id);
-              return (
-                <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
-                  <Link to={`/profile/${s.id}`} style={{ width: 36, height: 36, background: "#1a4a8a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, textDecoration: "none", flexShrink: 0, overflow: "hidden" }}>
-                    {s.profile_picture
-                      ? <img src={s.profile_picture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      : s.full_name?.charAt(0)
-                    }
-                  </Link>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Link to={`/profile/${s.id}`} style={{ fontSize: 12, fontWeight: 600, color: C.text, textDecoration: "none", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {s.full_name}
-                    </Link>
-                    {s.mutual_count > 0
-                      ? <p style={{ fontSize: 11, color: "#888", margin: 0 }}>{s.mutual_count} ümumi bağlantı</p>
-                      : <p style={{ fontSize: 11, color: "#aaa", margin: 0 }}>{s.major || "Hash istifadəçisi"}</p>
-                    }
+        {/* Contest widget */}
+        {contestInfo && (() => {
+          const pad = n => String(n).padStart(2, "0");
+          const d = Math.floor(contestRemaining / 86400);
+          const h = Math.floor((contestRemaining % 86400) / 3600);
+          const m = Math.floor((contestRemaining % 3600) / 60);
+          const s = contestRemaining % 60;
+          return (
+            <div style={{ background: C.sidebarBg, border: C.border, padding: "12px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: "#1a4a8a", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>🏆 {contestInfo.prize} Müsabiqə</p>
+              </div>
+
+              {/* Countdown */}
+              <div style={{ display: "flex", gap: 4, marginBottom: 10 }}>
+                {[{ v: d, l: "gün" }, { v: h, l: "saat" }, { v: m, l: "dəq" }, { v: s, l: "san" }].map(({ v, l }) => (
+                  <div key={l} style={{ flex: 1, textAlign: "center", background: dark ? "#0f172a" : "#f0f5ff", borderRadius: 6, padding: "4px 2px" }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#1a4a8a", fontVariantNumeric: "tabular-nums" }}>{pad(v)}</div>
+                    <div style={{ fontSize: 9, color: C.muted }}>{l}</div>
                   </div>
-                  <button
-                    onClick={() => !sent && handleSuggestedConnect(s.id)}
-                    disabled={sent}
-                    style={{ flexShrink: 0, background: sent ? (dark ? "#374151" : "#f0f0f0") : (dark ? "#1e3a5f" : "#f0f5ff"), color: sent ? C.faint : C.primary, border: `1px solid ${sent ? (dark ? "#4b5563" : "#ddd") : (dark ? "#2563eb" : "#c8d8f0")}`, padding: "3px 8px", fontSize: 11, cursor: sent ? "default" : "pointer", display: "flex", alignItems: "center", gap: 3 }}
-                  >
-                    {sent ? <UserCheck size={12} /> : <UserPlus size={12} />}
-                    {sent ? "Göndərildi" : "Əlaqə"}
-                  </button>
+                ))}
+              </div>
+
+              {/* Leaderboard */}
+              {contestBoard.length === 0 ? (
+                <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Hələ iştirakçı yoxdur. İlk sən ol! 📸</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {contestBoard.map(entry => (
+                    <div key={entry.post_id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ fontSize: 13, flexShrink: 0, width: 18, textAlign: "center" }}>
+                        {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `${entry.rank}.`}
+                      </span>
+                      {entry.image_url && (
+                        <img src={entry.image_url} alt="" style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.author.full_name}</div>
+                        <div style={{ fontSize: 11, color: "#e11d48", display: "flex", alignItems: "center", gap: 2, fontWeight: 700 }}>
+                          <Heart size={10} fill="#e11d48" /> {entry.like_count}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    )}
+              )}
+              <p style={{ fontSize: 10, color: C.muted, margin: "8px 0 0" }}>
+                #AviasiyaAkademiyası #HashCampus
+              </p>
+            </div>
+          );
+        })()}
+
       </div>
     )}
     </div>
