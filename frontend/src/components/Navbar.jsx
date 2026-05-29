@@ -130,7 +130,7 @@ export default function Navbar() {
         {/* Right side */}
         <div className="hidden md:flex" style={{ alignItems: "center", gap: 4, marginLeft: "auto" }}>
           <a
-            href="https://www.instagram.com/hashcampus.site"
+            href="https://www.instagram.com/hashcampus_official/"
             target="_blank"
             rel="noopener noreferrer"
             title="Instagram"
@@ -167,7 +167,7 @@ export default function Navbar() {
         {/* Mobile right */}
         <div className="md:hidden" style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
           <a
-            href="https://www.instagram.com/hashcampus.site"
+            href="https://www.instagram.com/hashcampus_official/"
             target="_blank"
             rel="noopener noreferrer"
             style={{ display: "flex", alignItems: "center", padding: "0 6px", lineHeight: "46px", color: dark ? "#d1d5db" : "#666" }}
