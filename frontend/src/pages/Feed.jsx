@@ -278,50 +278,70 @@ export default function Feed() {
         const h = Math.floor((contestRemaining % 86400) / 3600);
         const m = Math.floor((contestRemaining % 3600) / 60);
         const s = contestRemaining % 60;
+        const divider = <div style={{ height: 1, background: C.divider, margin: "10px 0" }} />;
         return (
-          <div style={{ background: C.sidebarBg, border: C.border, borderRadius: 8, padding: "10px 12px", marginBottom: 12 }}>
-            {/* Title + countdown */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#1a4a8a" }}>🏆 {contestInfo.prize} Müsabiqə</span>
-              <div style={{ display: "flex", gap: 4 }}>
-                {[{ v: d, l: "gün" }, { v: h, l: "saat" }, { v: m, l: "dəq" }].map(({ v, l }) => (
-                  <div key={l} style={{ textAlign: "center", background: dark ? "#0f172a" : "#f0f5ff", borderRadius: 5, padding: "3px 6px", minWidth: 32 }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: "#1a4a8a", fontVariantNumeric: "tabular-nums" }}>{pad(v)}</div>
-                    <div style={{ fontSize: 9, color: C.muted }}>{l}</div>
-                  </div>
-                ))}
+          <div style={{ background: C.sidebarBg, border: C.border, borderRadius: 6, overflow: "hidden", marginBottom: 12 }}>
+            {/* Header */}
+            <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.divider}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: C.muted }}>Foto Müsabiqəsi</p>
+                <p style={{ margin: "2px 0 0", fontSize: 14, fontWeight: 700, color: C.text }}>{contestInfo.title || "Aviasiya Akademiyası"}</p>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#1a4a8a", lineHeight: 1 }}>{contestInfo.prize}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 10, color: C.muted }}>mükafat</p>
               </div>
             </div>
+
+            {/* Countdown */}
+            <div style={{ padding: "10px 14px", borderBottom: `1px solid ${C.divider}`, display: "flex", gap: 6 }}>
+              {[{ v: d, l: "Gün" }, { v: h, l: "Saat" }, { v: m, l: "Dəq" }, { v: s, l: "San" }].map(({ v, l }, i) => (
+                <div key={l} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                  {i > 0 && <span style={{ position: "absolute", fontSize: 14, fontWeight: 700, color: C.muted, marginTop: 1 }} />}
+                  <span style={{ fontSize: 16, fontWeight: 800, color: C.text, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em" }}>{pad(v)}</span>
+                  <span style={{ fontSize: 9, color: C.muted, textTransform: "uppercase", letterSpacing: "0.05em" }}>{l}</span>
+                </div>
+              ))}
+            </div>
+
             {/* Leaderboard */}
-            {contestBoard.length === 0 ? (
-              <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Hələ iştirakçı yoxdur. İlk sən ol! 📸</p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {contestBoard.map(entry => (
-                  <div key={entry.post_id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <span style={{ fontSize: 13, flexShrink: 0, width: 18, textAlign: "center" }}>
-                      {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `${entry.rank}.`}
-                    </span>
-                    {entry.image_url && (
-                      <img src={entry.image_url} alt="" style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 6, flexShrink: 0, border: "1px solid rgba(0,0,0,0.08)" }} />
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.author.full_name}</div>
-                      <div style={{ fontSize: 11, color: C.muted, display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
-                        <span style={{ color: "#e11d48", display: "flex", alignItems: "center", gap: 2 }}><Heart size={10} fill="#e11d48" /> {entry.like_count}</span>
-                        <span>💬 {entry.comment_count ?? 0}</span>
-                        <span style={{ color: "#7c3aed", fontWeight: 700 }}>= {entry.score ?? entry.like_count}</span>
+            <div style={{ padding: "10px 14px" }}>
+              {contestBoard.length === 0 ? (
+                <p style={{ fontSize: 12, color: C.muted, margin: 0, textAlign: "center", padding: "4px 0" }}>Hələ iştirakçı yoxdur. İlk sən ol.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {contestBoard.map((entry, idx) => (
+                    <div key={entry.post_id}>
+                      {idx > 0 && <div style={{ height: 1, background: C.divider, marginBottom: 8 }} />}
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, width: 16, flexShrink: 0, textAlign: "center" }}>
+                          {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `${entry.rank}`}
+                        </span>
+                        {entry.image_url && (
+                          <img src={entry.image_url} alt="" style={{ width: 42, height: 42, objectFit: "cover", borderRadius: 4, flexShrink: 0 }} />
+                        )}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.author.full_name}</div>
+                          <div style={{ fontSize: 11, color: C.muted, display: "flex", alignItems: "center", gap: 8, marginTop: 2 }}>
+                            <span style={{ display: "flex", alignItems: "center", gap: 3 }}><Heart size={10} fill="#e11d48" color="#e11d48" /> {entry.like_count}</span>
+                            <span style={{ display: "flex", alignItems: "center", gap: 3 }}>
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                              {entry.comment_count ?? 0}
+                            </span>
+                            <span style={{ fontWeight: 700, color: C.primary, marginLeft: "auto" }}>{entry.score ?? entry.like_count} xal</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {contestInfo?.tags && (
-              <p style={{ fontSize: 10, color: C.muted, margin: "8px 0 0" }}>
-                {contestInfo.tags.map(t => t.startsWith("#") ? t : `#${t}`).join(" ")}
-              </p>
-            )}
+                  ))}
+                </div>
+              )}
+              {contestInfo?.tags && (
+                <p style={{ fontSize: 10, color: C.faint, margin: "10px 0 0", letterSpacing: "0.03em" }}>
+                  {contestInfo.tags.map(t => t.startsWith("#") ? t : `#${t}`).join("  ")}
+                </p>
+              )}
+            </div>
           </div>
         );
       })()}
