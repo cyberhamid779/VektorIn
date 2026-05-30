@@ -18,6 +18,30 @@ import re
 
 USERNAME_RE = re.compile(r'^[a-z0-9_]{3,30}$')
 
+class PublicUserResponse(BaseModel):
+    id: int
+    username: str | None = None
+    full_name: str
+    headline: str | None
+    faculty: str | None
+    major: str | None
+    course: int | None
+    bio: str | None
+    profile_picture: str | None
+    banner_image: str | None = None
+    github_url: str | None
+    linkedin_url: str | None
+    website_url: str | None
+    skills: str | None
+    certificates: str | None
+    is_open_for_team: bool
+    is_admin: bool
+    last_seen: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
+
 class UserResponse(BaseModel):
     id: int
     email: str
@@ -29,6 +53,7 @@ class UserResponse(BaseModel):
     course: int | None
     bio: str | None
     profile_picture: str | None
+    banner_image: str | None = None
     phone: str | None
     github_url: str | None
     linkedin_url: str | None
@@ -51,6 +76,7 @@ class UpdateProfileRequest(BaseModel):
     course: int | None = None
     bio: str | None = None
     profile_picture: str | None = None
+    banner_image: str | None = None
     phone: str | None = None
     github_url: str | None = None
     linkedin_url: str | None = None
@@ -117,7 +143,7 @@ def change_password(request: Request, data: ChangePasswordRequest, db: Session =
     return {"message": "Şifrə uğurla dəyişdirildi"}
 
 
-@router.get("/search", response_model=list[UserResponse])
+@router.get("/search", response_model=list[PublicUserResponse])
 def search_users(
     q: str = "",
     skill: str = "",
@@ -169,7 +195,7 @@ async def parse_cv_endpoint(
         raise HTTPException(status_code=500, detail=f"CV parse xətası: {str(e)}")
 
 
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get("/{user_id}", response_model=PublicUserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
