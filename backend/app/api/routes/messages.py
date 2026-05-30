@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, text
 from pydantic import BaseModel
 from jose import jwt, JWTError
 
@@ -33,38 +33,47 @@ def get_unread_count(db: Session = Depends(get_db), current_user: User = Depends
 
 @router.get("")
 def get_conversations(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    all_msgs = (
-        db.query(Message)
-        .filter(or_(Message.sender_id == current_user.id, Message.receiver_id == current_user.id))
-        .order_by(Message.created_at.desc())
-        .all()
-    )
+    rows = db.execute(text("""
+        SELECT
+            lm.partner_id,
+            lm.last_content,
+            lm.last_created_at,
+            COALESCE(u.full_name, ''),
+            u.profile_picture,
+            u.last_seen,
+            COALESCE(unread.cnt, 0) AS unread_count
+        FROM (
+            SELECT DISTINCT ON (partner_id)
+                CASE WHEN sender_id = :me THEN receiver_id ELSE sender_id END AS partner_id,
+                content AS last_content,
+                created_at AS last_created_at
+            FROM messages
+            WHERE sender_id = :me OR receiver_id = :me
+            ORDER BY partner_id, created_at DESC
+        ) lm
+        JOIN users u ON u.id = lm.partner_id
+        LEFT JOIN (
+            SELECT sender_id AS partner_id, COUNT(*) AS cnt
+            FROM messages
+            WHERE receiver_id = :me AND is_read = FALSE
+            GROUP BY sender_id
+        ) unread ON unread.partner_id = lm.partner_id
+        ORDER BY lm.last_created_at DESC
+    """), {"me": current_user.id}).fetchall()
 
-    seen = set()
-    convs = []
-    for m in all_msgs:
-        partner_id = m.receiver_id if m.sender_id == current_user.id else m.sender_id
-        if partner_id in seen:
-            continue
-        seen.add(partner_id)
-        partner = db.query(User).filter(User.id == partner_id).first()
-        if not partner:
-            continue
-        unread = db.query(Message).filter(
-            Message.sender_id == partner_id,
-            Message.receiver_id == current_user.id,
-            Message.is_read == False,
-        ).count()
-        convs.append({
-            "user_id": partner_id,
-            "full_name": partner.full_name,
-            "profile_picture": partner.profile_picture,
-            "last_seen": str(partner.last_seen) if partner.last_seen else None,
-            "last_message": decrypt_msg(m.content),
-            "unread_count": unread,
-            "is_online": manager.is_online(partner_id),
-        })
-    return convs
+    return [
+        {
+            "user_id": r[0],
+            "last_message": decrypt_msg(r[1]),
+            "last_created_at": str(r[2]),
+            "full_name": r[3],
+            "profile_picture": r[4],
+            "last_seen": str(r[5]) if r[5] else None,
+            "unread_count": r[6],
+            "is_online": manager.is_online(r[0]),
+        }
+        for r in rows
+    ]
 
 
 @router.get("/{user_id}")

@@ -66,7 +66,7 @@ export default function Messages() {
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState("");
-  const [sending, setSending] = useState(false);
+  const prevLastMessageRef = useRef({});
   const [wsReady, setWsReady] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -194,28 +194,48 @@ export default function Messages() {
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMsg.trim() || !activeChat || sending) return;
     const content = newMsg.trim();
+    if (!content || !activeChat) return;
+
+    const tempId = `tmp_${Date.now()}`;
     setNewMsg("");
-    setSending(true);
+
+    // Optimistic: mesajı dərhal göstər
+    setMessages(prev => [...prev, {
+      id: tempId,
+      content,
+      is_mine: true,
+      is_read: false,
+      created_at: new Date().toISOString(),
+    }]);
+    setChats(prev => {
+      const exists = prev.find(c => c.user_id === activeChat.userId);
+      if (exists) {
+        prevLastMessageRef.current[activeChat.userId] = exists.last_message;
+        return prev.map(c => c.user_id === activeChat.userId ? { ...c, last_message: content } : c);
+      }
+      return [{ user_id: activeChat.userId, full_name: activeChat.fullName, profile_picture: activeChat.picture, last_message: content, unread_count: 0 }, ...prev];
+    });
+
     try {
       const res = await api.post(`/messages/${activeChat.userId}`, { content });
-      setMessages(prev =>
-        prev.some(m => m.id === res.data.id) ? prev : [...prev, {
-          id: res.data.id, content: res.data.content, is_mine: true, is_read: false, created_at: res.data.created_at,
-        }]
-      );
-      setChats(prev => {
-        const exists = prev.find(c => c.user_id === activeChat.userId);
-        if (exists) return prev.map(c => c.user_id === activeChat.userId ? { ...c, last_message: content } : c);
-        return [{ user_id: activeChat.userId, full_name: activeChat.fullName, profile_picture: activeChat.picture, last_message: content, unread_count: 0 }, ...prev];
-      });
+      // Temp ID-ni real ID ilə əvəz et
+      setMessages(prev => prev.map(m =>
+        m.id === tempId ? { ...m, id: res.data.id, created_at: res.data.created_at } : m
+      ));
     } catch (err) {
+      // Geri al
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setChats(prev => prev.map(c =>
+        c.user_id === activeChat.userId
+          ? { ...c, last_message: prevLastMessageRef.current[activeChat.userId] ?? c.last_message }
+          : c
+      ));
       setNewMsg(content);
       const detail = err.response?.data?.detail;
       if (err.response?.status === 403) toast.error(detail || "Yalnız bağlantılarınıza mesaj göndərə bilərsiniz");
+      else toast.error(detail || "Mesaj göndərilmədi");
     }
-    setSending(false);
   };
 
   return (
@@ -508,16 +528,16 @@ export default function Messages() {
                 />
                 <button
                   type="submit"
-                  disabled={!newMsg.trim() || sending}
+                  disabled={!newMsg.trim()}
                   style={{
                     width: 44, height: 44, borderRadius: "50%",
                     border: "none", flexShrink: 0,
-                    background: newMsg.trim() && !sending ? ACCENT : C.chatBg,
-                    border: newMsg.trim() && !sending ? "none" : `1px solid ${C.border}`,
-                    color: newMsg.trim() && !sending ? "#fff" : C.muted,
-                    cursor: newMsg.trim() && !sending ? "pointer" : "not-allowed",
+                    background: newMsg.trim() ? ACCENT : C.chatBg,
+                    border: newMsg.trim() ? "none" : `1px solid ${C.border}`,
+                    color: newMsg.trim() ? "#fff" : C.muted,
+                    cursor: newMsg.trim() ? "pointer" : "not-allowed",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: newMsg.trim() && !sending ? "0 4px 14px rgba(30,144,255,0.35)" : "none",
+                    boxShadow: newMsg.trim() ? "0 4px 14px rgba(30,144,255,0.35)" : "none",
                     transition: "background 0.15s, box-shadow 0.15s",
                   }}
                 >
