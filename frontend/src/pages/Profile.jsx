@@ -5,7 +5,7 @@ import { useDarkMode } from "../hooks/useTheme";
 import {
   Edit3, Save, X, BookOpen, Award, GraduationCap, Sparkles, Plus, Trash2,
   ExternalLink, Camera, FolderGit2, Code2, Heart, ThumbsDown, MessageCircle,
-  FileText, Send, Mail, Globe, Settings,
+  FileText, Send, Mail, Globe, Settings, UserPlus, UserCheck,
 } from "lucide-react";
 
 const GithubIcon = () => (
@@ -125,6 +125,9 @@ export default function Profile() {
   const [connModal, setConnModal] = useState(false);
   const [connList, setConnList] = useState([]);
   const [connListLoading, setConnListLoading] = useState(false);
+  const [myConnectedIds, setMyConnectedIds] = useState(new Set());
+  const [myPendingIds, setMyPendingIds] = useState(new Set());
+  const [myUserId, setMyUserId] = useState(null);
   const [cvParsing, setCvParsing]     = useState(false);
   const [cvPreview, setCvPreview]     = useState(null);
   const fileInputRef = useRef(null);
@@ -133,10 +136,19 @@ export default function Profile() {
   useEffect(() => {
     loadProfile(); loadCertificates(); loadProjects(); loadUserPosts();
     const targetId = id ? Number(id) : null;
+
+    Promise.all([
+      api.get("/users/me"),
+      api.get("/connections/my"),
+      api.get("/connections/sent"),
+    ]).then(([meRes, myRes, sentRes]) => {
+      setMyUserId(meRes.data.id);
+      setMyConnectedIds(new Set(myRes.data.map(c => c.user_id)));
+      setMyPendingIds(new Set(sentRes.data.map(c => c.receiver_id)));
+      if (targetId) setIsConnected(myRes.data.some(c => c.user_id === targetId));
+    }).catch(() => {});
+
     if (targetId) {
-      api.get("/connections/my")
-        .then(res => setIsConnected(res.data.some(c => c.user_id === targetId)))
-        .catch(() => {});
       api.get(`/connections/count/${targetId}`)
         .then(res => setConnectionCount(res.data.count))
         .catch(() => {});
@@ -147,6 +159,16 @@ export default function Profile() {
         .catch(() => {});
     }
   }, [id]);
+
+  const handleQuickConnect = async (userId) => {
+    setMyPendingIds(prev => new Set([...prev, userId]));
+    try {
+      await api.post(`/connections/${userId}`);
+      toast.success("Bağlantı istəyi göndərildi!");
+    } catch {
+      setMyPendingIds(prev => { const s = new Set(prev); s.delete(userId); return s; });
+    }
+  };
 
   const openConnModal = async () => {
     setConnModal(true);
@@ -835,25 +857,40 @@ export default function Profile() {
               </div>
             ) : connList.length === 0 ? (
               <p style={{ textAlign: "center", color: C.muted, padding: "32px 20px", fontSize: 14 }}>Hələ bağlantı yoxdur</p>
-            ) : connList.map(c => (
-              <Link key={c.user_id} to={`/profile/${c.user_id}`} onClick={() => setConnModal(false)}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", textDecoration: "none", borderBottom: `1px solid ${C.divider}` }}
-                onMouseEnter={e => e.currentTarget.style.background = C.rowHover}
-                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                <div style={{ width: 46, height: 46, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: ACCENT }}>
-                  {c.profile_picture
-                    ? <img src={c.profile_picture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 17, fontFamily: "'Archivo', sans-serif" }}>{c.full_name?.charAt(0)}</div>
-                  }
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 800, fontSize: 14.5, color: C.text, fontFamily: "'Archivo', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.full_name}</div>
-                  {(c.headline || c.major) && (
-                    <div style={{ fontSize: 12.5, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{c.headline || c.major}</div>
+            ) : connList.map(c => {
+              const isMe = c.user_id === myUserId;
+              const connected = myConnectedIds.has(c.user_id);
+              const pending = myPendingIds.has(c.user_id);
+              return (
+                <div key={c.user_id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 20px", borderBottom: `1px solid ${C.divider}` }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.rowHover}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  <Link to={`/profile/${c.user_id}`} onClick={() => setConnModal(false)} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0, textDecoration: "none" }}>
+                    <div style={{ width: 46, height: 46, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: ACCENT }}>
+                      {c.profile_picture
+                        ? <img src={c.profile_picture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 17, fontFamily: "'Archivo', sans-serif" }}>{c.full_name?.charAt(0)}</div>
+                      }
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 800, fontSize: 14.5, color: C.text, fontFamily: "'Archivo', sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.full_name}</div>
+                      {(c.headline || c.major) && (
+                        <div style={{ fontSize: 12.5, color: C.muted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{c.headline || c.major}</div>
+                      )}
+                    </div>
+                  </Link>
+                  {!isMe && (
+                    <button
+                      onClick={() => !connected && !pending && handleQuickConnect(c.user_id)}
+                      disabled={connected || pending}
+                      title={connected ? "Bağlıdır" : pending ? "Gözlənilir" : "Bağlantı istəyi göndər"}
+                      style={{ flexShrink: 0, width: 34, height: 34, borderRadius: "50%", border: connected || pending ? C.border : `1.5px solid ${ACCENT}`, background: connected ? C.surface : pending ? C.surface : "transparent", color: connected ? C.muted : pending ? C.muted : ACCENT, display: "flex", alignItems: "center", justifyContent: "center", cursor: connected || pending ? "default" : "pointer", transition: "all .15s" }}>
+                      {connected ? <UserCheck size={16} /> : <UserPlus size={16} />}
+                    </button>
                   )}
                 </div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
