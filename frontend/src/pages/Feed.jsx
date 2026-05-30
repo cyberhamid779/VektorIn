@@ -460,8 +460,10 @@ export default function Feed() {
   const [composerFocus, setComposerFocus] = useState(false);
   const [feedTab, setFeedTab] = useState("foryou");
   const [mobileComposer, setMobileComposer] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const composerRef = useRef(null);
+  const touchStartX = useRef(null);
   const { t } = useLang();
   const isMobile = useIsMobile(821);
   const hideRail = useIsMobile(1121);
@@ -662,8 +664,105 @@ export default function Feed() {
 
   const showRightRail = !hideRail;
 
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    if (dx > 55 && touchStartX.current < 44) setDrawerOpen(true);
+    if (dx < -55) setDrawerOpen(false);
+    touchStartX.current = null;
+  };
+
   return (
-    <div style={{ fontFamily: "'Archivo', system-ui, sans-serif", WebkitFontSmoothing: "antialiased", background: C.bg, color: C.text, minHeight: "100vh", transition: "background .25s, color .25s" }}>
+    <div
+      style={{ fontFamily: "'Archivo', system-ui, sans-serif", WebkitFontSmoothing: "antialiased", background: C.bg, color: C.text, minHeight: "100vh", transition: "background .25s, color .25s" }}
+      onTouchStart={isMobile ? handleTouchStart : undefined}
+      onTouchEnd={isMobile ? handleTouchEnd : undefined}
+    >
+      {/* Mobile drawer */}
+      {isMobile && (
+        <>
+          {/* Overlay */}
+          <div onClick={() => setDrawerOpen(false)} style={{
+            position: "fixed", inset: 0, zIndex: 250,
+            background: "rgba(0,0,0,0.45)",
+            opacity: drawerOpen ? 1 : 0,
+            pointerEvents: drawerOpen ? "auto" : "none",
+            transition: "opacity 0.28s",
+          }} />
+          {/* Drawer panel */}
+          <div style={{
+            position: "fixed", top: 0, left: 0, height: "100vh", width: 290, zIndex: 300,
+            background: C.bg, overflowY: "auto",
+            transform: drawerOpen ? "translateX(0)" : "translateX(-100%)",
+            transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1)",
+            display: "flex", flexDirection: "column",
+            boxShadow: drawerOpen ? "4px 0 32px rgba(0,0,0,0.35)" : "none",
+          }}>
+            {/* User info */}
+            <div style={{ padding: "52px 20px 16px" }}>
+              <Link to="/profile" onClick={() => setDrawerOpen(false)}>
+                <UserAvatar user={user} size="lg" />
+              </Link>
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontWeight: 900, fontSize: 18, color: C.text, fontFamily: "'Archivo', sans-serif" }}>{user?.full_name || "—"}</div>
+                <div style={{ fontSize: 14, color: C.muted, fontFamily: "'JetBrains Mono', monospace", marginTop: 2 }}>@{user?.username || user?.email?.split("@")[0] || "—"}</div>
+              </div>
+              <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
+                <Link to="/connections" onClick={() => setDrawerOpen(false)} style={{ textDecoration: "none" }}>
+                  <span style={{ fontWeight: 800, fontSize: 15, color: C.text }}>{user?.connections_count ?? "—"}</span>
+                  <span style={{ fontSize: 13, color: C.muted, marginLeft: 4 }}>Bağlantı</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Nav items */}
+            <nav style={{ flex: 1, padding: "4px 0" }}>
+              {[
+                { to: "/feed", icon: <Home size={22} />, label: "Yeniliklər" },
+                { to: "/profile", icon: <User size={22} />, label: "Profil" },
+                { to: "/connections", icon: <Users size={22} />, label: "Bağlantılar" },
+                { to: "/messages", icon: <MessageSquare size={22} />, label: "Mesajlar" },
+                { to: "/articles", icon: <BookOpen size={22} />, label: "Məqalələr" },
+                { to: "/search", icon: <Search size={22} />, label: "Axtar" },
+                ...(user?.is_admin ? [{ to: "/admin", icon: <Shield size={22} />, label: "Admin" }] : []),
+              ].map(item => (
+                <Link key={item.to} to={item.to} onClick={() => setDrawerOpen(false)}
+                  style={{ display: "flex", alignItems: "center", gap: 18, padding: "14px 20px", textDecoration: "none", color: C.text, fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: 17 }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.navHover}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                >
+                  <span style={{ color: C.textSoft }}>{item.icon}</span>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Bottom: settings + theme */}
+            <div style={{ borderTop: `1px solid ${C.divider}`, padding: "8px 0 28px" }}>
+              <Link to="/settings" onClick={() => setDrawerOpen(false)}
+                style={{ display: "flex", alignItems: "center", gap: 18, padding: "14px 20px", textDecoration: "none", color: C.text, fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: 17 }}
+                onMouseEnter={e => e.currentTarget.style.background = C.navHover}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                <span style={{ color: C.textSoft }}><Settings size={22} /></span>
+                Parametrlər
+              </Link>
+              <button onClick={() => { toggleTheme(); setDrawerOpen(false); }}
+                style={{ display: "flex", alignItems: "center", gap: 18, padding: "14px 20px", background: "none", border: "none", color: C.text, fontFamily: "'Archivo', sans-serif", fontWeight: 700, fontSize: 17, width: "100%", cursor: "pointer", textAlign: "left" }}
+                onMouseEnter={e => e.currentTarget.style.background = C.navHover}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+              >
+                <span style={{ color: C.textSoft }}>{dark ? <Sun size={22} /> : <Moon size={22} />}</span>
+                {dark ? "Açıq tema" : "Qaranlıq tema"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       <div style={{ display: "flex", justifyContent: "center", maxWidth: 1290, margin: "0 auto" }}>
 
         {/* Left sidebar — desktop */}
@@ -690,9 +789,9 @@ export default function Feed() {
               /* Mobile header — Twitter/X style */
               <>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px 8px" }}>
-                  <Link to="/profile">
+                  <button onClick={() => setDrawerOpen(true)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex" }}>
                     <UserAvatar user={user} size="sm" />
-                  </Link>
+                  </button>
                   <div style={{ width: 36, height: 36, borderRadius: 11, background: ACCENT, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 18, color: "#fff", fontFamily: "'Archivo', sans-serif", boxShadow: "0 3px 10px rgba(30,144,255,0.35)" }}>
                     #
                   </div>
