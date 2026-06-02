@@ -108,11 +108,13 @@ function ImageCarousel({ images }) {
   const [idx, setIdx] = useState(0);
   if (!images?.length) return null;
   if (images.length === 1) return (
-    <img src={images[0]} alt="post" style={{ width: "100%", maxHeight: 480, objectFit: "cover", display: "block", borderRadius: 14 }} />
+    <div style={{ width: "100%", height: 400, borderRadius: 14, overflow: "hidden" }}>
+      <img src={images[0]} alt="post" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+    </div>
   );
   return (
-    <div style={{ position: "relative", userSelect: "none", borderRadius: 14, overflow: "hidden" }}>
-      <img src={images[idx]} alt={`post-${idx}`} style={{ width: "100%", maxHeight: 480, objectFit: "cover", display: "block" }} />
+    <div style={{ position: "relative", userSelect: "none", borderRadius: 14, overflow: "hidden", height: 400 }}>
+      <img src={images[idx]} alt={`post-${idx}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
       <button onClick={() => setIdx(i => (i - 1 + images.length) % images.length)}
         style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", width: 32, height: 32, background: "rgba(0,0,0,0.55)", border: "none", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%" }}>
         <ChevronLeft size={16} />
