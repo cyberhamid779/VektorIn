@@ -192,6 +192,13 @@ async def parse_cv_endpoint(
         raise HTTPException(status_code=500, detail=f"CV parse xətası: {str(e)}")
 
 
+@router.get("/by-username/{username}", response_model=PublicUserResponse)
+def get_user_by_username(username: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    user = db.query(User).filter(User.username == username.lower()).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="İstifadəçi tapılmadı")
+    return user
+
 @router.get("/{user_id}", response_model=PublicUserResponse)
 def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     user = db.query(User).filter(User.id == user_id).first()

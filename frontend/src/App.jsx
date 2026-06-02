@@ -332,6 +332,7 @@ export default function App() {
         <Route path="/feed" element={<FeedRoute><Feed /></FeedRoute>} />
         <Route path="/profile" element={<AppShell><Profile /></AppShell>} />
         <Route path="/profile/:id" element={<AppShell><Profile /></AppShell>} />
+        <Route path="/u/:username" element={<AppShell><Profile /></AppShell>} />
         <Route path="/search" element={<AppShell><Search_ /></AppShell>} />
         <Route path="/connections" element={<AppShell><Connections /></AppShell>} />
         <Route path="/messages" element={<AppShell><Messages /></AppShell>} />

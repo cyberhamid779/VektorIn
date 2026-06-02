@@ -100,7 +100,7 @@ const textareaStyle = (C) => ({
 });
 
 export default function Profile() {
-  const { id } = useParams();
+  const { id, username } = useParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const dark = useDarkMode();
@@ -186,7 +186,11 @@ export default function Profile() {
 
   const loadProfile = async () => {
     try {
-      if (id) {
+      if (username) {
+        const [profileRes, meRes] = await Promise.all([api.get(`/users/by-username/${username}`), api.get("/users/me")]);
+        setUser(profileRes.data); setForm(profileRes.data);
+        setIsOwn(meRes.data.id === profileRes.data.id);
+      } else if (id) {
         const [profileRes, meRes] = await Promise.all([api.get(`/users/${id}`), api.get("/users/me")]);
         setUser(profileRes.data); setForm(profileRes.data);
         setIsOwn(meRes.data.id === profileRes.data.id);
@@ -213,7 +217,9 @@ export default function Profile() {
 
   const loadUserPosts = async () => {
     try {
-      const userId = id || (await api.get("/users/me")).data.id;
+      const userId = username
+        ? (await api.get(`/users/by-username/${username}`)).data.id
+        : id || (await api.get("/users/me")).data.id;
       const res = await api.get(`/posts/user/${userId}`);
       setUserPosts(res.data);
     } catch {}
