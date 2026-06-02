@@ -207,7 +207,7 @@ const IconGlobe = (p) => <Icon {...p}><circle cx="12" cy="12" r="9.2" /><path d=
 const IconExternal = (p) => <Icon {...p}><path d="M14 4h6v6M20 4l-9 9" /><path d="M18 13.5V19a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 19V8.5A1.5 1.5 0 0 1 5.5 7H11" /></Icon>;
 const IconShare = (p) => <Icon {...p}><circle cx="18" cy="5" r="2.5" /><circle cx="6" cy="12" r="2.5" /><circle cx="18" cy="19" r="2.5" /><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4" /></Icon>;
 const IconCheck = (p) => <Icon {...p}><path d="M5 12.5l4.5 4.5L19 6.5" /></Icon>;
-const IconPrinter = (p) => <Icon {...p}><path d="M6 9V3.5h12V9" /><rect x="3.5" y="9" width="17" height="8" rx="1.5" /><path d="M7 17v3.5h10V17" /><path d="M17 12.5h.01" /></Icon>;
+const IconDownload = (p) => <Icon {...p}><path d="M12 3v12m0 0l-4-4m4 4l4-4" /><path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" /></Icon>;
 
 /* ----------------------------------------------------------------------------
    HELPERS
@@ -312,6 +312,27 @@ function CVPage({ profile }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    const el = document.querySelector('.cv-paper');
+    if (!el) return;
+    setDownloading(true);
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      await html2pdf().set({
+        margin: 0,
+        filename: `${profile.full_name.replace(/\s+/g, '_')}_CV.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: 'avoid-all' },
+      }).from(el).save();
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const skills = asList(profile.skills);
   const languages = asList(profile.languages);
   const experiences = profile.experiences || [];
@@ -357,9 +378,9 @@ function CVPage({ profile }) {
               {copied ? <IconCheck size={15} stroke="#16a34a" /> : <IconShare size={15} />}
               <span style={{ color: copied ? '#16a34a' : undefined }}>{copied ? 'Kopyalandı' : 'Paylaş'}</span>
             </button>
-            <button className="btn btn-navy" onClick={() => window.print()}>
-              <IconPrinter size={15} stroke="#fff" />
-              <span>Print / PDF</span>
+            <button className="btn btn-navy" onClick={handleDownloadPDF} disabled={downloading}>
+              <IconDownload size={15} stroke="#fff" />
+              <span>{downloading ? 'Hazırlanır...' : 'PDF Yüklə'}</span>
             </button>
           </div>
         </div>
