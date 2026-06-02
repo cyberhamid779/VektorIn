@@ -47,6 +47,8 @@ def ensure_tables():
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(30)",
         "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_username ON users (username)",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS university VARCHAR(255)",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS edu_start_year INTEGER",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS edu_end_year INTEGER",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS languages TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS gpa FLOAT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS show_email BOOLEAN DEFAULT FALSE",

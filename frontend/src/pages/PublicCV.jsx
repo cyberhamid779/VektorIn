@@ -461,7 +461,7 @@ function CVPage({ profile }) {
                 </Reveal>
               )}
 
-              {(profile.faculty || profile.major) && (
+              {(profile.university || profile.faculty || profile.major) && (
                 <Reveal className="block">
                   <SectionTitle>Təhsil</SectionTitle>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a', lineHeight: 1.4 }}>
@@ -472,7 +472,13 @@ function CVPage({ profile }) {
                   )}
                   {profile.major && <div style={{ fontSize: 12.5, color: '#475569', marginTop: 1 }}>{profile.major}</div>}
                   <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
-                    {[profile.course ? `${profile.course}-ci kurs` : null, profile.gpa != null ? `GPA ${profile.gpa}` : null].filter(Boolean).join(' · ')}
+                    {[
+                      profile.edu_start_year
+                        ? `${profile.edu_start_year} – ${profile.edu_end_year || '...'}`
+                        : null,
+                      profile.course ? `${profile.course}-ci kurs` : null,
+                      profile.gpa != null ? `GPA ${profile.gpa}` : null,
+                    ].filter(Boolean).join(' · ')}
                   </div>
                 </Reveal>
               )}

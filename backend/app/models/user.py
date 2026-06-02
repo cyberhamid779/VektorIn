@@ -15,6 +15,8 @@ class User(Base):
     faculty = Column(String(255))  # fakultə
     major = Column(String(255))  # ixtisas
     course = Column(Integer)  # kurs (1-4)
+    edu_start_year = Column(Integer, nullable=True)
+    edu_end_year = Column(Integer, nullable=True)
     headline = Column(String(255))  # "Frontend Developer | 3-cu kurs"
     bio = Column(Text)
     profile_picture = Column(String(500))

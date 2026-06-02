@@ -366,7 +366,10 @@ export default function Profile() {
       await api.put("/users/me", {
         full_name: form.full_name, username: form.username || null,
         headline: form.headline || null, university: form.university || null, major: form.major || null,
-        course: form.course || null, bio: form.bio || null,
+        course: form.course || null,
+        edu_start_year: form.edu_start_year ? parseInt(form.edu_start_year) : null,
+        edu_end_year: form.edu_end_year ? parseInt(form.edu_end_year) : null,
+        bio: form.bio || null,
         skills: form.skills || null, phone: form.phone || null,
         github_url: form.github_url || null,
         linkedin_url: form.linkedin_url || null, website_url: form.website_url || null,
@@ -589,7 +592,13 @@ export default function Profile() {
                 <input type="text" value={form.university || ""} onChange={e => setForm({ ...form, university: e.target.value })} placeholder="AZTU, BDU, AUA..." style={inputStyle(C)} />
               </InputField>
 
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 12 }}>
+                <InputField C={C} label="Başlama ili">
+                  <input type="number" min="1990" max="2040" value={form.edu_start_year || ""} onChange={e => setForm({ ...form, edu_start_year: e.target.value })} placeholder="2023" style={inputStyle(C)} />
+                </InputField>
+                <InputField C={C} label="Bitmə ili">
+                  <input type="number" min="1990" max="2040" value={form.edu_end_year || ""} onChange={e => setForm({ ...form, edu_end_year: e.target.value })} placeholder="2027" style={inputStyle(C)} />
+                </InputField>
                 <InputField C={C} label="İxtisas">
                   <input type="text" value={form.major || ""} onChange={e => setForm({ ...form, major: e.target.value })} style={inputStyle(C)} />
                 </InputField>

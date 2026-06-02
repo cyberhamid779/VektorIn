@@ -27,6 +27,8 @@ class PublicUserResponse(BaseModel):
     faculty: str | None
     major: str | None
     course: int | None
+    edu_start_year: int | None = None
+    edu_end_year: int | None = None
     bio: str | None
     profile_picture: str | None
     github_url: str | None
@@ -55,6 +57,8 @@ class UserResponse(BaseModel):
     faculty: str | None
     major: str | None
     course: int | None
+    edu_start_year: int | None = None
+    edu_end_year: int | None = None
     bio: str | None
     profile_picture: str | None
     phone: str | None
@@ -81,6 +85,8 @@ class UpdateProfileRequest(BaseModel):
     university: str | None = None
     major: str | None = None
     course: int | None = None
+    edu_start_year: int | None = None
+    edu_end_year: int | None = None
     bio: str | None = None
     profile_picture: str | None = None
     phone: str | None = None

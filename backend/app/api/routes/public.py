@@ -51,6 +51,8 @@ class PublicProfileResponse(BaseModel):
     faculty: str | None
     major: str | None
     course: int | None
+    edu_start_year: int | None = None
+    edu_end_year: int | None = None
     bio: str | None
     profile_picture: str | None
     github_url: str | None
@@ -89,6 +91,8 @@ def get_public_profile(username: str, db: Session = Depends(get_db)):
         "faculty": user.faculty,
         "major": user.major,
         "course": user.course,
+        "edu_start_year": user.edu_start_year,
+        "edu_end_year": user.edu_end_year,
         "bio": user.bio,
         "profile_picture": user.profile_picture,
         "github_url": user.github_url,
