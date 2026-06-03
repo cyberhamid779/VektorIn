@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useLang } from "../hooks/useLang";
 import { toast } from "../components/Toast";
 import { useDarkMode } from "../hooks/useTheme";
 import {
@@ -105,6 +106,7 @@ export default function Profile() {
   const isMobile = useIsMobile();
   const dark = useDarkMode();
   const C = useColors(dark);
+  const { lang } = useLang();
 
   const [user, setUser]               = useState(null);
   const [isOwn, setIsOwn]             = useState(!id);
@@ -136,6 +138,7 @@ export default function Profile() {
   const [myUserId, setMyUserId] = useState(null);
   const [cvParsing, setCvParsing]     = useState(false);
   const [cvPreview, setCvPreview]     = useState(null);
+  const [bioTab, setBioTab]           = useState("az");
   const fileInputRef = useRef(null);
   const cvInputRef   = useRef(null);
 
@@ -447,19 +450,27 @@ export default function Profile() {
                     <button onClick={() => cvInputRef.current?.click()} disabled={cvParsing} style={btnGhost({ opacity: cvParsing ? 0.6 : 1 })}>
                       <FileText size={14} />{cvParsing ? "Oxunur..." : "CV yüklə"}
                     </button>
+                    <button onClick={() => navigate("/settings")} style={btnGhost()}>
+                      <Settings size={14} />Parametrlər
+                    </button>
                   </>
-                ) : isConnected ? (
-                  <button onClick={() => navigate(`/messages?to=${user.id}&name=${encodeURIComponent(user.full_name)}`)} style={btnPrimary()}>
-                    <Mail size={14} />Mesaj göndər
-                  </button>
-                ) : myPendingIds.has(user.id) ? (
-                  <button disabled style={btnGhost({ opacity: 0.6, cursor: "default" })}>
-                    <UserCheck size={14} />İstək göndərildi
-                  </button>
                 ) : (
-                  <button onClick={() => handleQuickConnect(user.id)} style={btnPrimary()}>
-                    <UserPlus size={14} />Bağlan
-                  </button>
+                  <>
+                    {isConnected ? (
+                      <button onClick={() => navigate(`/messages?to=${user.id}&name=${encodeURIComponent(user.full_name)}`)} style={btnGhost()}>
+                        <Mail size={14} />Mesaj göndər
+                      </button>
+                    ) : null}
+                    {myPendingIds.has(user.id) ? (
+                      <button disabled style={btnGhost({ opacity: 0.6, cursor: "default" })}>
+                        <UserCheck size={14} />İstək göndərildi
+                      </button>
+                    ) : !isConnected ? (
+                      <button onClick={() => handleQuickConnect(user.id)} style={btnPrimary()}>
+                        <UserPlus size={14} />Bağlan
+                      </button>
+                    ) : null}
+                  </>
                 )}
               </div>
             </div>
@@ -494,14 +505,18 @@ export default function Profile() {
             {(user.github_url || user.linkedin_url || user.website_url) && (
               <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 10 }}>
                 {user.github_url && (
-                  <a href={user.github_url} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.muted, textDecoration: "none" }}
-                    onMouseEnter={e => e.currentTarget.style.color = C.text}
-                    onMouseLeave={e => e.currentTarget.style.color = C.muted}>
+                  <a href={user.github_url} target="_blank" rel="noreferrer"
+                    style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: C.textSoft, textDecoration: "none", fontWeight: 600, transition: "color .15s" }}
+                    onMouseEnter={e => e.currentTarget.style.color = dark ? "#ffffff" : "#0f172a"}
+                    onMouseLeave={e => e.currentTarget.style.color = C.textSoft}>
                     <GithubIcon /> GitHub
                   </a>
                 )}
                 {user.linkedin_url && (
-                  <a href={user.linkedin_url} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: "#0077b5", textDecoration: "none" }}>
+                  <a href={user.linkedin_url} target="_blank" rel="noreferrer"
+                    style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: "#0a66c2", textDecoration: "none", fontWeight: 600, transition: "color .15s" }}
+                    onMouseEnter={e => e.currentTarget.style.color = "#004182"}
+                    onMouseLeave={e => e.currentTarget.style.color = "#0a66c2"}>
                     <LinkedinIcon /> LinkedIn
                   </a>
                 )}
@@ -605,7 +620,23 @@ export default function Profile() {
               </div>
 
               <InputField C={C} label="Haqqında">
-                <textarea value={form.bio || ""} onChange={e => setForm({ ...form, bio: e.target.value })} style={textareaStyle(C)} rows={3} />
+                <div>
+                  <div style={{ display: "flex", gap: 2, marginBottom: 8 }}>
+                    {[{ key: "az", label: "🇦🇿 AZ" }, { key: "en", label: "🇬🇧 EN" }].map(({ key, label }) => (
+                      <button key={key} type="button" onClick={() => setBioTab(key)} style={{
+                        padding: "4px 12px", fontSize: 11.5, fontWeight: 700, borderRadius: 7,
+                        border: "none", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace",
+                        background: bioTab === key ? ACCENT : C.bg,
+                        color: bioTab === key ? "#fff" : C.muted,
+                        transition: "background .12s",
+                      }}>{label}</button>
+                    ))}
+                  </div>
+                  {bioTab === "az"
+                    ? <textarea value={form.bio || ""} onChange={e => setForm({ ...form, bio: e.target.value })} style={textareaStyle(C)} rows={3} placeholder="Azərbaycanca qısa məlumat..." />
+                    : <textarea value={form.bio_en || ""} onChange={e => setForm({ ...form, bio_en: e.target.value })} style={textareaStyle(C)} rows={3} placeholder="Short bio in English..." />
+                  }
+                </div>
               </InputField>
 
               <InputField C={C} label="Bacarıqlar" hint="(vergüllə ayırın)">
@@ -724,10 +755,12 @@ export default function Profile() {
         {/* ── TAB: XÜLASƏ ── */}
         {!editing && activeTab === "about" && (
           <>
-            {user.bio && (
+            {(user.bio || user.bio_en) && (
               <div style={{ background: C.surface, border: C.border, borderRadius: 20, padding: "20px 24px", marginBottom: 14 }}>
                 <SectionHead C={C} icon={BookOpen}>Haqqında</SectionHead>
-                <p style={{ fontSize: 14.5, color: C.textBody, lineHeight: 1.7, margin: 0 }}>{user.bio}</p>
+                <p style={{ fontSize: 14.5, color: C.textBody, lineHeight: 1.7, margin: 0 }}>
+                  {lang === "en" && user.bio_en ? user.bio_en : (user.bio || user.bio_en)}
+                </p>
               </div>
             )}
             {user.skills && (

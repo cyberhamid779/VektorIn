@@ -19,6 +19,7 @@ class User(Base):
     edu_end_year = Column(Integer, nullable=True)
     headline = Column(String(255))  # "Frontend Developer | 3-cu kurs"
     bio = Column(Text)
+    bio_en = Column(Text)
     profile_picture = Column(String(500))
     phone = Column(String(50))
     github_url = Column(String(500))

@@ -92,6 +92,7 @@ def ensure_tables():
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS languages TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS gpa FLOAT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS show_email BOOLEAN DEFAULT FALSE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS bio_en TEXT",
         """CREATE TABLE IF NOT EXISTS experiences (
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id),

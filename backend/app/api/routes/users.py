@@ -30,6 +30,7 @@ class PublicUserResponse(BaseModel):
     edu_start_year: int | None = None
     edu_end_year: int | None = None
     bio: str | None
+    bio_en: str | None = None
     profile_picture: str | None
     github_url: str | None
     linkedin_url: str | None
@@ -60,6 +61,7 @@ class UserResponse(BaseModel):
     edu_start_year: int | None = None
     edu_end_year: int | None = None
     bio: str | None
+    bio_en: str | None = None
     profile_picture: str | None
     phone: str | None
     github_url: str | None
@@ -88,6 +90,7 @@ class UpdateProfileRequest(BaseModel):
     edu_start_year: int | None = None
     edu_end_year: int | None = None
     bio: str | None = None
+    bio_en: str | None = None
     profile_picture: str | None = None
     phone: str | None = None
     github_url: str | None = None
