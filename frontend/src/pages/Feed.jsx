@@ -315,15 +315,17 @@ function BottomNav({ C, user, onCompose }) {
     { path: "/search",        icon: <Search size={24} /> },
     { path: "/messages",      icon: <MessageSquare size={24} /> },
     { path: "/notifications", icon: <Bell size={24} /> },
-    { path: "/profile",       icon: <User size={24} /> },
   ];
 
   const secondary = [
+    { path: "/profile",     icon: <User size={20} />,       label: "Profil" },
     { path: "/radar",       icon: <TrendingUp size={20} />, label: "Radar" },
-    { path: "/connections", icon: <Users size={20} />,     label: "Bağlantılar" },
-    { path: "/articles",    icon: <BookOpen size={20} />,  label: "Məqalələr" },
+    { path: "/connections", icon: <Users size={20} />,      label: "Bağlantılar" },
+    { path: "/articles",    icon: <BookOpen size={20} />,   label: "Məqalələr" },
     ...(user?.is_admin ? [{ path: "/admin", icon: <Shield size={20} />, label: "Admin" }] : []),
   ];
+
+  const moreActive = secondary.some(s => p === s.path || p.startsWith(s.path + "/"));
 
   return (
     <>
@@ -333,13 +335,16 @@ function BottomNav({ C, user, onCompose }) {
           style={{ position: "fixed", inset: 0, zIndex: 99, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }}>
           <div onClick={e => e.stopPropagation()}
             style={{ position: "absolute", bottom: 66, left: 16, right: 16, background: C.bg, border: `1px solid ${C.divider}`, borderRadius: 18, padding: "8px 0", boxShadow: "0 -8px 32px rgba(0,0,0,0.18)" }}>
-            {secondary.map(item => (
-              <button key={item.path} onClick={() => { navigate(item.path); setMoreOpen(false); }}
-                style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", background: "none", border: "none", cursor: "pointer", color: p.startsWith(item.path) ? C.accent : C.text, fontSize: 15, fontWeight: 700, fontFamily: "'Archivo', sans-serif", WebkitTapHighlightColor: "transparent" }}>
-                <span style={{ color: p.startsWith(item.path) ? C.accent : C.muted }}>{item.icon}</span>
-                {item.label}
-              </button>
-            ))}
+            {secondary.map(item => {
+              const active = p === item.path || p.startsWith(item.path + "/");
+              return (
+                <button key={item.path} onClick={() => { navigate(item.path); setMoreOpen(false); }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", background: "none", border: "none", cursor: "pointer", color: active ? C.accent : C.text, fontSize: 15, fontWeight: 700, fontFamily: "'Archivo', sans-serif", WebkitTapHighlightColor: "transparent" }}>
+                  <span style={{ color: active ? C.accent : C.muted }}>{item.icon}</span>
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -353,22 +358,23 @@ function BottomNav({ C, user, onCompose }) {
         paddingBottom: "env(safe-area-inset-bottom)",
       }}>
         {primary.map((item, i) => {
-          const isActive = p === item.path || (item.path !== "/feed" && item.path !== "/profile" && p.startsWith(item.path));
+          const isActive = p === item.path || (item.path !== "/feed" && p.startsWith(item.path));
           return (
             <button key={i} onClick={() => navigate(item.path)}
-              style={{
-                flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-                border: "none", background: "transparent", cursor: "pointer",
-                color: isActive ? C.accent : C.muted, transition: "color .12s",
-                WebkitTapHighlightColor: "transparent",
-              }}>
+              style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "transparent", cursor: "pointer", color: isActive ? C.accent : C.muted, transition: "color .12s", WebkitTapHighlightColor: "transparent" }}>
               {item.icon}
-              {isActive && (
-                <span style={{ position: "absolute", bottom: 6, width: 4, height: 4, borderRadius: "50%", background: C.accent }} />
-              )}
             </button>
           );
         })}
+        {/* More button */}
+        <button onClick={() => setMoreOpen(v => !v)}
+          style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, border: "none", background: "transparent", cursor: "pointer", color: moreActive || moreOpen ? C.accent : C.muted, transition: "color .12s", WebkitTapHighlightColor: "transparent" }}>
+          <div style={{ display: "flex", gap: 3 }}>
+            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "currentColor" }} />
+            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "currentColor" }} />
+            <span style={{ width: 4, height: 4, borderRadius: "50%", background: "currentColor" }} />
+          </div>
+        </button>
       </div>
     </>
   );
