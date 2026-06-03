@@ -620,23 +620,7 @@ export default function Profile() {
               </div>
 
               <InputField C={C} label="Haqqında">
-                <div>
-                  <div style={{ display: "flex", gap: 2, marginBottom: 8 }}>
-                    {[{ key: "az", label: "🇦🇿 AZ" }, { key: "en", label: "🇬🇧 EN" }].map(({ key, label }) => (
-                      <button key={key} type="button" onClick={() => setBioTab(key)} style={{
-                        padding: "4px 12px", fontSize: 11.5, fontWeight: 700, borderRadius: 7,
-                        border: "none", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace",
-                        background: bioTab === key ? ACCENT : C.bg,
-                        color: bioTab === key ? "#fff" : C.muted,
-                        transition: "background .12s",
-                      }}>{label}</button>
-                    ))}
-                  </div>
-                  {bioTab === "az"
-                    ? <textarea value={form.bio || ""} onChange={e => setForm({ ...form, bio: e.target.value })} style={textareaStyle(C)} rows={3} placeholder="Azərbaycanca qısa məlumat..." />
-                    : <textarea value={form.bio_en || ""} onChange={e => setForm({ ...form, bio_en: e.target.value })} style={textareaStyle(C)} rows={3} placeholder="Short bio in English..." />
-                  }
-                </div>
+                <textarea value={form.bio || ""} onChange={e => setForm({ ...form, bio: e.target.value })} style={textareaStyle(C)} rows={3} />
               </InputField>
 
               <InputField C={C} label="Bacarıqlar" hint="(vergüllə ayırın)">
