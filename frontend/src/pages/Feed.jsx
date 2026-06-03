@@ -1458,7 +1458,8 @@ export default function Feed() {
         </div>
       )}
 
-      {/* Bottom nav is rendered globally in App.jsx */}
+      {/* Mobile bottom nav — Feed has its own AppShell-free route */}
+      {isMobile && <BottomNav C={C} user={user} onCompose={() => setMobileComposer(true)} />}
 
       {/* Report modal */}
       {reportPostId && (
