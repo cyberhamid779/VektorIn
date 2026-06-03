@@ -396,6 +396,77 @@ function PanelHead({ C, children }) {
   );
 }
 
+function CommentSection({ post, user, C, dark, commentText, comments, onCommentChange, onSubmit, t }) {
+  const [showAll, setShowAll] = useState(false);
+  const hasText = commentText.trim().length > 0;
+  const PREVIEW = 3;
+  const shown = showAll ? comments : comments.slice(0, PREVIEW);
+
+  return (
+    <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.divider}` }}>
+      {/* Pill input */}
+      <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14 }}>
+        <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 12 }}>
+          {user?.profile_picture
+            ? <img src={user.profile_picture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : (user?.full_name || user?.username || "?").charAt(0).toUpperCase()}
+        </div>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", background: dark ? "#0d2248" : "#f1f5f9", border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "#e2e8f0"}`, borderRadius: 999, padding: "0 6px 0 16px", gap: 6 }}>
+          <input
+            type="text"
+            value={commentText}
+            onChange={e => onCommentChange(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && hasText && onSubmit()}
+            placeholder={t("feed_comment_placeholder") || "Şərh yaz..."}
+            style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 13.5, color: C.text, fontFamily: "'Archivo', sans-serif", padding: "9px 0" }}
+          />
+          <button
+            onClick={onSubmit}
+            disabled={!hasText}
+            style={{ width: 32, height: 32, borderRadius: "50%", border: "none", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: hasText ? "pointer" : "default", background: hasText ? C.accent : "transparent", color: hasText ? "#fff" : C.muted, transition: "background .15s, color .15s" }}>
+            <Send size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Comment list */}
+      {comments.length === 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "16px 0 8px", gap: 8 }}>
+          <MessageCircle size={22} color={C.muted} strokeWidth={1.5} />
+          <p style={{ fontSize: 13, color: C.muted, margin: 0, fontWeight: 500, fontFamily: "'Archivo', sans-serif", textAlign: "center" }}>
+            Hələ şərh yoxdur. İlk şərhi sən yaz!
+          </p>
+        </div>
+      ) : (
+        <div style={{ maxHeight: 320, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+          {shown.map(c => (
+            <div key={c.id} style={{ display: "flex", gap: 9 }}>
+              <Link to={`/profile/${c.user_id}`} style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 800, textDecoration: "none" }}>
+                {c.user_picture
+                  ? <img src={c.user_picture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : c.user_name?.charAt(0)}
+              </Link>
+              <div style={{ flex: 1, background: C.commentBg, border: C.commentBorder, borderRadius: 14, padding: "8px 12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                  <Link to={`/profile/${c.user_id}`} style={{ fontSize: 13, fontWeight: 700, color: C.text, textDecoration: "none", fontFamily: "'Archivo', sans-serif" }}>{c.user_name}</Link>
+                  <span style={{ fontSize: 11, color: C.muted, fontFamily: "'JetBrains Mono', monospace" }}>{formatBakuHM(c.created_at)}</span>
+                </div>
+                <p style={{ fontSize: 13.5, color: C.commentText, margin: 0, lineHeight: 1.5, wordBreak: "break-word" }}>{c.content}</p>
+              </div>
+            </div>
+          ))}
+          {!showAll && comments.length > PREVIEW && (
+            <button onClick={() => setShowAll(true)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: C.accent, fontSize: 13, fontWeight: 700, padding: "4px 0", fontFamily: "'Archivo', sans-serif", textAlign: "left" }}>
+              Daha çox şərh göstər ({comments.length - PREVIEW})
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function OriginalPostPreview({ orig, C }) {
   if (!orig) return null;
   const images = orig.images?.length ? orig.images : orig.image_url ? [orig.image_url] : [];
@@ -539,42 +610,14 @@ function PostItem({ post, C, dark, user, connectedIds, pendingIds, openComments,
         </div>
 
         {openComments[post.id] && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.divider}` }}>
-            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-              <input
-                type="text"
-                value={commentText[post.id] || ""}
-                onChange={e => onCommentChange(post.id, e.target.value)}
-                onKeyDown={e => e.key === "Enter" && onSubmitComment(post.id)}
-                placeholder={t("feed_comment_placeholder") || "Şərh yaz..."}
-                style={{ flex: 1, padding: "8px 12px", border: C.border, borderRadius: 10, fontSize: 13, color: C.text, background: C.bg, outline: "none", fontFamily: "'Archivo', sans-serif" }}
-                onFocus={e => e.target.style.borderColor = C.accent}
-                onBlur={e => e.target.style.borderColor = C.borderColor}
-              />
-              <button onClick={() => onSubmitComment(post.id)} disabled={!commentText[post.id]?.trim()}
-                style={{ ...C.btnPrimary, borderRadius: 10, display: "inline-flex", alignItems: "center", padding: "8px 14px", fontSize: 13, cursor: "pointer", opacity: !commentText[post.id]?.trim() ? 0.4 : 1 }}>
-                <Send size={13} />
-              </button>
-            </div>
-            <div style={{ maxHeight: 280, overflowY: "auto" }}>
-              {(comments[post.id] || []).length === 0 ? (
-                <p style={{ fontSize: 13, color: C.muted, textAlign: "center", padding: "12px 0", fontFamily: "'Archivo', sans-serif" }}>Hələ şərh yoxdur</p>
-              ) : (comments[post.id] || []).map(c => (
-                <div key={c.id} style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-                  <Link to={`/profile/${c.user_id}`} style={{ width: 32, height: 32, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, fontWeight: 800, textDecoration: "none", flexShrink: 0, borderRadius: "50%" }}>
-                    {c.user_name?.charAt(0)}
-                  </Link>
-                  <div style={{ flex: 1, background: C.commentBg, border: C.commentBorder, borderRadius: 12, padding: "8px 12px" }}>
-                    <div style={{ display: "flex", gap: 8, marginBottom: 3, alignItems: "center" }}>
-                      <Link to={`/profile/${c.user_id}`} style={{ fontSize: 13, fontWeight: 700, color: C.text, textDecoration: "none", fontFamily: "'Archivo', sans-serif" }}>{c.user_name}</Link>
-                      <span style={{ fontSize: 11, color: C.muted }}>{formatBakuHM(c.created_at)}</span>
-                    </div>
-                    <p style={{ fontSize: 13, color: C.commentText, margin: 0 }}>{c.content}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <CommentSection
+            post={post} user={user} C={C} dark={dark}
+            commentText={commentText[post.id] || ""}
+            comments={comments[post.id] || []}
+            onCommentChange={val => onCommentChange(post.id, val)}
+            onSubmit={() => onSubmitComment(post.id)}
+            t={t}
+          />
         )}
       </div>
     </article>
@@ -790,13 +833,30 @@ export default function Feed() {
   const submitComment = async (postId) => {
     const text = commentText[postId]?.trim();
     if (!text) return;
-    setCommentText({ ...commentText, [postId]: "" });
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, comment_count: p.comment_count + 1 } : p));
+
+    const tempId = `tmp_${Date.now()}`;
+    const optimistic = {
+      id: tempId,
+      user_id: user?.id,
+      user_name: user?.full_name || user?.username || "Sən",
+      user_picture: user?.profile_picture,
+      content: text,
+      created_at: new Date().toISOString(),
+    };
+
+    setCommentText(prev => ({ ...prev, [postId]: "" }));
+    setComments(prev => ({ ...prev, [postId]: [...(prev[postId] || []), optimistic] }));
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, comment_count: (p.comment_count || 0) + 1 } : p));
+
     try {
       await api.post(`/posts/${postId}/comment`, { content: text });
       const res = await api.get(`/posts/${postId}/comments`);
-      setComments({ ...comments, [postId]: res.data });
-    } catch { loadFeed(); }
+      setComments(prev => ({ ...prev, [postId]: res.data }));
+    } catch {
+      setComments(prev => ({ ...prev, [postId]: (prev[postId] || []).filter(c => c.id !== tempId) }));
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, comment_count: Math.max(0, (p.comment_count || 0) - 1) } : p));
+      toast.error("Şərh göndərilmədi");
+    }
   };
 
   const handleRepost = async (withText) => {
