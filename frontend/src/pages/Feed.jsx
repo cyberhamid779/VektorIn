@@ -182,9 +182,9 @@ function ActionBtn({ C, onClick, active, activeColor, icon, count, title }) {
   return (
     <button onClick={onClick} title={title}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-      style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px", borderRadius: 999, border: "none", background: hover ? C.accentWash : "transparent", cursor: "pointer", color: col, font: "inherit", fontSize: 13.5, fontWeight: 600, transition: "background .12s, color .12s" }}>
+      style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 12px", borderRadius: 999, border: "none", background: hover ? C.accentWash : "transparent", cursor: "pointer", color: col, font: "inherit", fontSize: 14, fontWeight: 600, transition: "background .12s, color .12s", WebkitTapHighlightColor: "transparent" }}>
       {icon}
-      {count != null && count > 0 && <span>{count}</span>}
+      {count != null && count > 0 && <span style={{ fontSize: 13, fontWeight: 700 }}>{count}</span>}
     </button>
   );
 }
@@ -307,43 +307,70 @@ function LeftNav({ C, dark, user, onCompose, onToggleTheme }) {
 function BottomNav({ C, user, onCompose }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [moreOpen, setMoreOpen] = useState(false);
   const p = location.pathname;
 
-  const items = [
-    { path: "/feed",        icon: <Home size={21} /> },
-    { path: "/search",      icon: <Search size={21} /> },
-    { path: "/radar",       icon: <TrendingUp size={21} /> },
-    { path: "/connections", icon: <Users size={21} /> },
-    { path: "/messages",    icon: <MessageSquare size={21} /> },
-    { path: "/notifications", icon: <Bell size={21} /> },
-    { path: "/profile",     icon: <User size={21} /> },
-    ...(user?.is_admin ? [{ path: "/admin", icon: <Shield size={21} /> }] : []),
+  const primary = [
+    { path: "/feed",          icon: <Home size={24} /> },
+    { path: "/search",        icon: <Search size={24} /> },
+    { path: "/messages",      icon: <MessageSquare size={24} /> },
+    { path: "/notifications", icon: <Bell size={24} /> },
+    { path: "/profile",       icon: <User size={24} /> },
+  ];
+
+  const secondary = [
+    { path: "/radar",       icon: <TrendingUp size={20} />, label: "Radar" },
+    { path: "/connections", icon: <Users size={20} />,     label: "Bağlantılar" },
+    { path: "/articles",    icon: <BookOpen size={20} />,  label: "Məqalələr" },
+    ...(user?.is_admin ? [{ path: "/admin", icon: <Shield size={20} />, label: "Admin" }] : []),
   ];
 
   return (
-    <div style={{
-      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
-      height: 58, background: C.barBlur,
-      backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
-      borderTop: `1px solid ${C.divider}`,
-      display: "flex", alignItems: "stretch",
-      overflowX: "auto", scrollbarWidth: "none",
-    }}>
-      {items.map((item, i) => {
-        const isActive = p === item.path || (item.path !== "/feed" && item.path !== "/profile" && p.startsWith(item.path));
-        return (
-          <button key={i} onClick={() => navigate(item.path)}
-            style={{
-              flex: "0 0 auto", minWidth: 52,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              border: "none", background: "transparent", cursor: "pointer",
-              color: isActive ? C.accent : C.muted, transition: "color .12s",
-            }}>
-            {item.icon}
-          </button>
-        );
-      })}
-    </div>
+    <>
+      {/* More drawer */}
+      {moreOpen && (
+        <div onClick={() => setMoreOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 99, background: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)" }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ position: "absolute", bottom: 66, left: 16, right: 16, background: C.bg, border: `1px solid ${C.divider}`, borderRadius: 18, padding: "8px 0", boxShadow: "0 -8px 32px rgba(0,0,0,0.18)" }}>
+            {secondary.map(item => (
+              <button key={item.path} onClick={() => { navigate(item.path); setMoreOpen(false); }}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", background: "none", border: "none", cursor: "pointer", color: p.startsWith(item.path) ? C.accent : C.text, fontSize: 15, fontWeight: 700, fontFamily: "'Archivo', sans-serif", WebkitTapHighlightColor: "transparent" }}>
+                <span style={{ color: p.startsWith(item.path) ? C.accent : C.muted }}>{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
+        height: 62, background: C.barBlur,
+        backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+        borderTop: `1px solid ${C.divider}`,
+        display: "flex", alignItems: "stretch",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}>
+        {primary.map((item, i) => {
+          const isActive = p === item.path || (item.path !== "/feed" && item.path !== "/profile" && p.startsWith(item.path));
+          return (
+            <button key={i} onClick={() => navigate(item.path)}
+              style={{
+                flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+                border: "none", background: "transparent", cursor: "pointer",
+                color: isActive ? C.accent : C.muted, transition: "color .12s",
+                WebkitTapHighlightColor: "transparent",
+              }}>
+              {item.icon}
+              {isActive && (
+                <span style={{ position: "absolute", bottom: 6, width: 4, height: 4, borderRadius: "50%", background: C.accent }} />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
@@ -386,14 +413,27 @@ function OriginalPostPreview({ orig, C }) {
   );
 }
 
-function PostItem({ post, C, user, connectedIds, pendingIds, openComments, comments, commentText, onLike, onDislike, onDelete, onConnect, onToggleComments, onCommentChange, onSubmitComment, onReport, onRepost, t }) {
+function PostItem({ post, C, dark, user, connectedIds, pendingIds, openComments, comments, commentText, onLike, onDislike, onDelete, onConnect, onToggleComments, onCommentChange, onSubmitComment, onReport, onRepost, t }) {
   const [hover, setHover] = useState(false);
 
+  const isMobileView = window.innerWidth < 640;
   return (
     <article
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      style={{ display: "flex", gap: 12, padding: "14px 16px", borderBottom: `1px solid ${C.divider}`, background: hover ? C.rowHover : "transparent", transition: "background .12s" }}
+      style={isMobileView ? {
+        display: "flex", gap: 12,
+        margin: "8px 10px", padding: "14px 14px 10px",
+        background: dark ? (hover ? "#0d2248" : "#0a1c39") : (hover ? "#f8faff" : "#ffffff"),
+        borderRadius: 18,
+        border: `1px solid ${C.divider}`,
+        boxShadow: dark ? "0 2px 12px rgba(0,0,0,0.25)" : "0 1px 6px rgba(7,20,40,0.06)",
+        transition: "background .12s, box-shadow .12s",
+      } : {
+        display: "flex", gap: 12, padding: "14px 16px",
+        borderBottom: `1px solid ${C.divider}`,
+        background: hover ? C.rowHover : "transparent", transition: "background .12s",
+      }}
     >
       <div style={{ flexShrink: 0, paddingTop: 2 }}>
         <Link to={`/profile/${post.author_id}`}>
@@ -463,22 +503,22 @@ function PostItem({ post, C, user, connectedIds, pendingIds, openComments, comme
           </div>
         )}
 
-        <div style={{ display: "flex", alignItems: "center", gap: 2, marginTop: 8, marginLeft: -8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 0, marginTop: 10, marginLeft: -10, maxWidth: 380 }}>
           <ActionBtn C={C} onClick={() => onToggleComments(post.id)}
             active={openComments[post.id]} activeColor={C.accent}
-            icon={<MessageCircle size={18} />} count={post.comment_count}
+            icon={<MessageCircle size={20} />} count={post.comment_count}
             title="Şərhlər" />
           <ActionBtn C={C} onClick={() => onLike(post.id)}
             active={post.is_liked} activeColor="#e11d48"
-            icon={<Heart size={18} fill={post.is_liked ? "#e11d48" : "none"} color={post.is_liked ? "#e11d48" : "currentColor"} />}
+            icon={<Heart size={20} fill={post.is_liked ? "#e11d48" : "none"} color={post.is_liked ? "#e11d48" : "currentColor"} />}
             count={post.like_count} title="Bəyən" />
           <ActionBtn C={C} onClick={() => onDislike(post.id)}
             active={post.is_disliked} activeColor={C.muted}
-            icon={<ThumbsDown size={18} fill={post.is_disliked ? "currentColor" : "none"} />}
+            icon={<ThumbsDown size={20} fill={post.is_disliked ? "currentColor" : "none"} />}
             count={post.show_dislikes ? post.dislike_count : undefined} title="Bəyənmə" />
           <ActionBtn C={C} onClick={() => onRepost(post)}
             active={false} activeColor={C.accent}
-            icon={<Repeat2 size={18} />}
+            icon={<Repeat2 size={20} />}
             count={post.repost_count || undefined} title="Repost" />
           <div style={{ flex: 1 }} />
           {user && post.author_id !== user.id && (
@@ -1021,24 +1061,23 @@ export default function Feed() {
                     </button>
                   </div>
                 </div>
-                {/* Pill tabs */}
-                <div style={{ padding: "6px 14px 10px" }}>
-                  <div style={{ display: "flex", background: C.surface, borderRadius: 12, padding: 3, gap: 2 }}>
-                    {[["foryou", "Sənə uyğun"], ["following", "İzlədiklərin"]].map(([tabId, label]) => {
-                      const on = feedTab === tabId;
-                      return (
-                        <button key={tabId} onClick={() => setFeedTab(tabId)} style={{
-                          flex: 1, padding: "8px 0", borderRadius: 9, border: "none", cursor: "pointer",
-                          background: on ? C.bg : "transparent",
-                          boxShadow: on ? "0 1px 4px rgba(0,0,0,0.10)" : "none",
-                          fontFamily: "'Archivo', sans-serif", fontSize: 14, fontWeight: on ? 800 : 600,
-                          color: on ? C.accent : C.muted, transition: "all .15s",
-                        }}>
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                {/* Underline tabs */}
+                <div style={{ display: "flex", borderBottom: `1px solid ${C.divider}` }}>
+                  {[["foryou", "Sənə uyğun"], ["following", "İzlədiklərin"]].map(([tabId, label]) => {
+                    const on = feedTab === tabId;
+                    return (
+                      <button key={tabId} onClick={() => setFeedTab(tabId)} style={{
+                        flex: 1, padding: "13px 0 12px", border: "none", cursor: "pointer",
+                        background: "transparent",
+                        borderBottom: on ? `2px solid ${C.accent}` : "2px solid transparent",
+                        fontFamily: "'Archivo', sans-serif", fontSize: 15, fontWeight: on ? 800 : 500,
+                        color: on ? C.text : C.muted, transition: "color .15s, border-color .15s",
+                        WebkitTapHighlightColor: "transparent",
+                      }}>
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </>
             ) : (
@@ -1206,7 +1245,7 @@ export default function Feed() {
           {!loading && posts.map(post => (
             <PostItem
               key={post.id}
-              post={post} C={C} user={user}
+              post={post} C={C} dark={dark} user={user}
               connectedIds={connectedIds} pendingIds={pendingIds}
               openComments={openComments} comments={comments} commentText={commentText}
               onLike={handleLike} onDislike={handleDislike} onDelete={handleDelete}
