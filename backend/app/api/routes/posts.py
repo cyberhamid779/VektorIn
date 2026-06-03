@@ -493,8 +493,11 @@ def get_comments(post_id: int, db: Session = Depends(get_db), current_user: User
         {
             "id": c.id,
             "content": c.content,
-            "user_name": c.user.full_name,
             "user_id": c.user_id,
+            "user_name": c.user.full_name,
+            "user_picture": c.user.profile_picture,
+            "faculty": c.user.faculty,
+            "major": c.user.major,
             "created_at": str(c.created_at),
         }
         for c in comments

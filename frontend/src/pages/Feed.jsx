@@ -439,22 +439,32 @@ function CommentSection({ post, user, C, dark, commentText, comments, onCommentC
         </div>
       ) : (
         <div style={{ maxHeight: 320, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
-          {shown.map(c => (
-            <div key={c.id} style={{ display: "flex", gap: 9 }}>
-              <Link to={`/profile/${c.user_id}`} style={{ width: 30, height: 30, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 800, textDecoration: "none" }}>
-                {c.user_picture
-                  ? <img src={c.user_picture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  : c.user_name?.charAt(0)}
-              </Link>
-              <div style={{ flex: 1, background: C.commentBg, border: C.commentBorder, borderRadius: 14, padding: "8px 12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                  <Link to={`/profile/${c.user_id}`} style={{ fontSize: 13, fontWeight: 700, color: C.text, textDecoration: "none", fontFamily: "'Archivo', sans-serif" }}>{c.user_name}</Link>
-                  <span style={{ fontSize: 11, color: C.muted, fontFamily: "'JetBrains Mono', monospace" }}>{formatBakuHM(c.created_at)}</span>
+          {shown.map(c => {
+            const facultyShort = c.faculty
+              ? c.faculty.split(" ").filter(w => w.length > 2).slice(0, 2).map(w => w[0].toUpperCase()).join("")
+              : null;
+            return (
+              <div key={c.id} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
+                <Link to={`/profile/${c.user_id}`} style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", flexShrink: 0, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 800, textDecoration: "none", marginTop: 2 }}>
+                  {c.user_picture
+                    ? <img src={c.user_picture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }}/>
+                    : (c.user_name?.charAt(0) || "?")}
+                </Link>
+                <div style={{ flex: 1, minWidth: 0, background: dark ? "#0d2248" : "#f1f5f9", borderRadius: "0 14px 14px 14px", padding: "8px 12px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap", marginBottom: 3 }}>
+                    <Link to={`/profile/${c.user_id}`} style={{ fontSize: 13, fontWeight: 800, color: C.text, textDecoration: "none", fontFamily: "'Archivo', sans-serif" }}>{c.user_name}</Link>
+                    {facultyShort && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: C.accent, background: `rgba(30,144,255,0.10)`, padding: "1px 7px", borderRadius: 6, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.04em" }}>
+                        {facultyShort}{c.major ? ` · ${c.major.split(" ")[0]}` : ""}
+                      </span>
+                    )}
+                    <span style={{ fontSize: 11, color: C.muted, marginLeft: "auto", fontFamily: "'JetBrains Mono', monospace" }}>{formatBakuHM(c.created_at)}</span>
+                  </div>
+                  <p style={{ fontSize: 13.5, color: C.commentText, margin: 0, lineHeight: 1.55, wordBreak: "break-word", whiteSpace: "pre-wrap" }}>{c.content}</p>
                 </div>
-                <p style={{ fontSize: 13.5, color: C.commentText, margin: 0, lineHeight: 1.5, wordBreak: "break-word" }}>{c.content}</p>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {!showAll && comments.length > PREVIEW && (
             <button onClick={() => setShowAll(true)}
               style={{ background: "none", border: "none", cursor: "pointer", color: C.accent, fontSize: 13, fontWeight: 700, padding: "4px 0", fontFamily: "'Archivo', sans-serif", textAlign: "left" }}>
